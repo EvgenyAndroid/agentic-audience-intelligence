@@ -25,6 +25,29 @@ def _unique(doc: dict[str, Any], array: str, key: str) -> list[Issue]:
     return [Issue(f"/{array}", "semantic", f"duplicate {key} {value!r}") for value, n in counts.items() if n > 1]
 
 
+def _model_registration(doc: dict[str, Any]) -> list[Issue]:
+    """Validation evidence counts only for the exact registered model and preprocessing (FR44)."""
+    issues = _order(doc, "valid_from", "valid_until")
+    artifact, prep = doc["artifact"], doc["preprocessing"]["sha256"]
+    for i, ev in enumerate(doc["validation_evidence"]):
+        same_model = (
+            ev["bound_model_sha256"] is not None and ev["bound_model_sha256"] == artifact["artifact_sha256"]
+        ) or (ev["bound_served_version"] is not None and ev["bound_served_version"] == artifact["served_version"])
+        if not same_model:
+            issues.append(
+                Issue(f"/validation_evidence/{i}", "semantic", "evidence is not bound to the registered model")
+            )
+        if ev["bound_preprocessing_sha256"] != prep:
+            issues.append(
+                Issue(
+                    f"/validation_evidence/{i}/bound_preprocessing_sha256", "semantic", "evidence preprocessing differs"
+                )
+            )
+    ids = Counter(f["feature_id"] for f in doc["input_features"])
+    issues += [Issue("/input_features", "semantic", f"duplicate feature_id {f!r}") for f, n in ids.items() if n > 1]
+    return issues
+
+
 def _policy(doc: dict[str, Any]) -> list[Issue]:
     issues = _order(doc, "effective_from", "effective_until")
     if doc["kind"] == "execution_policy":
@@ -47,6 +70,11 @@ RULES: dict[str, Callable[[dict[str, Any]], list[Issue]]] = {
     "authorization": lambda d: _order(d, "valid_from", "valid_until"),
     "entity": lambda d: _order(d, "valid_from", "valid_until"),
     "type_registry_entry": lambda d: [],
+    "model_registration": _model_registration,
+    "unit_mapping": lambda d: _order(d, "effective_from", "effective_until"),
+    "relationship_snapshot": lambda d: (
+        _order(d, "valid_from", "valid_until") + _order(d, "as_of", "available_at", strict=False)
+    ),
 }
 
 

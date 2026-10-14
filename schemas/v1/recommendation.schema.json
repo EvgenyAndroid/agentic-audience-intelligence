@@ -1,0 +1,298 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/recommendation.schema.json",
+  "title": "Recommendation",
+  "description": "Ordering of a requested task and its separately identified alternatives against one objective, derived from current task decisions. It never changes a verdict or replaces the requested task; a ranking can be partial or withheld.",
+  "x-prd-requirements": [
+    "FR46",
+    "FR25",
+    "FR16"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "recommendation"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "recommendation_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "tenant_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "objective_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "requested_task": {
+      "type": "object",
+      "properties": {
+        "task_ref": {
+          "$ref": "common.schema.json#/$defs/versioned_ref"
+        },
+        "decision_ref": {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "task_family": {
+          "$ref": "common.schema.json#/$defs/task_family"
+        },
+        "verdict": {
+          "$ref": "common.schema.json#/$defs/verdict"
+        }
+      },
+      "required": [
+        "task_ref",
+        "decision_ref",
+        "task_family",
+        "verdict"
+      ],
+      "additionalProperties": false
+    },
+    "recommended_options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "task_ref": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          },
+          "decision_ref": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "task_family": {
+            "$ref": "common.schema.json#/$defs/task_family"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Equal positions are unordered relative to each other."
+          },
+          "claim_type": {
+            "$ref": "common.schema.json#/$defs/claim_type"
+          },
+          "fit": {
+            "type": "string",
+            "enum": [
+              "requested",
+              "exact",
+              "alternative"
+            ]
+          },
+          "fit_basis": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "requested_task",
+                "requested_task_family",
+                "accepted_claim",
+                "different_question"
+              ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "cost": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "const": "unknown"
+                  }
+                },
+                "required": [
+                  "status"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "const": "known"
+                  },
+                  "amount": {
+                    "$ref": "common.schema.json#/$defs/decimal_string"
+                  },
+                  "currency": {
+                    "$ref": "common.schema.json#/$defs/currency"
+                  },
+                  "usage_record_refs": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "common.schema.json#/$defs/id"
+                    },
+                    "minItems": 1
+                  }
+                },
+                "required": [
+                  "status",
+                  "amount",
+                  "currency",
+                  "usage_record_refs"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "required": [
+          "task_ref",
+          "decision_ref",
+          "task_family",
+          "position",
+          "claim_type",
+          "fit",
+          "fit_basis",
+          "cost"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "unlock_options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "task_ref": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          },
+          "decision_ref": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "task_family": {
+            "$ref": "common.schema.json#/$defs/task_family"
+          },
+          "reason_codes": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/reason_code"
+            },
+            "minItems": 1
+          },
+          "next_actions": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/text"
+            }
+          }
+        },
+        "required": [
+          "task_ref",
+          "decision_ref",
+          "task_family",
+          "reason_codes",
+          "next_actions"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "blocked_options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "task_ref": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          },
+          "decision_ref": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "task_family": {
+            "$ref": "common.schema.json#/$defs/task_family"
+          },
+          "reason_codes": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/reason_code"
+            },
+            "minItems": 1
+          },
+          "remedies": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/text"
+            }
+          }
+        },
+        "required": [
+          "task_ref",
+          "decision_ref",
+          "task_family",
+          "reason_codes",
+          "remedies"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "ranking_status": {
+      "type": "string",
+      "enum": [
+        "ranked",
+        "partial_order",
+        "insufficient_evidence_to_rank",
+        "no_eligible_options"
+      ]
+    },
+    "ranking_basis": {
+      "$ref": "common.schema.json#/$defs/text"
+    },
+    "decision_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/id"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "generated_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "valid_until": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "generated_by": {
+      "type": "object",
+      "properties": {
+        "service_id": {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "service_version": {
+          "$ref": "common.schema.json#/$defs/semver"
+        },
+        "authority": {
+          "const": "deterministic_ranker"
+        }
+      },
+      "required": [
+        "service_id",
+        "service_version",
+        "authority"
+      ],
+      "additionalProperties": false
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "recommendation_id",
+    "tenant_id",
+    "objective_ref",
+    "requested_task",
+    "recommended_options",
+    "unlock_options",
+    "blocked_options",
+    "ranking_status",
+    "ranking_basis",
+    "decision_refs",
+    "generated_at",
+    "valid_until",
+    "generated_by"
+  ],
+  "unevaluatedProperties": false
+}

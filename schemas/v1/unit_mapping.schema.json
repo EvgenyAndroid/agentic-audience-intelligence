@@ -1,0 +1,280 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/unit_mapping.schema.json",
+  "title": "Unit mapping",
+  "description": "Versioned definition of how one registered unit maps to another: direction, cardinality, method, permitted uses and approval. It does not establish the actual links; a relationship_snapshot does.",
+  "x-prd-requirements": [
+    "FR43",
+    "FR03",
+    "FR06"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "unit_mapping"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "mapping_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "mapping_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "tenant_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "source_unit": {
+      "$ref": "common.schema.json#/$defs/unit"
+    },
+    "target_unit": {
+      "$ref": "common.schema.json#/$defs/unit"
+    },
+    "relationship_type": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "cardinality": {
+      "type": "string",
+      "enum": [
+        "one_to_one",
+        "many_to_one",
+        "one_to_many",
+        "many_to_many"
+      ]
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "supplied_deterministic",
+        "supplied_probabilistic",
+        "rule_based"
+      ]
+    },
+    "confidence": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "definition": {
+              "$ref": "common.schema.json#/$defs/text"
+            },
+            "evidence_ref": {
+              "$ref": "common.schema.json#/$defs/id"
+            }
+          },
+          "required": [
+            "definition",
+            "evidence_ref"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "permitted_uses": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "feature_join",
+          "activation_mapping",
+          "measurement_mapping",
+          "alias_exclusion",
+          "aggregation"
+        ]
+      }
+    },
+    "aggregation_rule": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string",
+              "enum": [
+                "count_distinct",
+                "sum",
+                "mean",
+                "max",
+                "min",
+                "any"
+              ]
+            },
+            "description": {
+              "$ref": "common.schema.json#/$defs/text"
+            }
+          },
+          "required": [
+            "method",
+            "description"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ambiguity_handling": {
+      "type": "string",
+      "enum": [
+        "exclude",
+        "keep_highest_confidence",
+        "keep_all"
+      ]
+    },
+    "unmatched_handling": {
+      "type": "string",
+      "enum": [
+        "exclude_and_count",
+        "abstain"
+      ]
+    },
+    "mapping_state": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "approved",
+        "revoked"
+      ]
+    },
+    "approval": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "approved_by": {
+              "$ref": "common.schema.json#/$defs/human_actor"
+            },
+            "approved_at": {
+              "$ref": "common.schema.json#/$defs/timestamp"
+            },
+            "evidence_ref": {
+              "$ref": "common.schema.json#/$defs/id"
+            }
+          },
+          "required": [
+            "approved_by",
+            "approved_at",
+            "evidence_ref"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "effective_from": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "effective_until": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "rights_policy_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "mapping_id",
+    "mapping_version",
+    "tenant_id",
+    "source_unit",
+    "target_unit",
+    "relationship_type",
+    "cardinality",
+    "method",
+    "confidence",
+    "permitted_uses",
+    "aggregation_rule",
+    "ambiguity_handling",
+    "unmatched_handling",
+    "mapping_state",
+    "approval",
+    "effective_from",
+    "effective_until",
+    "rights_policy_ref"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "supplied_probabilistic"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "confidence": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mapping_state": {
+            "enum": [
+              "approved",
+              "revoked"
+            ]
+          }
+        },
+        "required": [
+          "mapping_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "approval": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "permitted_uses": {
+            "contains": {
+              "const": "aggregation"
+            }
+          }
+        },
+        "required": [
+          "permitted_uses"
+        ]
+      },
+      "then": {
+        "properties": {
+          "aggregation_rule": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

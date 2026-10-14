@@ -121,6 +121,13 @@
           "items": {
             "$ref": "common.schema.json#/$defs/versioned_ref"
           }
+        },
+        "relationship_snapshot_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          },
+          "description": "Relationship snapshots that establish the links for each cited unit mapping. Optional so existing v1 tasks stay valid; absent means none are cited."
         }
       },
       "required": [

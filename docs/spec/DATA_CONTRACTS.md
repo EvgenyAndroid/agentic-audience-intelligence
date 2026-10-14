@@ -41,13 +41,16 @@ Some rules cannot be expressed in JSON Schema. A semantic layer (`aip.contracts.
 | `feature_plan` | Point-in-time feature definitions. Event time and availability time must both precede the cutoff. | FR07, FR12, FR06 |
 | `job` | Execution record. Execution state, failure code and statistical outcome are separate fields. | NFR02, NFR03, FR21, FR20 |
 | `measurement_feedback` | Downstream evidence bound to one exact release. Observational designs cannot carry causal claims. | FR34, FR35, FR36 |
+| `model_registration` | Identity and declared requirements of an existing or bring-your-own model: features, units, score type, artifact and preprocessing checksums, bound validation evidence, validity, rights and execution mode. Registration is not validation. | FR44, FR45, FR13, FR14, FR09 |
 | `monitoring_report` | Post-release drift, coverage or base-rate check against a supplied threshold. It can propose reassessment, never a release. | FR42 |
 | `objective` | The buyer's requested value: task family, intended use, claim sought and task-specific inputs. | FR03, FR25, FR10 |
 | `observation` | An attribute value about an entity. Missing, unobserved, zero and false remain distinct states. | FR08, FR07, FR23 |
 | `outcome_label` | An outcome observation for a named event, cutoff and horizon. Negatives require a mature, complete window. | FR10, FR13, FR36 |
 | `output_policy` | Which artifacts, grains and destinations may leave an execution boundary, with supplied disclosure controls. | FR28, FR29, FR05, NFR06 |
+| `recommendation` | Deterministic ordering of the requested task and separately identified alternatives against one objective, from current decisions. Sections: requested task, recommended, unlock, blocked. | FR46, FR25, FR16 |
 | `reason_code_registry` | Single registry of reason codes, each bound to one dimension. Legacy aliases resolve to canonical codes. | FR41 |
 | `relationship` | A permitted, evidenced, time-bounded link between typed units. Permitted uses are explicit. | FR06, FR02, FR07 |
+| `relationship_snapshot` | Immutable set of links produced under one unit mapping, with checksum, as-of and availability times, validity coverage, observed cardinality, unmatched and ambiguous counts, corrections and revocation. | FR43, FR06, FR07, FR15, FR22 |
 | `release_manifest` | Immutable prepared release. Any membership or policy change requires a new prepared version. | FR15, FR16, FR18, FR22 |
 | `representation_descriptor` | Vector space declaration reusing Vector Alignment Contract field names. Identifiers are never represented. | FR24, FR09 |
 | `routing_case` | Neutral case visible to an evaluated agent. Expected decisions live only in the separate oracle. | FR32 |
@@ -58,6 +61,7 @@ Some rules cannot be expressed in JSON Schema. A semantic layer (`aip.contracts.
 | `task` | One exact requested operation. Each task receives its own decision; parent runs may hold several tasks. | FR03, FR25, FR27, FR28, FR40 |
 | `task_decision` | Authoritative per-task verdict assembled by the router from established prerequisites. Precedence: violated > missing > satisfied. | FR25, FR38, FR39, FR10, FR41, NFR06 |
 | `type_registry_entry` | Declares what a unit or identifier type represents. Every source family uses the same registry rules. | FR31, FR02, FR09 |
+| `unit_mapping` | Versioned definition of how one registered unit maps to another: direction, cardinality, method, confidence definition, permitted uses, aggregation rule, approval and effective period. It does not establish links. | FR43, FR03, FR06 |
 | `usage_cost_record` | Attributed usage and cost for a job, task, run or release. Feeds cost per comparable run, per reviewed release and contribution. | FR37, NFR03, NFR05 |
 
 ## 3 Separate dimensions
@@ -140,6 +144,8 @@ Composition rules (`aip.policy.compose`):
 7. Aggregation rules compose most-restrictively per counted unit: the highest threshold, `block_release` over `suppress_cell`, and the intersection of approved dimensions. Thresholds are supplied by the policy owner; the platform has no default cohort size.
 8. A release whose cells cannot meet the composed rules is BLOCKED (`aggregation_threshold_not_met`). Unknown counts are PROVISIONAL (`aggregate_counts_unavailable`).
 
+9. Task-level (run-bound) policies only tighten. A task-level prohibition or restriction applies; task-level silence or permission adds no requirement and grants nothing, so it cannot stand in for a contributing source that is silent. Unresolved policy refs from any source are missing evidence (`missing_document`) and never dropped.
+
 A policy version change invalidates every decision that bound it (FR39, NFR06). Moving data to another location to bypass a rule is never a remedy; an alternative output requires a separate task.
 
 ## 7 Tasks, evidence bundles and decisions
@@ -171,9 +177,32 @@ The router selects prerequisites from the operation and task family (`aip.routin
 | `P-MODEL-VALIDATED` | An applicable validated model and its evidence exist | fact from policy service, steward, reviewer or deterministic job | `missing_validation_evidence` |
 | `P-POPULATION-COMPATIBLE` | The scored population is compatible with the validated model | fact from policy service, steward, reviewer or deterministic job | `missing_population_compatibility` |
 | `P-REPRESENTATION-COMPATIBLE` | Vector representations are compatible or aligned with evidence | fact from policy service, steward, reviewer or deterministic job | `missing_representation_evidence` |
+| `P-MODEL-REGISTERED` | The cited model is registered, current, and its family, score type, units and (for probabilities) target match the task and objective | router check | `missing_model_registration` |
+| `P-MODEL-EXECUTION` | The model's registered execution mode and locations permit this operation here | router check | `missing_model_registration` |
+| `P-MODEL-FEATURES-AVAILABLE` | The model's required features exist at its declared units for the scored population | fact from policy service, steward, reviewer or deterministic job | `insufficient_feature_coverage` |
+| `P-REMOTE-PAYLOAD` | Every contributing source permits sending the inference payload to the endpoint | router check | `missing_output_policy` |
+| `P-REMOTE-RECIPIENT-TERMS` | The rights owner accepts the endpoint's recipients, retention and reuse terms | fact from policy service, steward, reviewer or deterministic job | `recipient_terms_unverified` |
 | `P-DESTINATION-COMPATIBLE` | Destination capability is verified for this artifact | fact from policy service, steward, reviewer or deterministic job | `capability_not_verified` |
 
 Quarantine-safe operations (intake, profiling, semantic mapping, type registration) skip the profile, unit and grain prerequisites. A new propensity model (`train`, `validate`, `calibrate`) needs qualified labels. Inference with an existing model needs model validity, population compatibility and feature timing, but no future labels on candidates. Publishing probabilities additionally requires model validation, because eligibility to train does not establish eligibility to publish.
+
+Unit mappings (FR43). Each unit that differs from the modeling unit, and an output unit that differs from it, needs a cited `unit_mapping` from that unit to the other, plus a cited `relationship_snapshot` produced under that mapping (`task.units.mapping_refs` and the optional `task.units.relationship_snapshot_refs`). The router checks, in order:
+
+| Condition | Outcome | Reason |
+| --- | --- | --- |
+| The type registry declares no relationship between the types | violated | `grain_incompatible` |
+| A cited mapping or snapshot does not resolve | missing | `missing_document` |
+| No cited mapping covers the pair | missing | `missing_unit_mapping` |
+| The mapping is revoked | violated | `mapping_revoked` |
+| The mapping does not permit the use (observation to modeling needs `feature_join`, or `measurement_mapping` for `measure`; modeling to output needs `aggregation` when many-to-one, otherwise `activation_mapping`) | violated | `mapping_use_not_permitted` |
+| The mapping is a draft or outside its effective period | missing | `missing_unit_mapping` |
+| A cited snapshot is revoked | violated | `relationship_snapshot_revoked` |
+| No cited snapshot was available at decision time | missing | `missing_relationship_evidence` |
+| Observed cardinality contradicts the declared cardinality | violated | `mapping_cardinality_mismatch` |
+
+Availability at the prediction cutoff, including late-discovered relationships, remains a `P-FEATURE-TIMING` fact.
+
+Registered models (FR44, FR45). A scoring task that cites `model_ref`, and every `remote_inference` task, adds the model prerequisites. A revoked registration is BLOCKED; a suspended or expired one is PROVISIONAL. Registration never satisfies `P-MODEL-VALIDATED`, which probability tasks still require. An endpoint model must run as `remote_inference`, and an in-boundary model cannot, so the payload transfer is always checked. `P-REMOTE-PAYLOAD` applies output policies to the endpoint's payload artifact type, unit and destination with the same composition as egress: a prohibited row payload is BLOCKED (`forbidden_row_level_egress`), a missing permission is PROVISIONAL, and an expressly permitted aggregate payload passes even where row artifacts are prohibited.
 
 Precedence is fixed: any violated prerequisite makes the task BLOCKED; otherwise any missing prerequisite makes it PROVISIONAL; otherwise it is ELIGIBLE. The `task_decision` schema enforces this structurally, so an ELIGIBLE decision with a non-satisfied prerequisite is invalid.
 
@@ -240,6 +269,8 @@ Downstream measurements are appended as separate `measured_claims`; they never c
 **Export receipts** require destination confirmation before reporting accepted, matched or live states or counts. An unknown state requires reconciliation before any retry.
 
 **Usage and cost records** (FR37) attribute metered, allocated or contracted costs to a job, task, run, release or tenant period. Allocated costs must name their allocation method. A run's outcome and comparable class make cost per comparable completed run computable, including abstentions and no-signal results. Review and analyst minutes support the BRD's analyst-effort measure.
+
+**Recommendations (FR46).** `aip.recommendation.recommend` takes one objective, the requested task and separately identified alternatives, each with a current decision whose `task_checksum` matches the task. It refuses lapsed, changed or foreign inputs. The requested task keeps its own card with its verdict. ELIGIBLE tasks are ordered in three groups (the requested task, then tasks of the requested family, then alternatives that answer a different question), and within a group by known cost only. Unknown cost is never treated as zero: options without comparable cost share a position. There is no claim-strength ladder between families. `ranking_status` is `ranked`, `partial_order`, `insufficient_evidence_to_rank` (every eligible option shares the first position) or `no_eligible_options`. PROVISIONAL tasks appear under `unlock_options` with their reason codes and next actions; BLOCKED tasks under `blocked_options` with remedies. The recommendation lapses with its earliest decision. `admissibility_issues` checks any proposed recommendation, including a future agent-proposed order, against current decisions; passing it shows admissibility, not optimality.
 
 ## 9 Reason-code registry
 
@@ -347,7 +378,7 @@ Requirements that describe behavior rather than data shape (for example FR12 bou
 | FR02 | `entity`, `relationship`, `type_registry_entry` |
 | FR03 | `objective`, `task` |
 | FR05 | `execution_policy`, `output_policy` |
-| FR06 | `feature_plan`, `relationship` |
+| FR06 | `feature_plan`, `relationship`, `relationship_snapshot`, `unit_mapping` |
 | FR07 | `event`, `feature_plan`, `observation`, `relationship` |
 | FR08 | `content_item`, `event`, `observation`, `source_profile` |
 | FR09 | `entity`, `representation_descriptor`, `type_registry_entry` |
@@ -381,6 +412,10 @@ Requirements that describe behavior rather than data shape (for example FR12 bou
 | FR40 | `dataset_manifest`, `execution_policy`, `source_profile`, `task` |
 | FR41 | `reason_code_registry`, `task_decision` |
 | FR42 | `monitoring_report` |
+| FR43 | `relationship_snapshot`, `task`, `unit_mapping` |
+| FR44 | `model_registration`, `task` |
+| FR45 | `common`, `model_registration` |
+| FR46 | `recommendation` |
 | NFR02 | `job` |
 | NFR03 | `job`, `usage_cost_record` |
 | NFR05 | `usage_cost_record` |

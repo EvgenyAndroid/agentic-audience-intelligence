@@ -175,6 +175,55 @@
       "aliases": []
     },
     {
+      "code": "mapping_use_not_permitted",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "The cited unit mapping does not permit this use (for example an activation-only mapping used to build features).",
+      "aliases": []
+    },
+    {
+      "code": "mapping_revoked",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "The cited unit mapping has been revoked.",
+      "aliases": []
+    },
+    {
+      "code": "relationship_snapshot_revoked",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "The cited relationship snapshot has been revoked.",
+      "aliases": []
+    },
+    {
+      "code": "mapping_cardinality_mismatch",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "The relationship snapshot's observed cardinality contradicts the mapping's declared cardinality.",
+      "aliases": []
+    },
+    {
+      "code": "model_registration_revoked",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "The cited model registration has been revoked.",
+      "aliases": []
+    },
+    {
+      "code": "model_contract_mismatch",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "The registered model's task family, score type or units do not match the task.",
+      "aliases": []
+    },
+    {
+      "code": "model_execution_mismatch",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "The model's registered execution mode or locations do not permit this operation at this location.",
+      "aliases": []
+    },
+    {
       "code": "unsupported_outcome_probability",
       "dimension": "task_decision",
       "decision_effect": "missing",
@@ -337,6 +386,27 @@
       "dimension": "task_decision",
       "decision_effect": "missing",
       "description": "A referenced document could not be resolved.",
+      "aliases": []
+    },
+    {
+      "code": "missing_model_registration",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "The task needs a registered model and none resolves.",
+      "aliases": []
+    },
+    {
+      "code": "model_registration_not_current",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "The model registration is suspended or outside its validity period.",
+      "aliases": []
+    },
+    {
+      "code": "recipient_terms_unverified",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "The remote endpoint's recipients, retention and reuse terms are not confirmed by the rights owner.",
       "aliases": []
     },
     {

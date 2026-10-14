@@ -1,0 +1,46 @@
+{
+  "kind": "unit_mapping",
+  "schema_version": "1.0.0",
+  "mapping_id": "map_cookie_household_activation",
+  "mapping_version": "1.0.0",
+  "tenant_id": "tenant_demo",
+  "source_unit": {
+    "type_id": "browser_cookie",
+    "type_version": "1.0.0",
+    "namespace": "web_demo_cookie"
+  },
+  "target_unit": {
+    "type_id": "provider_household_key",
+    "type_version": "1.0.0",
+    "namespace": "acr_demo_hh"
+  },
+  "relationship_type": "browser_in_household",
+  "cardinality": "many_to_one",
+  "method": "supplied_probabilistic",
+  "confidence": {
+    "definition": "Vendor-supplied posterior that the browser was observed in the household during the validity window",
+    "evidence_ref": "graph_vendor_demo_methodology_2026"
+  },
+  "permitted_uses": [
+    "activation_mapping"
+  ],
+  "aggregation_rule": null,
+  "ambiguity_handling": "keep_highest_confidence",
+  "unmatched_handling": "exclude_and_count",
+  "mapping_state": "approved",
+  "approval": {
+    "approved_by": {
+      "actor_id": "user_steward_01",
+      "actor_type": "human",
+      "role": "data_steward"
+    },
+    "approved_at": "2026-10-01T00:00:00Z",
+    "evidence_ref": "steward_review_map_0002"
+  },
+  "effective_from": "2026-10-01T00:00:00Z",
+  "effective_until": "2027-01-01T00:00:00Z",
+  "rights_policy_ref": {
+    "id": "rights_demo_2026",
+    "version": "1.0.0"
+  }
+}

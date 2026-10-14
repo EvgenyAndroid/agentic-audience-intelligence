@@ -1,6 +1,6 @@
 # Product Requirements for the Agentic Audience Intelligence Platform
 
-Session 1 | Revision 2 | 14 October 2026 (Session 2 corrections; see Section 13)
+Session 1 | Revision 3 | 14 October 2026 (Session 2 corrections and contracts; see Section 13)
 
 ## 1 Product decision and scope
 
@@ -242,6 +242,14 @@ P0 is required for enabled MVP tasks. P1 is an optional path or later capability
 
 **FR42 Post-release monitoring — P1.** Purpose: detect drift after release. Actor: monitoring service and operator. Inputs: released model or audience, reference distributions and supplied thresholds. Outputs: monitoring reports with a proposed action. Failure: missing thresholds produce no automatic action. Acceptance: monitoring can propose reassessment or refresh but never releases, modifies or revokes an artifact by itself.
 
+**FR43 Unit mappings — P0.** Purpose: make differing units comparable only through approved evidence. Actor: steward and router. Inputs: a versioned unit mapping (direction, cardinality, method, confidence definition, permitted uses, aggregation rule, ambiguity and unmatched handling, approval, effective period) and a bound relationship snapshot (checksum, as-of and availability times, validity coverage, observed cardinality, unmatched and ambiguous counts, corrections, revocation). Outputs: a grain prerequisite outcome per mismatched unit. Failure: BLOCKED when the type registry permits no relationship, the mapping or snapshot is revoked, the use is not permitted or observed cardinality contradicts the declaration; PROVISIONAL when a mapping or snapshot is missing, unapproved, not effective or not yet available. Acceptance: an activation-only mapping cannot build features; a mapping definition alone never establishes links; cutoff-level availability stays under the feature-timing prerequisite.
+
+**FR44 Model registration — P0 for model-backed tasks.** Purpose: let existing and bring-your-own models be routed under the same rules. Actor: scientist and router. Inputs: a model registration (task family, score type and scale, target for probabilities, artifact checksum or served version, preprocessing checksum, ordered input features with units, vocabularies and missing-value behavior, coverage and abstention rule, units, validation evidence bound to the exact model and preprocessing, validity, rights, execution mode and locations). Outputs: registration, contract and execution prerequisite outcomes. Failure: PROVISIONAL for a missing, suspended or expired registration; BLOCKED for a revoked registration, a contract mismatch with the task or objective, or an execution mismatch. Acceptance: registration establishes identity and declared requirements, never validation; stronger-than-exploratory claims keep their claim-specific evidence requirements.
+
+**FR45 Remote inference — P1.** Purpose: control data that crosses a boundary to reach an outside model. Actor: policy and router. Inputs: an endpoint registration (endpoint identity, payload artifact type, recipients, retention, reuse, resource limits, revocation authority) and contributing output policies. Outputs: separate execution, payload-transfer and recipient-terms prerequisite outcomes for a `remote_inference` task. Failure: BLOCKED for a documented prohibition on the payload; PROVISIONAL for missing payload permission or unconfirmed recipient terms. Acceptance: an endpoint model cannot run under an in-boundary operation; an aggregate-only policy blocks row payloads without automatically forbidding expressly permitted aggregate payloads.
+
+**FR46 Recommendations — P0.** Purpose: help buyers choose among supported tasks without changing verdicts. Actor: deterministic ranker. Inputs: one objective, the requested task and separately identified alternatives, each with a current decision whose task checksum matches, and known costs where recorded. Outputs: a recommendation with the requested task, ranked eligible options, unlock options with their missing evidence, and blocked options with remedies. Failure: refuse lapsed, changed or foreign decisions; return a partial order, insufficient evidence to rank or no eligible options instead of an invented order. Acceptance: no claim-strength ladder; unknown cost is never zero; the requested task keeps its own card and is never silently replaced; an admissibility check can verify any proposed order against current decisions without asserting it is optimal.
+
 ## 11 Nonfunctional requirements
 
 **NFR01 Tenant isolation — P0.** Purpose: prevent cross-tenant access. Actor: platform security owner. Inputs: authenticated context and artifact scope. Outputs: enforced access across data, identity maps, prompts, embeddings, models and caches. Failure: deny mismatched access. Acceptance: service-derived tenant scope and negative access checks cover every enabled surface.
@@ -267,14 +275,14 @@ Session 3 creates checks for the contracts and failure modes implemented in scop
 | Business need | Product requirements | Verification focus |
 | --- | --- | --- |
 | BR01 Task clarity | FR03, FR10, FR25 | Exact operation, output, unit and verdict consistency |
-| BR02 Extensible inputs | FR01, FR02, FR08, FR26, FR31, FR40 | Three reference profiles and supported versus new capability onboarding |
-| BR03 Correct routing | FR04, FR10, FR21, FR23, FR25, FR32, FR38, FR41 | Task-specific locked cases and false-block/deferral metrics |
-| BR04 Execution/output control | FR05, FR27, FR28, FR29 | Same source with blocked row export and eligible qualifying aggregates |
-| BR05 Honest evidence | FR07, FR11, FR12, FR13, FR14, FR24 | Leakage, score types, calibration and abstention |
+| BR02 Extensible inputs | FR01, FR02, FR08, FR26, FR31, FR40, FR43 | Three reference profiles and supported versus new capability onboarding |
+| BR03 Correct routing | FR04, FR10, FR21, FR23, FR25, FR32, FR38, FR41, FR46 | Task-specific locked cases and false-block/deferral metrics |
+| BR04 Execution/output control | FR05, FR27, FR28, FR29, FR45 | Same source with blocked row export and eligible qualifying aggregates |
+| BR05 Honest evidence | FR07, FR11, FR12, FR13, FR14, FR24, FR44 | Leakage, score types, calibration and abstention |
 | BR06 Bounded agents | FR09, FR19, FR38, NFR03, NFR07 | Context restrictions, injected text and budget boundaries |
 | BR07 Reviewed release | FR15 to FR18, FR33, FR39, NFR06 | Counts, checksums, policy freshness and receipts |
 | BR08 Downstream evidence | FR34 to FR36 | Release binding, coverage, assignment-based claims and later feedback |
-| BR09 Tenant and use rights | FR05, FR06, FR09, FR22, NFR01, NFR06 | Authorization, lineage, withdrawal and isolation |
+| BR09 Tenant and use rights | FR05, FR06, FR09, FR22, FR43, FR45, NFR01, NFR06 | Authorization, lineage, withdrawal and isolation |
 | BR10 Auditability | FR20, FR39, FR42, NFR02, NFR04 | Versioned decisions, artifacts, recovery and replay |
 | BR11 Independent proof | FR12, FR21, FR24, FR32, FR37, NFR08 | Separate routing, semantics, statistical utility and cost results |
 | BR12 Commercial visibility | FR37, NFR03 to NFR05 | Attributed run/release costs and named denominators |
@@ -288,6 +296,8 @@ The pilot still needs its objective, actual source contract and units, execution
 Session 2 must implement the shared vocabulary and source/run execution fields in schemas. It resolves exact policy object structure, schema dialect, type extensions, job contracts, release authorization and pinned exchange mappings. Session 1 does not generate JSON schemas, implementation code, the detailed modeling report, or the engineering backlog.
 
 Revision 2 records the Session 2 review corrections: the traceability table now covers every active requirement (FR04, FR11, NFR06 and NFR08 were untraced); FR30 is retired into NFR08; FR37 adds the usage and cost record that BR12 and the analyst-effort measure need; FR38 separates advisory agent proposals from authoritative task decisions; FR39 adds decision validity; FR40 defines quarantine profiling; FR41 creates one reason-code registry; and FR42 adds post-release monitoring as P1. The scientific rules, verdict vocabulary and scope are unchanged.
+
+Revision 3 adds the Session 2 contracts requested after review: FR43 unit mappings with bound relationship snapshots, FR44 model registration for existing and bring-your-own models, FR45 remote inference as its own operation with payload-transfer and recipient-terms checks, and FR46 deterministic recommendations. Task-level execution and output policies now only tighten what contributing sources permit. The scientific rules, verdict vocabulary and scope are unchanged.
 
 ## 14 Reference guidance
 

@@ -162,6 +162,41 @@ CATALOG: dict[str, Prerequisite] = {
             "Run the representation compatibility check",
         ),
         Prerequisite(
+            "P-MODEL-REGISTERED",
+            "The cited model is registered, current, and its family, score type and units match the task",
+            "computed",
+            "missing_model_registration",
+            "Register the model, or cite a current registration whose contract matches the task",
+        ),
+        Prerequisite(
+            "P-MODEL-EXECUTION",
+            "The model's registered execution mode and locations permit this operation here",
+            "computed",
+            "missing_model_registration",
+            "Run an in-boundary model at a registered location, or request remote_inference for an endpoint model",
+        ),
+        Prerequisite(
+            "P-MODEL-FEATURES-AVAILABLE",
+            "The model's required features exist at its declared units for the scored population",
+            "fact",
+            "insufficient_feature_coverage",
+            "Confirm the model's required features are available at its declared units",
+        ),
+        Prerequisite(
+            "P-REMOTE-PAYLOAD",
+            "Every contributing source permits sending the inference payload to the endpoint",
+            "computed",
+            "missing_output_policy",
+            "Obtain an output policy that permits this payload to this endpoint, or use an in-boundary model",
+        ),
+        Prerequisite(
+            "P-REMOTE-RECIPIENT-TERMS",
+            "The rights owner accepts the endpoint's recipients, retention and reuse terms",
+            "fact",
+            "recipient_terms_unverified",
+            "Obtain the rights owner's confirmation of the endpoint's recipient terms",
+        ),
+        Prerequisite(
             "P-DESTINATION-COMPATIBLE",
             "Destination capability is verified for this artifact",
             "fact",
@@ -174,7 +209,7 @@ CATALOG: dict[str, Prerequisite] = {
 QUARANTINE_OPS = {"intake_receive", "profile", "map_semantics", "register_type", "inspect_raw"}
 EGRESS_OPS = {"export_rows", "export_aggregate", "activate"}
 MODEL_BUILD_OPS = {"train", "validate", "calibrate"}
-SCORING_OPS = {"infer", "score", "build_cohort"}
+SCORING_OPS = {"infer", "score", "remote_inference", "build_cohort"}
 
 
 def required_prerequisites(task: dict[str, Any]) -> list[str]:
@@ -206,6 +241,10 @@ def required_prerequisites(task: dict[str, Any]) -> list[str]:
         required += ["P-AGGREGATION-RULES"]
     if op == "export_aggregate":
         required += ["P-AGGREGATION-THRESHOLD"]
+    if op == "remote_inference" or (task.get("model_ref") and op in SCORING_OPS):
+        required += ["P-MODEL-REGISTERED", "P-MODEL-EXECUTION", "P-MODEL-FEATURES-AVAILABLE"]
+    if op == "remote_inference":
+        required += ["P-REMOTE-PAYLOAD", "P-REMOTE-RECIPIENT-TERMS"]
     if op in EGRESS_OPS:
         required += ["P-OUTPUT-ARTIFACT", "P-DESTINATION-COMPATIBLE"]
     return list(dict.fromkeys(required))

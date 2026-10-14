@@ -1,0 +1,116 @@
+{
+  "kind": "model_registration",
+  "schema_version": "1.0.0",
+  "model_id": "byom_lookalike_remote",
+  "model_version": "1.0.0",
+  "tenant_id": "tenant_demo",
+  "owner": {
+    "actor_id": "partner_modeling_demo",
+    "actor_type": "service",
+    "role": "model_provider"
+  },
+  "task_family": "seed_affinity",
+  "score_type": "seed_affinity",
+  "scale": "unit_interval",
+  "target": null,
+  "artifact": {
+    "artifact_sha256": null,
+    "served_version": "lookalike-2026.10.1"
+  },
+  "preprocessing": {
+    "definition_ref": {
+      "id": "prep_partner_lookalike",
+      "version": "1.0.0"
+    },
+    "sha256": "sha256:c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3"
+  },
+  "input_features": [
+    {
+      "feature_id": "sessions_28d",
+      "feature_version": "1.0.0",
+      "unit": {
+        "type_id": "browser_cookie",
+        "type_version": "1.0.0",
+        "namespace": "web_demo_cookie"
+      },
+      "value_type": "numeric",
+      "required": true,
+      "preprocessing": "Standardized on the training partition",
+      "categorical_vocabulary_ref": null,
+      "missing_value_behavior": "abstain"
+    },
+    {
+      "feature_id": "content_topics_28d",
+      "feature_version": "1.0.0",
+      "unit": {
+        "type_id": "browser_cookie",
+        "type_version": "1.0.0",
+        "namespace": "web_demo_cookie"
+      },
+      "value_type": "categorical",
+      "required": true,
+      "preprocessing": "Vocabulary fixed at training time",
+      "categorical_vocabulary_ref": {
+        "id": "vocab_content_topics_28d",
+        "version": "1.0.0"
+      },
+      "missing_value_behavior": "abstain"
+    }
+  ],
+  "coverage_rule": {
+    "abstain_when": "below_min_feature_count",
+    "min_feature_count": 2
+  },
+  "modeling_unit": {
+    "type_id": "browser_cookie",
+    "type_version": "1.0.0",
+    "namespace": "web_demo_cookie"
+  },
+  "output_unit": {
+    "type_id": "browser_cookie",
+    "type_version": "1.0.0",
+    "namespace": "web_demo_cookie"
+  },
+  "validation_evidence": [],
+  "valid_from": "2026-10-01T00:00:00Z",
+  "valid_until": "2026-12-01T00:00:00Z",
+  "rights": {
+    "source_rights_refs": [
+      {
+        "id": "rights_demo_2026",
+        "version": "1.0.0"
+      }
+    ],
+    "cross_client_reuse_permitted": false,
+    "reuse_rights_ref": null
+  },
+  "execution": {
+    "mode": "remote_endpoint",
+    "permitted_location_ids": [
+      "loc_workspace_demo"
+    ],
+    "endpoint": {
+      "endpoint_id": "endpoint_partner_lookalike",
+      "identity_ref": "mtls_partner_lookalike_2026",
+      "payload_artifact_type": "feature_snapshot",
+      "recipients": [
+        "partner_modeling_demo"
+      ],
+      "provider_retention_days": 0,
+      "provider_reuse_permitted": false,
+      "resource_limits_ref": "limits_partner_lookalike",
+      "revocation_authority": {
+        "actor_id": "user_policy_01",
+        "actor_type": "human",
+        "role": "policy_owner"
+      }
+    }
+  },
+  "registration_state": "registered",
+  "registered_by": {
+    "actor_id": "user_scientist_01",
+    "actor_type": "human",
+    "role": "scientist"
+  },
+  "registered_at": "2026-10-01T00:00:00Z"
+}

@@ -21,6 +21,9 @@ ID_FIELDS: dict[str, tuple[str, str]] = {
     "type_registry_entry": ("type_id", "type_version"),
     "feature_plan": ("feature_plan_id", "feature_plan_version"),
     "evidence_card": ("card_id", "card_version"),
+    "unit_mapping": ("mapping_id", "mapping_version"),
+    "model_registration": ("model_id", "model_version"),
+    "relationship_snapshot": ("snapshot_id", "snapshot_version"),
 }
 
 

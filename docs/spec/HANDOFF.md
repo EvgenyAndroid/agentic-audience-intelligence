@@ -10,7 +10,7 @@ Session 2 applied the review corrections to the Session 1 documents and produced
 | --- | --- | --- |
 | `docs/spec/Claude_Audience_Platform_Mega_Prompt_v3.md` | v3.1: full Session 2 contract list; Session 3 extends this repository | Revised |
 | `docs/spec/BRD.md` | Business requirements | Unchanged from Session 1 |
-| `docs/spec/PRD.md` | Revision 2: complete traceability, FR30 retired into NFR08, FR37 to FR42 added | Revised |
+| `docs/spec/PRD.md` | Revision 3: complete traceability, FR30 retired into NFR08, FR37 to FR46 added | Revised |
 | `docs/spec/DATA_CONTRACTS.md` | Dialect, conventions, catalog, units, policies, routing, AdCP mapping, VAC/GTS reuse, versioning | Session 2 |
 | `docs/spec/AGENT_DESIGN.md` | Roles, authority, context limits, gateway, state machines, failure handling, benchmark design | Session 2 |
 | `docs/adr/` | Four architecture decision records | Session 2 |
@@ -37,6 +37,10 @@ All Session 1 binding decisions remain in force. Session 2 adds:
 | Exchange | AdCP 3.1.20 at `d033baef`. Use `signal_ref` with scope `signal_source`. Emit `modeling` only when seed source, jurisdictions and AI Act class are declared. `data_sources` are declared per profile. Aggregates, associations and experimental effects are not exchanged as audience signals |
 | Representation | VAC field names reused. `pseudo-v1` vectors are nonsemantic and serve exchange conformance only. Direct comparison needs full descriptor equality; a projector needs held-out alignment evidence |
 | Platform defaults | None for decision validity, thresholds, coverage, prototype counts, budgets, model identifiers or AdCP configuration |
+| Unit mappings | A mapping definition never establishes links; a bound relationship snapshot does. An activation-only mapping cannot build features (FR43) |
+| Model registration | Registration establishes identity and declared requirements, not validation. Endpoint models run only as `remote_inference`, with payload transfer checked as egress (FR44, FR45) |
+| Recommendations | Deterministic; four sections; no claim-strength ladder; unknown cost is unknown; the requested task is never replaced (FR46) |
+| Task-level policies | Tighten only. They can prohibit or restrict, never grant or add a requirement |
 | Tooling | Python 3.11+, `pathlib`, PowerShell scripts, Windows CI, vendored files excluded from line-ending conversion (ADR 0004) |
 
 ## Verification boundary
@@ -60,7 +64,7 @@ Not run:
 
 ## Inputs for Session 3
 
-Work inside this repository. Attach or read the v3.1 prompt, BRD, PRD Revision 2, DATA_CONTRACTS.md, AGENT_DESIGN.md and this handoff.
+Work inside this repository. Attach or read the v3.1 prompt, BRD, PRD Revision 3, DATA_CONTRACTS.md, AGENT_DESIGN.md and this handoff.
 
 1. Run `.\scripts\check-all.ps1` on Windows. Record passed, failed and not-run results under `reports/`, and fix platform issues.
 2. Produce MODELING_AND_EVALUATION.md, MVP_BACKLOG.md and PILOT_PROOF_PLAN.md with requirement traceability.
@@ -71,9 +75,12 @@ Work inside this repository. Attach or read the v3.1 prompt, BRD, PRD Revision 2
 
 ## Open items found in Session 2
 
-- No unit-mapping contract exists, so `task.units.mapping_refs` cannot be verified. A unit mismatch is BLOCKED `grain_incompatible` when the type registry declares no relationship between the types, and PROVISIONAL `missing_unit_mapping` otherwise, whether or not a mapping ref is cited. Session 2 must define the mapping definition and the bound relationship snapshot (effective and availability times, corrections, revocation, cardinality, ambiguity and unmatched handling, approvals) before mapped-grain tasks can be ELIGIBLE.
+- RESOLVED (FR43): unit mappings and relationship snapshots are defined; see DATA_CONTRACTS section 7. Original note: no unit-mapping contract existed, so `task.units.mapping_refs` could not be verified. A unit mismatch is BLOCKED `grain_incompatible` when the type registry declares no relationship between the types, and PROVISIONAL `missing_unit_mapping` otherwise, whether or not a mapping ref is cited. Session 2 must define the mapping definition and the bound relationship snapshot (effective and availability times, corrections, revocation, cardinality, ambiguity and unmatched handling, approvals) before mapped-grain tasks can be ELIGIBLE.
 - Platform-wide policies: until an explicit platform scope exists, represent them as tenant-bound policy instances that reference the authoritative platform template and version. `tenant_id` stays required; mandatory platform exclusions cannot be relaxed by tenant policy.
-- Task-level output policy refs can tighten aggregation rules but never supply a contributing source's missing rules. The same separation is not yet applied to execution and output permission checks, where a task-level policy silent on the operation still yields `missing_execution_policy` or `missing_output_policy`.
+- RESOLVED: task-level policies only tighten execution, output and aggregation checks (DATA_CONTRACTS section 6, rule 9).
+- Relationship availability is checked against decision time; availability at each prediction cutoff stays a `P-FEATURE-TIMING` fact until the feature service computes it.
+- The recommender orders by known cost only when `usage_cost_record` data is supplied per candidate; no cost data means ties, by design.
+- `remote_inference` is defined and routed, but no endpoint client exists. Recipient terms are a reviewer fact, not an enforced contract.
 - The evidence format for platform-enforced execution and output policies in real clean rooms.
 - AdCP `data_sources`, signal type, training jurisdictions and AI Act class for each actual source profile.
 - Whether cross-party exchange needs signed canonical hashes (RFC 8785 JCS) rather than the platform's sorted-key hashing.
@@ -91,4 +98,4 @@ Work inside this repository. Attach or read the v3.1 prompt, BRD, PRD Revision 2
 
 ## Next session command
 
-Run Session 3 only in Claude Code, inside this repository. Use the v3.1 brief, BRD, PRD Revision 2, DATA_CONTRACTS.md, AGENT_DESIGN.md and this handoff. First run `.\scripts\check-all.ps1` and record the results. Then produce MODELING_AND_EVALUATION.md, MVP_BACKLOG.md and PILOT_PROOF_PLAN.md, build the locked routing suite and analyst comparator, update HANDOFF.md, and stop before production deployment.
+Run Session 3 only in Claude Code, inside this repository. Use the v3.1 brief, BRD, PRD Revision 3, DATA_CONTRACTS.md, AGENT_DESIGN.md and this handoff. First run `.\scripts\check-all.ps1` and record the results. Then produce MODELING_AND_EVALUATION.md, MVP_BACKLOG.md and PILOT_PROOF_PLAN.md, build the locked routing suite and analyst comparator, update HANDOFF.md, and stop before production deployment.

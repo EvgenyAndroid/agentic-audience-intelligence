@@ -964,6 +964,379 @@
       "expect": {
         "layer": "strict_json"
       }
+    },
+    {
+      "id": "inv-055",
+      "description": "Probabilistic mapping requires a confidence definition",
+      "base": "examples/valid/unit_mapping/map_cookie_household_features.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/confidence",
+          "value": null
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/confidence"
+      }
+    },
+    {
+      "id": "inv-056",
+      "description": "Approved mapping requires an approval record",
+      "base": "examples/valid/unit_mapping/map_cookie_household_features.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/approval",
+          "value": null
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/approval"
+      }
+    },
+    {
+      "id": "inv-057",
+      "description": "Aggregation use requires an aggregation rule",
+      "base": "examples/valid/unit_mapping/map_cookie_household_features.json",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/permitted_uses/-",
+          "value": "aggregation"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/aggregation_rule"
+      }
+    },
+    {
+      "id": "inv-058",
+      "description": "Mapping needs at least one permitted use",
+      "base": "examples/valid/unit_mapping/map_cookie_household_features.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/permitted_uses",
+          "value": []
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "minItems",
+        "path": "/permitted_uses"
+      }
+    },
+    {
+      "id": "inv-059",
+      "description": "Mapping effective period must be ordered",
+      "base": "examples/valid/unit_mapping/map_cookie_household_features.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/effective_until",
+          "value": "2026-09-01T00:00:00Z"
+        }
+      ],
+      "expect": {
+        "layer": "semantic",
+        "keyword": "semantic",
+        "path": "/effective_until"
+      }
+    },
+    {
+      "id": "inv-060",
+      "description": "Relationship snapshot cannot be produced by an agent",
+      "base": "examples/valid/relationship_snapshot/relsnap_cookie_household_2026_10.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/produced_by/actor_type",
+          "value": "agent"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "enum",
+        "path": "/produced_by/actor_type"
+      }
+    },
+    {
+      "id": "inv-061",
+      "description": "Relationship snapshot cannot become available before its as-of time",
+      "base": "examples/valid/relationship_snapshot/relsnap_cookie_household_2026_10.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/available_at",
+          "value": "2026-09-01T00:00:00Z"
+        }
+      ],
+      "expect": {
+        "layer": "semantic",
+        "keyword": "semantic",
+        "path": "/available_at"
+      }
+    },
+    {
+      "id": "inv-062",
+      "description": "Relationship snapshot requires a content hash",
+      "base": "examples/valid/relationship_snapshot/relsnap_cookie_household_2026_10.json",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/snapshot/sha256"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "required",
+        "path": "/snapshot"
+      }
+    },
+    {
+      "id": "inv-063",
+      "description": "Probability model requires an outcome target",
+      "base": "examples/valid/model_registration/model_propensity_logreg_v1.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/target",
+          "value": null
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/target"
+      }
+    },
+    {
+      "id": "inv-064",
+      "description": "Affinity model cannot declare a probability scale",
+      "base": "examples/valid/model_registration/model_byom_lookalike_remote.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/scale",
+          "value": "probability"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "not",
+        "path": "/scale"
+      }
+    },
+    {
+      "id": "inv-065",
+      "description": "Endpoint model requires an endpoint",
+      "base": "examples/valid/model_registration/model_byom_lookalike_remote.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/execution/endpoint",
+          "value": null
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/execution/endpoint"
+      }
+    },
+    {
+      "id": "inv-066",
+      "description": "In-boundary model cannot declare an endpoint",
+      "base": "examples/valid/model_registration/model_propensity_logreg_v1.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/execution/endpoint",
+          "value": {
+            "endpoint_id": "endpoint_partner_lookalike",
+            "identity_ref": "mtls_partner_lookalike_2026",
+            "payload_artifact_type": "feature_snapshot",
+            "recipients": [
+              "partner_modeling_demo"
+            ],
+            "provider_retention_days": 0,
+            "provider_reuse_permitted": false,
+            "resource_limits_ref": "limits_partner_lookalike",
+            "revocation_authority": {
+              "actor_id": "user_policy_01",
+              "actor_type": "human",
+              "role": "policy_owner"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/execution/endpoint"
+      }
+    },
+    {
+      "id": "inv-067",
+      "description": "Model artifact needs a checksum or a served version",
+      "base": "examples/valid/model_registration/model_byom_lookalike_remote.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/artifact/served_version",
+          "value": null
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "anyOf",
+        "path": "/artifact"
+      }
+    },
+    {
+      "id": "inv-068",
+      "description": "Validation evidence must be bound to the registered model",
+      "base": "examples/valid/model_registration/model_propensity_logreg_v1.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/validation_evidence/0/bound_model_sha256",
+          "value": "sha256:d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4"
+        }
+      ],
+      "expect": {
+        "layer": "semantic",
+        "keyword": "semantic",
+        "path": "/validation_evidence/0"
+      }
+    },
+    {
+      "id": "inv-069",
+      "description": "Validation evidence must be bound to the registered preprocessing",
+      "base": "examples/valid/model_registration/model_propensity_logreg_v1.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/validation_evidence/0/bound_preprocessing_sha256",
+          "value": "sha256:d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4"
+        }
+      ],
+      "expect": {
+        "layer": "semantic",
+        "keyword": "semantic",
+        "path": "/validation_evidence/0/bound_preprocessing_sha256"
+      }
+    },
+    {
+      "id": "inv-070",
+      "description": "Minimum-feature coverage rule needs a count",
+      "base": "examples/valid/model_registration/model_byom_lookalike_remote.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/coverage_rule/min_feature_count",
+          "value": null
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/coverage_rule/min_feature_count"
+      }
+    },
+    {
+      "id": "inv-071",
+      "description": "Recommendations are issued only by the deterministic ranker",
+      "base": "examples/valid/recommendation/rec_seed_affinity_web_0001.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/generated_by/authority",
+          "value": "agent"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "const",
+        "path": "/generated_by/authority"
+      }
+    },
+    {
+      "id": "inv-072",
+      "description": "Known cost needs an amount and currency",
+      "base": "examples/valid/recommendation/rec_seed_affinity_web_0001.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/recommended_options/0/cost",
+          "value": {
+            "status": "known"
+          }
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "oneOf",
+        "path": "/recommended_options/0/cost"
+      }
+    },
+    {
+      "id": "inv-073",
+      "description": "Positions start at one",
+      "base": "examples/valid/recommendation/rec_seed_affinity_web_0001.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/recommended_options/0/position",
+          "value": 0
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "minimum",
+        "path": "/recommended_options/0/position"
+      }
+    },
+    {
+      "id": "inv-074",
+      "description": "Ranking status uses the defined vocabulary",
+      "base": "examples/valid/recommendation/rec_seed_affinity_web_0001.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/ranking_status",
+          "value": "best"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "enum",
+        "path": "/ranking_status"
+      }
+    },
+    {
+      "id": "inv-075",
+      "description": "A recommendation cites at least one decision",
+      "base": "examples/valid/recommendation/rec_seed_affinity_web_0001.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/decision_refs",
+          "value": []
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "minItems",
+        "path": "/decision_refs"
+      }
     }
   ]
 }
