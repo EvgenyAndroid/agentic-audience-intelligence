@@ -71,6 +71,7 @@ Work inside this repository. Attach or read the v3.1 prompt, BRD, PRD Revision 2
 
 ## Open items found in Session 2
 
+- No unit-mapping contract exists. `task.units.mapping_refs` cannot be resolved or verified, so the router returns PROVISIONAL `missing_unit_mapping` for any unit mismatch that cites a mapping. Define the contract (source and target unit types, approval, validity, permitted uses) before mapped-grain tasks can be ELIGIBLE.
 - The evidence format for platform-enforced execution and output policies in real clean rooms.
 - AdCP `data_sources`, signal type, training jurisdictions and AI Act class for each actual source profile.
 - Whether cross-party exchange needs signed canonical hashes (RFC 8785 JCS) rather than the platform's sorted-key hashing.

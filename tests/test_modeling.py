@@ -64,3 +64,15 @@ def test_psi_detects_shift():
     base = RNG.normal(size=5000)
     assert population_stability_index(base, RNG.normal(size=5000), 10) < 0.05
     assert population_stability_index(base, RNG.normal(1.0, size=5000), 10) > 0.25
+
+
+def test_multi_prototype_reasons_agree_with_scores():
+    # Candidate 1 is observed only on dimension 0: it has zero norm against the [0, 1] prototype but scores
+    # against the [1, 0] one. Its reason must follow the score whichever prototype the RNG orders first.
+    seed = np.array([[1.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.0, 1.0]])
+    pool = np.array([[0.0, 0.0], [1.0, np.nan]])
+    for rng_seed in range(8):
+        result = multi_prototype_affinity(seed, pool, k=2, min_coverage=0.5, rng_seed=rng_seed)
+        for score, reason in zip(result.scores, result.abstain_reasons, strict=True):
+            assert np.isnan(score) == (reason is not None), rng_seed
+        assert result.abstain_reasons == ["zero_vector", None]

@@ -84,4 +84,6 @@ def multi_prototype_affinity(
     all_nan = np.all(np.isnan(stacked), axis=0)
     best = np.full(stacked.shape[1], np.nan)
     best[~all_nan] = np.nanmax(stacked[:, ~all_nan], axis=0)
-    return AffinityResult(best, results[0].abstain_reasons)
+    # A candidate abstains only when no prototype scored it; report the first prototype's reason in that case.
+    reasons = [None if scored else results[0].abstain_reasons[i] for i, scored in enumerate(~all_nan)]
+    return AffinityResult(best, reasons)

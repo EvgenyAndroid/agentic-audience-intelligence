@@ -2,8 +2,9 @@ import copy
 from datetime import timedelta
 
 import pytest
-from conftest import NOW, example
+from conftest import NOW, example, registry_doc
 
+from aip.registry import DocumentIndex
 from aip.routing import decide, is_decision_current, required_prerequisites
 
 GOLDEN = {
@@ -136,3 +137,87 @@ def test_task_observation_unit_must_match_source_contract(world, types, reasons,
     task["units"]["modeling_unit"] = task["units"]["output_unit"] = hh
     d = decide(task, documents=world, bundle=None, types=types, reasons=reasons, config=config, now=NOW)
     assert d["verdict"] == "BLOCKED" and "grain_incompatible" in codes(d)
+
+
+def _prerequisite(decision, pid):
+    return next(p for p in decision["prerequisites"] if p["prerequisite_id"] == pid)
+
+
+def _index_with(world, *extra):
+    kinds = ("execution_policy", "output_policy", "source_profile", "dataset_manifest", "objective")
+    return DocumentIndex([d for k in kinds for d in world.all(k)] + list(extra))
+
+
+def _rebound_bundle(task, bundle_id):
+    bundle = copy.deepcopy(example(f"evidence_bundle/bundle_{bundle_id}"))
+    bundle["task_ref"] = {"id": task["task_id"], "version": task["task_version"]}
+    return bundle
+
+
+def test_policy_from_another_tenant_violates_tenant_scope(world, types, reasons, config):
+    foreign = copy.deepcopy(registry_doc("policies/exec_cleanroom_demo"))
+    foreign.update(policy_id="exec_other_tenant", tenant_id="tenant_other")
+    task = copy.deepcopy(example("task/task_cr_export_aggregate"))
+    task["policy_refs"]["execution"] = [{"id": "exec_other_tenant", "version": foreign["policy_version"]}]
+    d = decide(
+        task,
+        documents=_index_with(world, foreign),
+        bundle=_rebound_bundle(task, "task_cr_export_aggregate"),
+        types=types,
+        reasons=reasons,
+        config=config,
+        now=NOW,
+    )
+    assert d["verdict"] == "BLOCKED" and "tenant_scope_mismatch" in codes(d)
+
+
+def test_unverifiable_unit_mapping_does_not_satisfy_grain(world, types, reasons, config):
+    task = copy.deepcopy(example("task/task_seed_affinity_score"))
+    task["units"]["output_unit"] = {"type_id": "postal_code", "type_version": "1.0.0", "namespace": "zip_us"}
+    task["units"]["mapping_refs"] = [{"id": "no_such_mapping", "version": "9.9.9"}]
+    d = decide(
+        task,
+        documents=world,
+        bundle=_rebound_bundle(task, "task_seed_affinity_score"),
+        types=types,
+        reasons=reasons,
+        config=config,
+        now=NOW,
+    )
+    assert _prerequisite(d, "P-GRAIN-COMPATIBLE")["outcome"] == "missing"
+    assert d["verdict"] == "PROVISIONAL" and "missing_unit_mapping" in codes(d)
+
+
+def test_aggregation_rules_apply_only_at_their_location(world, types, reasons, config):
+    task = copy.deepcopy(example("task/task_cr_export_aggregate"))
+    task["operation"] = "aggregate"
+    task["execution_location_ref"] = "loc_somewhere_else"
+    d = decide(
+        task,
+        documents=world,
+        bundle=_rebound_bundle(task, "task_cr_export_aggregate"),
+        types=types,
+        reasons=reasons,
+        config=config,
+        now=NOW,
+    )
+    assert _prerequisite(d, "P-AGGREGATION-RULES")["outcome"] == "missing"
+
+
+def test_every_source_must_supply_aggregation_rules(world, types, reasons, config):
+    silent = copy.deepcopy(registry_doc("policies/output_cleanroom_aggregate_only"))
+    silent.update(policy_id="output_task_silent", aggregation_rules=[])
+    task = copy.deepcopy(example("task/task_cr_export_aggregate"))
+    task["operation"] = "aggregate"
+    task["policy_refs"]["output"] = [{"id": "output_task_silent", "version": silent["policy_version"]}]
+    d = decide(
+        task,
+        documents=_index_with(world, silent),
+        bundle=_rebound_bundle(task, "task_cr_export_aggregate"),
+        types=types,
+        reasons=reasons,
+        config=config,
+        now=NOW,
+    )
+    assert _prerequisite(d, "P-AGGREGATION-RULES")["outcome"] == "missing"
+    assert d["verdict"] == "PROVISIONAL" and "aggregation_rules_unknown" in codes(d)

@@ -37,7 +37,7 @@ class RoutingContext:
                 out[f"{ref['id']}@{ref['version']}"] = self.documents.get("source_profile", ref)
         return out
 
-    def _policies(self, kind: str, profile_field: str, task_field: str) -> dict[str, list[dict[str, Any]]]:
+    def _policy_docs(self, kind: str, profile_field: str, task_field: str) -> dict[str, list[dict[str, Any]]]:
         by_source: dict[str, list[dict[str, Any]]] = {}
         for key, profile in self.profiles().items():
             refs = profile[profile_field] if profile else []
@@ -45,6 +45,10 @@ class RoutingContext:
         task_refs = self.task["policy_refs"][task_field]
         if task_refs:
             by_source["task"] = [p for p in (self.documents.get(kind, r) for r in task_refs) if p is not None]
+        return by_source
+
+    def _policies(self, kind: str, profile_field: str, task_field: str) -> dict[str, list[dict[str, Any]]]:
+        by_source = self._policy_docs(kind, profile_field, task_field)
         for policies in by_source.values():
             for p in policies:
                 self.policies_used[(p["policy_id"], p["policy_version"])] = p
@@ -82,6 +86,11 @@ class RoutingContext:
     def _tenant_scope(self) -> Outcome:
         tenant = self.task["tenant_id"]
         docs = [d for d in self.datasets() if d] + [p for p in self.profiles().values() if p] + [self.objective() or {}]
+        for kind, profile_field, task_field in (
+            ("execution_policy", "execution_policy_refs", "execution"),
+            ("output_policy", "output_policy_refs", "output"),
+        ):
+            docs += [p for ps in self._policy_docs(kind, profile_field, task_field).values() for p in ps]
         foreign = [d for d in docs if d and d.get("tenant_id") not in (None, tenant)]
         if foreign:
             return Outcome("P-TENANT-SCOPE", "violated", "tenant_scope_mismatch")
@@ -141,7 +150,16 @@ class RoutingContext:
             mismatched.append(output["type_id"])
         if mismatched and not mapped:
             return Outcome("P-GRAIN-COMPATIBLE", "violated", "grain_incompatible", tuple(mismatched))
-        return Outcome("P-GRAIN-COMPATIBLE", "satisfied", None, tuple(r["id"] for r in units["mapping_refs"]))
+        if mismatched:
+            # No unit-mapping contract exists yet, so a supplied mapping cannot be verified as approved (FR03, FR06).
+            return Outcome(
+                "P-GRAIN-COMPATIBLE",
+                "missing",
+                "missing_unit_mapping",
+                tuple(r["id"] for r in units["mapping_refs"]),
+                detail="unit mapping cannot be verified",
+            )
+        return Outcome("P-GRAIN-COMPATIBLE", "satisfied")
 
     def _exec_operation(self) -> Outcome:
         policies = self._policies("execution_policy", "execution_policy_refs", "execution")
@@ -160,10 +178,20 @@ class RoutingContext:
         )
 
     def _aggregation_rules(self) -> Outcome:
-        policies = [p for ps in self._policies("output_policy", "output_policy_refs", "output").values() for p in ps]
-        rules = compose_aggregation_rules(policies, self.task["requested_artifact"] or "aggregate_report", self.now)
-        if not rules:
-            return Outcome("P-AGGREGATION-RULES", "missing", "aggregation_rules_unknown")
+        by_source = self._policies("output_policy", "output_policy_refs", "output")
+        artifact = self.task["requested_artifact"] or "aggregate_report"
+        location = self.task["execution_location_ref"]
+        silent = [
+            source
+            for source, ps in by_source.items()
+            if not compose_aggregation_rules(ps, artifact, self.now, location_id=location)
+        ]
+        if not by_source or silent:
+            return Outcome(
+                "P-AGGREGATION-RULES", "missing", "aggregation_rules_unknown", tuple(silent), detail=", ".join(silent)
+            )
+        policies = [p for ps in by_source.values() for p in ps]
+        rules = compose_aggregation_rules(policies, artifact, self.now, location_id=location)
         return Outcome("P-AGGREGATION-RULES", "satisfied", None, tuple(r for rule in rules for r in rule.rule_ids))
 
     def _objective_field(self, pid: str, field_name: str) -> Outcome:
