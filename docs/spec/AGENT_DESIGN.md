@@ -151,9 +151,9 @@ The harness reports:
 
 Evaluated agents must run in a fresh, isolated workspace with allowlisted tools and only `cases/` and `world/` mounted. Oracles, generators and locked-suite metadata must be inaccessible. A local Windows run cannot enforce that isolation, so isolation remains not verified until a sandbox enforces it and records the boundary.
 
-The development suite (`fixtures/routing/development`) has 11 cases: 5 BLOCKED, 3 ELIGIBLE and 3 PROVISIONAL. They cover forbidden row egress, a qualifying aggregate, a failed aggregate threshold, a missing policy, missing labels, availability leakage and its repaired counterpart, mixed grains, a provider-artifact promotion failure, quarantine profiling, and an unconfirmed source.
+The development suite (`fixtures/routing/development`) has 12 cases: 5 BLOCKED, 3 ELIGIBLE and 4 PROVISIONAL. They cover forbidden row egress, a qualifying aggregate, a failed aggregate threshold, a missing policy, missing labels, availability leakage and its repaired counterpart, mixed grains with a permitted but unsupplied mapping (PROVISIONAL) and with no permitted relationship (BLOCKED), a provider-artifact promotion failure, quarantine profiling, and an unconfirmed source.
 
-The deterministic rules router scores 11 of 11. That result is by construction, because the cases were authored alongside the router; it shows harness wiring, not routing competence. Reject-all and approve-all baselines fail on false blocks and critical false-safe cases (`tests/test_agents_and_benchmark.py`).
+The deterministic rules router scores 12 of 12. That result is by construction, because the cases were authored alongside the router; it shows harness wiring, not routing competence. Reject-all and approve-all baselines fail on false blocks and critical false-safe cases (`tests/test_agents_and_benchmark.py`).
 
 Session 3 builds a locked suite with held-out defect combinations. It then compares agents against the rules router and a competent analyst with a reusable notebook, using the same visible evidence, and measures correctness before time savings.
 

@@ -14,6 +14,15 @@ from aip.registry.documents import DocumentIndex
 from aip.registry.types import TypeRegistry
 from aip.routing.prerequisites import CATALOG
 
+TASK_SOURCE = "task"  # task-level policy refs; they can tighten constraints but never stand in for a source
+
+
+@dataclass
+class PolicyLookup:
+    by_source: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+    unresolved: dict[str, list[str]] = field(default_factory=dict)
+    foreign: list[str] = field(default_factory=list)
+
 
 @dataclass
 class RoutingContext:
@@ -37,18 +46,39 @@ class RoutingContext:
                 out[f"{ref['id']}@{ref['version']}"] = self.documents.get("source_profile", ref)
         return out
 
-    def _policies(self, kind: str, profile_field: str, task_field: str) -> dict[str, list[dict[str, Any]]]:
-        by_source: dict[str, list[dict[str, Any]]] = {}
-        for key, profile in self.profiles().items():
-            refs = profile[profile_field] if profile else []
-            by_source[key] = [p for p in (self.documents.get(kind, r) for r in refs) if p is not None]
+    def _policy_lookup(self, kind: str, profile_field: str, task_field: str) -> PolicyLookup:
+        """Resolve policy refs per source. Unresolved and foreign-tenant refs are kept, never silently dropped."""
+        lookup = PolicyLookup()
+        sources = [(key, profile[profile_field] if profile else []) for key, profile in self.profiles().items()]
         task_refs = self.task["policy_refs"][task_field]
         if task_refs:
-            by_source["task"] = [p for p in (self.documents.get(kind, r) for r in task_refs) if p is not None]
-        for policies in by_source.values():
+            sources.append((TASK_SOURCE, task_refs))
+        for source, refs in sources:
+            lookup.by_source[source] = []
+            for ref in refs:
+                label = f"{kind}:{ref['id']}@{ref['version']}"
+                policy = self.documents.get(kind, ref)
+                if policy is None:
+                    lookup.unresolved.setdefault(source, []).append(label)
+                elif policy["tenant_id"] != self.task["tenant_id"]:
+                    lookup.foreign.append(label)  # reference only; the foreign policy's content is never used
+                else:
+                    lookup.by_source[source].append(policy)
+        return lookup
+
+    def _policies(self, kind: str, profile_field: str, task_field: str) -> PolicyLookup:
+        lookup = self._policy_lookup(kind, profile_field, task_field)
+        for policies in lookup.by_source.values():
             for p in policies:
                 self.policies_used[(p["policy_id"], p["policy_version"])] = p
-        return by_source
+        return lookup
+
+    @staticmethod
+    def _unresolved(pid: str, lookup: PolicyLookup) -> list[Outcome]:
+        return [
+            Outcome(pid, "missing", "missing_document", tuple(labels), detail=f"unresolved policy refs in {source}")
+            for source, labels in lookup.unresolved.items()
+        ]
 
     def objective(self) -> dict[str, Any] | None:
         return self.documents.get("objective", self.task["objective_ref"])
@@ -83,9 +113,19 @@ class RoutingContext:
         tenant = self.task["tenant_id"]
         docs = [d for d in self.datasets() if d] + [p for p in self.profiles().values() if p] + [self.objective() or {}]
         foreign = [d for d in docs if d and d.get("tenant_id") not in (None, tenant)]
-        if foreign:
-            return Outcome("P-TENANT-SCOPE", "violated", "tenant_scope_mismatch")
-        return Outcome("P-TENANT-SCOPE", "satisfied")
+        checked, foreign_refs = [], []
+        for kind, profile_field, task_field in (
+            ("execution_policy", "execution_policy_refs", "execution"),
+            ("output_policy", "output_policy_refs", "output"),
+        ):
+            lookup = self._policy_lookup(kind, profile_field, task_field)
+            checked += [
+                f"{kind}:{p['policy_id']}@{p['policy_version']}" for ps in lookup.by_source.values() for p in ps
+            ]
+            foreign_refs += lookup.foreign
+        if foreign or foreign_refs:
+            return Outcome("P-TENANT-SCOPE", "violated", "tenant_scope_mismatch", tuple(sorted(set(foreign_refs))))
+        return Outcome("P-TENANT-SCOPE", "satisfied", None, tuple(sorted(set(checked))))
 
     def _snapshot_immutable(self) -> Outcome:
         results = []
@@ -133,38 +173,73 @@ class RoutingContext:
 
     def _grain_compatible(self) -> Outcome:
         units = self.task["units"]
-        modeling, output, mapped = units["modeling_unit"], units["output_unit"], bool(units["mapping_refs"])
+        modeling, output = units["modeling_unit"], units["output_unit"]
         if modeling is None:
             return Outcome("P-GRAIN-COMPATIBLE", "satisfied", detail="no modeling unit")
-        mismatched = [o["unit"]["type_id"] for o in units["observation_units"] if o["unit"] != modeling]
+        mismatched = [o["unit"] for o in units["observation_units"] if o["unit"] != modeling]
         if output is not None and output != modeling:
-            mismatched.append(output["type_id"])
-        if mismatched and not mapped:
-            return Outcome("P-GRAIN-COMPATIBLE", "violated", "grain_incompatible", tuple(mismatched))
-        return Outcome("P-GRAIN-COMPATIBLE", "satisfied", None, tuple(r["id"] for r in units["mapping_refs"]))
+            mismatched.append(output)
+        if not mismatched:
+            return Outcome("P-GRAIN-COMPATIBLE", "satisfied")
+        unrelatable = [u["type_id"] for u in mismatched if not self.types.relationship_allowed(u, modeling)]
+        if unrelatable:
+            # The registry declares no relationship between these types: no mapping can make them comparable (FR03).
+            return Outcome("P-GRAIN-COMPATIBLE", "violated", "grain_incompatible", tuple(unrelatable))
+        # A relationship is permitted, but no unit-mapping contract exists yet, so no supplied or absent mapping
+        # can establish compatibility. Missing evidence, not a violation (FR03, FR06).
+        return Outcome(
+            "P-GRAIN-COMPATIBLE",
+            "missing",
+            "missing_unit_mapping",
+            tuple(r["id"] for r in units["mapping_refs"]) or tuple(u["type_id"] for u in mismatched),
+            detail="approved unit mapping not established",
+        )
 
     def _exec_operation(self) -> Outcome:
-        policies = self._policies("execution_policy", "execution_policy_refs", "execution")
-        return operation_permission(policies, self.task["execution_location_ref"], self.task["operation"], self.now)
+        lookup = self._policies("execution_policy", "execution_policy_refs", "execution")
+        outcome = operation_permission(
+            lookup.by_source, self.task["execution_location_ref"], self.task["operation"], self.now
+        )
+        return combine("P-EXEC-OPERATION", [*self._unresolved("P-EXEC-OPERATION", lookup), outcome])
 
     def _output_artifact(self) -> Outcome:
-        policies = self._policies("output_policy", "output_policy_refs", "output")
+        lookup = self._policies("output_policy", "output_policy_refs", "output")
         output = self.task["units"]["output_unit"]
-        return artifact_permission(
-            policies,
+        outcome = artifact_permission(
+            lookup.by_source,
             self.task["execution_location_ref"],
             self.task["requested_artifact"],
             output["type_id"] if output else None,
             self.task["destination_ref"],
             self.now,
         )
+        return combine("P-OUTPUT-ARTIFACT", [*self._unresolved("P-OUTPUT-ARTIFACT", lookup), outcome])
 
     def _aggregation_rules(self) -> Outcome:
-        policies = [p for ps in self._policies("output_policy", "output_policy_refs", "output").values() for p in ps]
-        rules = compose_aggregation_rules(policies, self.task["requested_artifact"] or "aggregate_report", self.now)
-        if not rules:
-            return Outcome("P-AGGREGATION-RULES", "missing", "aggregation_rules_unknown")
-        return Outcome("P-AGGREGATION-RULES", "satisfied", None, tuple(r for rule in rules for r in rule.rule_ids))
+        pid = "P-AGGREGATION-RULES"
+        lookup = self._policies("output_policy", "output_policy_refs", "output")
+        artifact = self.task["requested_artifact"] or "aggregate_report"
+        location = self.task["execution_location_ref"]
+        # Every contributing source must supply applicable rules; task-level policies can only tighten them (FR29).
+        sources = {k: ps for k, ps in lookup.by_source.items() if k != TASK_SOURCE}
+        silent = [
+            k
+            for k, ps in sources.items()
+            if not compose_aggregation_rules(ps, artifact, self.now, location_id=location)
+        ]
+        unresolved = self._unresolved(pid, lookup)
+        if not sources or silent:
+            return combine(
+                pid,
+                [
+                    *unresolved,
+                    Outcome(pid, "missing", "aggregation_rules_unknown", tuple(silent), detail=", ".join(silent)),
+                ],
+            )
+        policies = [p for ps in lookup.by_source.values() for p in ps]
+        rules = compose_aggregation_rules(policies, artifact, self.now, location_id=location)
+        refs = tuple(r for rule in rules for r in rule.rule_ids)
+        return combine(pid, [*unresolved, Outcome(pid, "satisfied", None, refs)])
 
     def _objective_field(self, pid: str, field_name: str) -> Outcome:
         objective = self.objective()

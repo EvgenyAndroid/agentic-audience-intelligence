@@ -137,12 +137,17 @@ def artifact_permission(
 
 
 def compose_aggregation_rules(
-    policies: Sequence[Mapping[str, Any]], artifact_type: str, at: datetime
+    policies: Sequence[Mapping[str, Any]], artifact_type: str, at: datetime, *, location_id: str
 ) -> list[AggregateRule]:
-    """Most restrictive composition per counted unit: max threshold, block beats suppress, intersect dimensions."""
+    """Most restrictive composition per counted unit: max threshold, block beats suppress, intersect dimensions.
+
+    Only active policies that apply at location_id contribute; the location is required for authoritative use.
+    """
     merged: dict[tuple[str, str], AggregateRule] = {}
     for policy in policies:
         if not _active(policy, at):
+            continue
+        if location_id not in policy["applies_to_locations"]:
             continue
         for rule in policy["aggregation_rules"]:
             if artifact_type not in rule["applies_to"]:

@@ -1,0 +1,74 @@
+{
+  "kind": "task",
+  "schema_version": "1.0.0",
+  "task_id": "task_case_0012",
+  "task_version": "1.0.0",
+  "run_ref": "run_demo_0001",
+  "tenant_id": "tenant_demo",
+  "objective_ref": {
+    "id": "obj_seed_affinity_web",
+    "version": "1.0.0"
+  },
+  "task_family": "seed_affinity",
+  "operation": "score",
+  "input_snapshot_refs": [
+    {
+      "id": "ds_web_demo",
+      "version": "1.0.0"
+    }
+  ],
+  "units": {
+    "observation_units": [
+      {
+        "dataset_ref": {
+          "id": "ds_web_demo",
+          "version": "1.0.0"
+        },
+        "unit": {
+          "type_id": "browser_cookie",
+          "type_version": "1.0.0",
+          "namespace": "web_demo_cookie"
+        }
+      }
+    ],
+    "modeling_unit": {
+      "type_id": "postal_code",
+      "type_version": "1.0.0",
+      "namespace": "zip_us"
+    },
+    "output_unit": {
+      "type_id": "postal_code",
+      "type_version": "1.0.0",
+      "namespace": "zip_us"
+    },
+    "activation_unit": null,
+    "measurement_unit": null,
+    "mapping_refs": []
+  },
+  "requested_artifact": "score_file",
+  "execution_location_ref": "loc_workspace_demo",
+  "destination_ref": null,
+  "policy_refs": {
+    "execution": [],
+    "output": [],
+    "rights": [
+      {
+        "id": "rights_demo_2026",
+        "version": "1.0.0"
+      }
+    ]
+  },
+  "model_ref": null,
+  "budget_refs": [
+    {
+      "id": "budget_pilot_demo",
+      "version": "1.0.0"
+    }
+  ],
+  "created_by": {
+    "actor_id": "user_analyst_01",
+    "actor_type": "human",
+    "role": "analyst"
+  },
+  "created_at": "2026-10-10T00:00:00Z"
+}

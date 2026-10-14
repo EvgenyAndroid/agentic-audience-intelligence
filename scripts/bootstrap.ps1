@@ -24,7 +24,7 @@ try {
     $extras = @('dev')
     if ($WithModeling) { $extras += 'modeling' }
     if ($WithLlm) { $extras += 'llm' }
-    & $py -m pip install -e ".[$($extras -join ',')]"
+    & $py -m pip install -c (Join-Path $RepoRoot 'requirements\constraints.txt') -e ".[$($extras -join ',')]"
     Assert-LastExit 'package install'
     Write-Host "Ready. Activate with: .\.venv\Scripts\Activate.ps1"
 }

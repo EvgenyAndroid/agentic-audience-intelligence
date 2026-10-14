@@ -13,7 +13,7 @@ def heldout_seed_recall_at(scores: np.ndarray, is_heldout_seed: np.ndarray, reac
         raise ValueError("no held-out seed members among scored entities")
     k = max(1, int(np.floor(reach_fraction * len(s))))
     top = np.argsort(-s, kind="stable")[:k]
-    return float(y[top].sum() / y.sum())
+    return float(y[top].sum()) / float(y.sum())
 
 
 def precision_at_reach(y: np.ndarray, p: np.ndarray, reach_fraction: float) -> float:

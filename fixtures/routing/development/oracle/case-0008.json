@@ -2,16 +2,16 @@
   "kind": "routing_oracle",
   "schema_version": "1.0.0",
   "case_id": "case-0008",
-  "oracle_version": "1.0.0",
-  "expected_verdict": "BLOCKED",
+  "oracle_version": "1.1.0",
+  "expected_verdict": "PROVISIONAL",
   "mandatory_reason_codes": [
-    "grain_incompatible"
+    "missing_unit_mapping"
   ],
   "acceptable_next_actions": [
     "Supply an approved mapping"
   ],
   "critical": false,
-  "defect_pattern": "mixed_grains",
+  "defect_pattern": "mixed_grains_mapping_missing",
   "authored_by": {
     "actor_id": "user_steward_01",
     "actor_type": "human",

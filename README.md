@@ -11,10 +11,10 @@ This repository holds the specification and a working scaffold: normative JSON S
 | Schema meta-validation (34 files, JSON Schema 2020-12) | Passed (Linux) | `reports/session2/` |
 | Valid examples and registry documents (76) | Passed (Linux) | `reports/session2/conformance.json` |
 | Invalid cases fail for the stated layer, keyword and path (54) | Passed (Linux) | `reports/session2/conformance.json` |
-| Unit and contract tests (195) | Passed (Linux, Python 3.12) | `reports/session2/pytest-linux.xml` |
+| Unit and contract tests (209) | Passed (Linux, Python 3.11 and 3.12, locked dependencies) | Session 2 record in `reports/session2/pytest-linux.xml` (195); review regression tests added since |
 | Lint (ruff) and type check (mypy, 46 files) | Passed (Linux) | `reports/session2/README.md` |
 | AdCP adapter output against pinned AdCP 3.1.20 schemas | Passed (Linux) | `tests/test_representation_and_exchange.py` |
-| Rules router on the development routing suite (11 cases) | Passed by construction | `reports/session2/routing_benchmark_development.json` |
+| Rules router on the development routing suite (12 cases) | Passed by construction | Session 2 record (11 cases) in `reports/session2/routing_benchmark_development.json` |
 | Windows and PowerShell execution, CI | Not run | Run `.\scripts\check-all.ps1` or push to trigger CI |
 | Agent routing benchmark with a real model, hidden-oracle isolation | Not run | Session 3 |
 | Statistical utility on real data, clean-room enforcement, live delivery | Not run | Requires authorized data and integrations |
