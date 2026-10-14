@@ -1,0 +1,438 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/common.schema.json",
+  "title": "Shared definitions",
+  "description": "Shared definitions referenced by every contract. Not a document kind.",
+  "x-prd-requirements": [
+    "FR01",
+    "FR20"
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]*$"
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?Z$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "decimal_string": {
+      "type": "string",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "country": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$"
+    },
+    "language": {
+      "type": "string",
+      "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+    },
+    "probability": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "versioned_ref": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "sha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        }
+      },
+      "required": [
+        "id",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "unit": {
+      "type": "object",
+      "properties": {
+        "type_id": {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "type_version": {
+          "$ref": "common.schema.json#/$defs/semver"
+        },
+        "namespace": {
+          "$ref": "common.schema.json#/$defs/id"
+        }
+      },
+      "required": [
+        "type_id",
+        "type_version",
+        "namespace"
+      ],
+      "additionalProperties": false,
+      "description": "A registered unit type within a namespace. Grain and meaning come from the type registry entry, never from the source name."
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "ELIGIBLE",
+        "PROVISIONAL",
+        "BLOCKED"
+      ]
+    },
+    "reason_code": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Code from registry/reason_codes.json; dimension is checked in code."
+    },
+    "reason": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "$ref": "common.schema.json#/$defs/reason_code"
+        },
+        "detail": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/id"
+          }
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "additionalProperties": false
+    },
+    "actor": {
+      "type": "object",
+      "properties": {
+        "actor_id": {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "actor_type": {
+          "type": "string",
+          "enum": [
+            "human",
+            "service",
+            "agent"
+          ]
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "actor_id",
+        "actor_type",
+        "role"
+      ],
+      "additionalProperties": false
+    },
+    "human_actor": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/actor"
+        },
+        {
+          "properties": {
+            "actor_type": {
+              "const": "human"
+            }
+          }
+        }
+      ]
+    },
+    "operation": {
+      "type": "string",
+      "enum": [
+        "intake_receive",
+        "profile",
+        "inspect_raw",
+        "map_semantics",
+        "register_type",
+        "build_features",
+        "join",
+        "embed_content",
+        "train",
+        "validate",
+        "calibrate",
+        "infer",
+        "score",
+        "build_cohort",
+        "aggregate",
+        "measure",
+        "prepare_release",
+        "export_rows",
+        "export_aggregate",
+        "activate",
+        "retain_learning"
+      ]
+    },
+    "artifact_type": {
+      "type": "string",
+      "enum": [
+        "score_file",
+        "cohort_definition",
+        "cohort_membership",
+        "aggregate_report",
+        "model",
+        "embedding",
+        "evidence_card",
+        "feature_snapshot",
+        "profile_report",
+        "log"
+      ]
+    },
+    "task_family": {
+      "type": "string",
+      "enum": [
+        "intake",
+        "semantic_similarity",
+        "seed_affinity",
+        "behavioral_affinity",
+        "outcome_propensity",
+        "cohort",
+        "aggregate_measurement",
+        "release"
+      ]
+    },
+    "claim_type": {
+      "type": "string",
+      "enum": [
+        "semantic_similarity",
+        "seed_affinity",
+        "behavioral_affinity",
+        "outcome_probability",
+        "cohort_pattern",
+        "aggregate_measurement",
+        "observed_association",
+        "experimental_effect"
+      ]
+    },
+    "evidence_kind": {
+      "type": "string",
+      "enum": [
+        "observed",
+        "declared",
+        "provider_inferred",
+        "model_inferred"
+      ]
+    },
+    "time_window": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "end": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "additionalProperties": false
+    },
+    "uncertainty": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "level": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 1
+        },
+        "lower": {
+          "type": "number"
+        },
+        "upper": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "method",
+        "level",
+        "lower",
+        "upper"
+      ],
+      "additionalProperties": false
+    },
+    "count": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unit": {
+          "$ref": "common.schema.json#/$defs/unit"
+        },
+        "basis": {
+          "type": "string",
+          "enum": [
+            "exact",
+            "estimated",
+            "sampled"
+          ]
+        }
+      },
+      "required": [
+        "value",
+        "unit",
+        "basis"
+      ],
+      "additionalProperties": false
+    },
+    "population_count": {
+      "type": "object",
+      "properties": {
+        "stage": {
+          "type": "string",
+          "enum": [
+            "input",
+            "valid",
+            "rights_eligible",
+            "joinable",
+            "scoreable",
+            "selected",
+            "submitted",
+            "accepted",
+            "confirmed_matched",
+            "delivered",
+            "outcome_observable"
+          ]
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unit": {
+          "$ref": "common.schema.json#/$defs/unit"
+        },
+        "basis": {
+          "type": "string",
+          "enum": [
+            "exact",
+            "estimated",
+            "sampled"
+          ]
+        },
+        "confirmed_by_destination": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "stage",
+        "value",
+        "unit",
+        "basis"
+      ],
+      "additionalProperties": false
+    },
+    "metric": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "value": {
+          "type": "number"
+        },
+        "denominator": {
+          "$ref": "common.schema.json#/$defs/count"
+        },
+        "population_ref": {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "uncertainty": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/uncertainty"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "value",
+        "denominator",
+        "population_ref",
+        "uncertainty"
+      ],
+      "additionalProperties": false
+    },
+    "extensions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "namespace": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(\\.[a-z0-9-]+)+$"
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "version": {
+            "$ref": "common.schema.json#/$defs/semver"
+          },
+          "value": {}
+        },
+        "required": [
+          "namespace",
+          "name",
+          "version",
+          "value"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Declared, namespaced extension slot. Unknown top-level fields are rejected; extensions carry their own version."
+    },
+    "budget_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/versioned_ref"
+      }
+    }
+  }
+}

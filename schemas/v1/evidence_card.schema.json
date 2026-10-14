@@ -1,0 +1,324 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/evidence_card.schema.json",
+  "title": "Evidence card",
+  "description": "Buyer-readable evidence for one output version. Claim type and qualifier stay visible; later measurements are appended as separate claims.",
+  "x-prd-requirements": [
+    "FR21",
+    "FR13",
+    "FR15",
+    "FR27",
+    "FR34"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "evidence_card"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "card_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "card_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "task_decision_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "claim": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "common.schema.json#/$defs/claim_type"
+        },
+        "qualifier": {
+          "type": "string",
+          "enum": [
+            "exploratory",
+            "validated"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "qualifier"
+      ],
+      "additionalProperties": false
+    },
+    "output_unit": {
+      "$ref": "common.schema.json#/$defs/unit"
+    },
+    "source_profiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "profile_ref": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          },
+          "collection_method": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "coverage_ref": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "known_limits": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/text"
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "profile_ref",
+          "collection_method",
+          "coverage_ref",
+          "known_limits"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "seed_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/versioned_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "target": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "event": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "horizon_days": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "event",
+            "horizon_days"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "content_brief_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/versioned_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "universe_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/versioned_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "time_windows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "window": {
+            "$ref": "common.schema.json#/$defs/time_window"
+          }
+        },
+        "required": [
+          "name",
+          "window"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "representation_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/versioned_ref"
+      }
+    },
+    "baselines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/metric"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "metrics"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/metric"
+      }
+    },
+    "populations": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/population_count"
+      },
+      "minItems": 1
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/text"
+      },
+      "minItems": 1
+    },
+    "permitted_uses": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/text"
+      },
+      "minItems": 1
+    },
+    "execution_boundary_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "output_policy_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/versioned_ref"
+      },
+      "minItems": 1
+    },
+    "measured_claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "claim_type": {
+            "type": "string",
+            "enum": [
+              "observed_association",
+              "experimental_effect"
+            ]
+          },
+          "measurement_feedback_ref": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          }
+        },
+        "required": [
+          "claim_type",
+          "measurement_feedback_ref"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "issued_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "card_id",
+    "card_version",
+    "task_decision_ref",
+    "claim",
+    "output_unit",
+    "source_profiles",
+    "seed_ref",
+    "target",
+    "content_brief_ref",
+    "universe_ref",
+    "time_windows",
+    "representation_refs",
+    "baselines",
+    "metrics",
+    "populations",
+    "limitations",
+    "permitted_uses",
+    "execution_boundary_ref",
+    "output_policy_refs",
+    "measured_claims",
+    "issued_at"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "claim": {
+            "properties": {
+              "type": {
+                "const": "outcome_probability"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          }
+        },
+        "required": [
+          "claim"
+        ]
+      },
+      "then": {
+        "properties": {
+          "target": {
+            "type": "object",
+            "properties": {
+              "event": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "horizon_days": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "event",
+              "horizon_days"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

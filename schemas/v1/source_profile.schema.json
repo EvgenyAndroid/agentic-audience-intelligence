@@ -1,0 +1,453 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/source_profile.schema.json",
+  "title": "Source profile",
+  "description": "Semantic contract that maps one source family onto canonical primitives. Transport adapters are referenced separately.",
+  "x-prd-requirements": [
+    "FR26",
+    "FR31",
+    "FR08",
+    "FR27",
+    "FR28",
+    "FR40"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "source_profile"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "profile_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "profile_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "tenant_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "family_label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "Descriptive only. Core services never branch on it."
+    },
+    "source_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "source_schema_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "transport_adapter_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "collection_method": {
+      "type": "string",
+      "enum": [
+        "fingerprint_match",
+        "tag_or_pixel",
+        "sdk",
+        "server_log",
+        "crawl_extraction",
+        "survey_response",
+        "transaction_record",
+        "vendor_model",
+        "clean_room_output",
+        "other"
+      ]
+    },
+    "collection_method_detail": {
+      "$ref": "common.schema.json#/$defs/text"
+    },
+    "observation_units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "unit": {
+            "$ref": "common.schema.json#/$defs/unit"
+          },
+          "key_field": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "contract_evidence_ref": {
+            "$ref": "common.schema.json#/$defs/id"
+          }
+        },
+        "required": [
+          "unit",
+          "key_field",
+          "contract_evidence_ref"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "signals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "signal_id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "field": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "primitive": {
+            "type": "string",
+            "enum": [
+              "observation",
+              "event",
+              "content_item",
+              "relationship",
+              "label"
+            ]
+          },
+          "value_type": {
+            "type": "string",
+            "enum": [
+              "number",
+              "integer",
+              "string",
+              "boolean",
+              "categorical",
+              "text",
+              "timestamp",
+              "none"
+            ]
+          },
+          "unit_of_measure": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evidence_kind": {
+            "$ref": "common.schema.json#/$defs/evidence_kind"
+          },
+          "description": {
+            "$ref": "common.schema.json#/$defs/text"
+          }
+        },
+        "required": [
+          "signal_id",
+          "field",
+          "primitive",
+          "value_type",
+          "unit_of_measure",
+          "evidence_kind",
+          "description"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "time_semantics": {
+      "type": "object",
+      "properties": {
+        "event_time_field": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "event_time_meaning": {
+          "$ref": "common.schema.json#/$defs/text"
+        },
+        "availability_rule": {
+          "$ref": "common.schema.json#/$defs/text"
+        },
+        "source_timezone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "expected_delivery_lag_hours": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "backfill_policy": {
+          "type": "string",
+          "enum": [
+            "none",
+            "append_only",
+            "corrections_versioned",
+            "unknown"
+          ]
+        }
+      },
+      "required": [
+        "event_time_field",
+        "event_time_meaning",
+        "availability_rule",
+        "source_timezone",
+        "expected_delivery_lag_hours",
+        "backfill_policy"
+      ],
+      "additionalProperties": false
+    },
+    "coverage": {
+      "type": "object",
+      "properties": {
+        "observable_population": {
+          "$ref": "common.schema.json#/$defs/text"
+        },
+        "coverage_ref": {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "known_gaps": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/text"
+          }
+        }
+      },
+      "required": [
+        "observable_population",
+        "coverage_ref",
+        "known_gaps"
+      ],
+      "additionalProperties": false
+    },
+    "missingness_semantics": {
+      "type": "object",
+      "properties": {
+        "absent_event_means": {
+          "type": "string",
+          "enum": [
+            "unknown",
+            "negative_within_complete_window"
+          ]
+        },
+        "null_value_means": {
+          "type": "string",
+          "enum": [
+            "unknown",
+            "not_applicable"
+          ]
+        }
+      },
+      "required": [
+        "absent_event_means",
+        "null_value_means"
+      ],
+      "additionalProperties": false
+    },
+    "content_resolution": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "method": {
+              "$ref": "common.schema.json#/$defs/text"
+            },
+            "quality_field": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 256
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "method",
+            "quality_field"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "quality_checks_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "rights_policy_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "intake_policy_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "execution_policy_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/versioned_ref"
+      },
+      "minItems": 1
+    },
+    "output_policy_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/versioned_ref"
+      },
+      "minItems": 1
+    },
+    "supplied_relationships": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/id"
+      }
+    },
+    "known_limits": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/text"
+      },
+      "minItems": 1
+    },
+    "profile_state": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "quarantined",
+        "confirmed",
+        "retired"
+      ]
+    },
+    "steward_confirmation": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "actor": {
+              "$ref": "common.schema.json#/$defs/human_actor"
+            },
+            "confirmed_at": {
+              "$ref": "common.schema.json#/$defs/timestamp"
+            }
+          },
+          "required": [
+            "actor",
+            "confirmed_at"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "profile_id",
+    "profile_version",
+    "tenant_id",
+    "family_label",
+    "source_ref",
+    "source_schema_version",
+    "transport_adapter_ref",
+    "collection_method",
+    "collection_method_detail",
+    "observation_units",
+    "signals",
+    "time_semantics",
+    "coverage",
+    "missingness_semantics",
+    "content_resolution",
+    "quality_checks_ref",
+    "rights_policy_ref",
+    "intake_policy_ref",
+    "execution_policy_refs",
+    "output_policy_refs",
+    "supplied_relationships",
+    "known_limits",
+    "profile_state",
+    "steward_confirmation"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "profile_state": {
+            "const": "confirmed"
+          }
+        },
+        "required": [
+          "profile_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "steward_confirmation": {
+            "type": "object",
+            "properties": {
+              "actor": {
+                "$ref": "common.schema.json#/$defs/human_actor"
+              },
+              "confirmed_at": {
+                "$ref": "common.schema.json#/$defs/timestamp"
+              }
+            },
+            "required": [
+              "actor",
+              "confirmed_at"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "signals": {
+            "contains": {
+              "properties": {
+                "primitive": {
+                  "const": "content_item"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "signals"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content_resolution": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

@@ -1,0 +1,455 @@
+{
+  "kind": "reason_code_registry",
+  "schema_version": "1.0.0",
+  "registry_version": "1.0.0",
+  "codes": [
+    {
+      "code": "forbidden_operation",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "An active policy prohibits this operation at this location.",
+      "aliases": []
+    },
+    {
+      "code": "forbidden_row_level_egress",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "An output policy prohibits row-level artifacts from leaving the boundary.",
+      "aliases": []
+    },
+    {
+      "code": "forbidden_artifact_egress",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "An output policy prohibits this artifact type from leaving the boundary.",
+      "aliases": []
+    },
+    {
+      "code": "output_grain_not_permitted",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "The output unit type is not permitted to leave the boundary.",
+      "aliases": []
+    },
+    {
+      "code": "destination_not_permitted",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "The destination is not permitted by the output policy.",
+      "aliases": []
+    },
+    {
+      "code": "aggregation_threshold_not_met",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "Supplied disclosure thresholds are not met for a releasable aggregate.",
+      "aliases": []
+    },
+    {
+      "code": "dimension_not_approved",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "An aggregate uses a dimension the policy does not approve.",
+      "aliases": []
+    },
+    {
+      "code": "contradictory_policies",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "Policies of the same source contradict each other for this operation.",
+      "aliases": []
+    },
+    {
+      "code": "temporal_leakage",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "Features or relationships were available after the prediction cutoff.",
+      "aliases": [
+        "leakage_detected"
+      ]
+    },
+    {
+      "code": "invalid_join",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "A join lacks a permitted, time-valid relationship or causes invalid fan-out.",
+      "aliases": []
+    },
+    {
+      "code": "grain_incompatible",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "Units differ and no approved mapping or aggregation rule exists.",
+      "aliases": []
+    },
+    {
+      "code": "prohibited_use",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "Rights explicitly prohibit this use or purpose.",
+      "aliases": [
+        "unauthorized_use"
+      ]
+    },
+    {
+      "code": "sensitive_category_excluded",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "The objective, labels or features touch an excluded sensitive category.",
+      "aliases": []
+    },
+    {
+      "code": "source_withdrawn",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "A contributing source or snapshot has been withdrawn.",
+      "aliases": [
+        "source_revoked"
+      ]
+    },
+    {
+      "code": "promotion_criteria_failed",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "The candidate failed predeclared promotion criteria.",
+      "aliases": []
+    },
+    {
+      "code": "representation_incompatible",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "Vector spaces are not compatible and no validated projector exists.",
+      "aliases": [
+        "incompatible_embedding"
+      ]
+    },
+    {
+      "code": "representation_nonsemantic",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "A nonsemantic or pseudo vector cannot support semantic similarity.",
+      "aliases": []
+    },
+    {
+      "code": "representation_expired",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "A representation is outside its declared time validity.",
+      "aliases": []
+    },
+    {
+      "code": "tenant_scope_mismatch",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "Inputs or policies belong to a different tenant.",
+      "aliases": []
+    },
+    {
+      "code": "snapshot_not_immutable",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "A referenced snapshot lacks an immutable checksum.",
+      "aliases": []
+    },
+    {
+      "code": "contract_invalid",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "The task contract fails schema validation.",
+      "aliases": [
+        "invalid_schema_task"
+      ]
+    },
+    {
+      "code": "destination_incompatible",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "The destination is demonstrably incompatible with the artifact.",
+      "aliases": []
+    },
+    {
+      "code": "cross_client_reuse_not_permitted",
+      "dimension": "task_decision",
+      "decision_effect": "violated",
+      "description": "Retained learning or artifacts would cross clients without rights.",
+      "aliases": []
+    },
+    {
+      "code": "unsupported_outcome_probability",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "Qualified outcome labels are missing or inadequate for a new probability model.",
+      "aliases": []
+    },
+    {
+      "code": "missing_execution_policy",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "No active execution policy addresses this location and operation for a contributing source.",
+      "aliases": []
+    },
+    {
+      "code": "missing_output_policy",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "No active output policy addresses this artifact for a contributing source.",
+      "aliases": []
+    },
+    {
+      "code": "policy_not_current",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "Policies exist but none is effective at decision time.",
+      "aliases": [
+        "policy_expired"
+      ]
+    },
+    {
+      "code": "unverified_permission",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "Rights or permission evidence has not been established.",
+      "aliases": []
+    },
+    {
+      "code": "missing_availability_evidence",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "Availability times needed for point-in-time checks are missing.",
+      "aliases": []
+    },
+    {
+      "code": "missing_unit_semantics",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "A unit type is unregistered or unconfirmed.",
+      "aliases": [
+        "unknown_grain"
+      ]
+    },
+    {
+      "code": "missing_unit_mapping",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "Required unit mapping evidence is missing.",
+      "aliases": []
+    },
+    {
+      "code": "missing_relationship_evidence",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "Relationship evidence or validity windows are missing.",
+      "aliases": []
+    },
+    {
+      "code": "insufficient_information",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "Inputs carry no usable evidence for the requested task.",
+      "aliases": []
+    },
+    {
+      "code": "insufficient_feature_coverage",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "Feature coverage for the eligible population has not been established as adequate.",
+      "aliases": []
+    },
+    {
+      "code": "missing_validation_evidence",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "Required model validation or calibration evidence is missing.",
+      "aliases": []
+    },
+    {
+      "code": "missing_population_compatibility",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "Scored population compatibility with the validated model is not established.",
+      "aliases": []
+    },
+    {
+      "code": "unregistered_source_profile",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "A contributing source profile is unregistered, quarantined or unconfirmed.",
+      "aliases": []
+    },
+    {
+      "code": "missing_seed",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "The seed reference or snapshot is missing.",
+      "aliases": []
+    },
+    {
+      "code": "missing_universe",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "The eligible universe is undefined.",
+      "aliases": []
+    },
+    {
+      "code": "missing_content_brief",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "The content brief or reference is missing.",
+      "aliases": []
+    },
+    {
+      "code": "missing_representation_evidence",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "Representation compatibility has not been established.",
+      "aliases": []
+    },
+    {
+      "code": "aggregation_rules_unknown",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "Required aggregation rules or counted units are not supplied.",
+      "aliases": []
+    },
+    {
+      "code": "aggregate_counts_unavailable",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "Distinct counts per counted unit are not available for the release check.",
+      "aliases": []
+    },
+    {
+      "code": "capability_not_verified",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "Destination or integration capability is not verified.",
+      "aliases": []
+    },
+    {
+      "code": "sensitive_screening_missing",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "Sensitive-category screening has not been completed.",
+      "aliases": []
+    },
+    {
+      "code": "missing_document",
+      "dimension": "task_decision",
+      "decision_effect": "missing",
+      "description": "A referenced document could not be resolved.",
+      "aliases": []
+    },
+    {
+      "code": "invalid_schema",
+      "dimension": "execution_failure",
+      "decision_effect": null,
+      "description": "A request or artifact failed schema validation.",
+      "aliases": []
+    },
+    {
+      "code": "budget_exceeded",
+      "dimension": "execution_failure",
+      "decision_effect": null,
+      "description": "A configured budget was exhausted.",
+      "aliases": []
+    },
+    {
+      "code": "cancelled",
+      "dimension": "execution_failure",
+      "decision_effect": null,
+      "description": "The job was cancelled.",
+      "aliases": []
+    },
+    {
+      "code": "timeout",
+      "dimension": "execution_failure",
+      "decision_effect": null,
+      "description": "The job exceeded its time limit.",
+      "aliases": []
+    },
+    {
+      "code": "dependency_unavailable",
+      "dimension": "execution_failure",
+      "decision_effect": null,
+      "description": "A required service was unavailable.",
+      "aliases": []
+    },
+    {
+      "code": "checkpoint_missing",
+      "dimension": "execution_failure",
+      "decision_effect": null,
+      "description": "No checkpoint exists for restart.",
+      "aliases": []
+    },
+    {
+      "code": "internal_error",
+      "dimension": "execution_failure",
+      "decision_effect": null,
+      "description": "Unexpected failure; see logs.",
+      "aliases": []
+    },
+    {
+      "code": "entity_feature_coverage_insufficient",
+      "dimension": "inclusion",
+      "decision_effect": null,
+      "description": "The entity lacks enough observed features.",
+      "aliases": []
+    },
+    {
+      "code": "zero_vector",
+      "dimension": "inclusion",
+      "decision_effect": null,
+      "description": "The entity vector has zero norm.",
+      "aliases": []
+    },
+    {
+      "code": "embedding_version_mismatch",
+      "dimension": "inclusion",
+      "decision_effect": null,
+      "description": "The entity vector is from another representation.",
+      "aliases": []
+    },
+    {
+      "code": "entity_suppressed",
+      "dimension": "inclusion",
+      "decision_effect": null,
+      "description": "The entity is suppressed.",
+      "aliases": []
+    },
+    {
+      "code": "entity_is_seed_or_alias",
+      "dimension": "inclusion",
+      "decision_effect": null,
+      "description": "The entity is a seed member or verified alias.",
+      "aliases": []
+    },
+    {
+      "code": "entity_outside_universe",
+      "dimension": "inclusion",
+      "decision_effect": null,
+      "description": "The entity is outside the eligible universe.",
+      "aliases": []
+    },
+    {
+      "code": "entity_expired",
+      "dimension": "inclusion",
+      "decision_effect": null,
+      "description": "The entity record is outside its validity period.",
+      "aliases": []
+    },
+    {
+      "code": "unknown_delivery_status",
+      "dimension": "delivery",
+      "decision_effect": null,
+      "description": "Remote delivery state is unknown; reconcile before retry.",
+      "aliases": []
+    },
+    {
+      "code": "destination_rejected",
+      "dimension": "delivery",
+      "decision_effect": null,
+      "description": "The destination rejected the submission.",
+      "aliases": []
+    }
+  ]
+}

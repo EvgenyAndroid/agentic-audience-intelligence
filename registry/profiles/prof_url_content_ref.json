@@ -1,0 +1,108 @@
+{
+  "kind": "source_profile",
+  "schema_version": "1.0.0",
+  "profile_id": "prof_url_content_ref",
+  "profile_version": "1.0.0",
+  "tenant_id": "tenant_demo",
+  "family_label": "URL content (reference)",
+  "source_ref": "source_prof_url_content_ref",
+  "source_schema_version": "2026-09",
+  "transport_adapter_ref": {
+    "id": "adapter_file_batch",
+    "version": "1.0.0"
+  },
+  "collection_method": "crawl_extraction",
+  "collection_method_detail": "Permitted crawl of listed domains with text extraction.",
+  "observation_units": [
+    {
+      "unit": {
+        "type_id": "content_item_key",
+        "type_version": "1.0.0",
+        "namespace": "url_demo"
+      },
+      "key_field": "canonical_url",
+      "contract_evidence_ref": "contract_url_demo_schedule_1"
+    }
+  ],
+  "signals": [
+    {
+      "signal_id": "url_text",
+      "field": "text_ref",
+      "primitive": "content_item",
+      "value_type": "text",
+      "unit_of_measure": null,
+      "evidence_kind": "observed",
+      "description": "Extracted page text reference"
+    },
+    {
+      "signal_id": "url_topic",
+      "field": "topics",
+      "primitive": "observation",
+      "value_type": "categorical",
+      "unit_of_measure": null,
+      "evidence_kind": "provider_inferred",
+      "description": "Provider topic labels"
+    }
+  ],
+  "time_semantics": {
+    "event_time_field": null,
+    "event_time_meaning": "Crawl time recorded per page",
+    "availability_rule": "available_at = crawl completion time",
+    "source_timezone": "UTC",
+    "expected_delivery_lag_hours": null,
+    "backfill_policy": "none"
+  },
+  "coverage": {
+    "observable_population": "Pages on the crawl list",
+    "coverage_ref": "coverage_url_demo",
+    "known_gaps": [
+      "Pages behind logins",
+      "Crawl staleness"
+    ]
+  },
+  "missingness_semantics": {
+    "absent_event_means": "unknown",
+    "null_value_means": "not_applicable"
+  },
+  "content_resolution": {
+    "method": "Canonicalization rules v3",
+    "quality_field": null
+  },
+  "quality_checks_ref": {
+    "id": "checks_prof_url_content_ref",
+    "version": "1.0.0"
+  },
+  "rights_policy_ref": {
+    "id": "rights_demo_2026",
+    "version": "1.0.0"
+  },
+  "intake_policy_ref": {
+    "id": "exec_workspace_demo",
+    "version": "1.0.0"
+  },
+  "execution_policy_refs": [
+    {
+      "id": "exec_workspace_demo",
+      "version": "1.0.0"
+    }
+  ],
+  "output_policy_refs": [
+    {
+      "id": "output_workspace_demo",
+      "version": "1.0.0"
+    }
+  ],
+  "supplied_relationships": [],
+  "known_limits": [
+    "Page context does not prove reader intent"
+  ],
+  "profile_state": "confirmed",
+  "steward_confirmation": {
+    "actor": {
+      "actor_id": "user_steward_01",
+      "actor_type": "human",
+      "role": "data_steward"
+    },
+    "confirmed_at": "2026-10-01T00:00:00Z"
+  }
+}

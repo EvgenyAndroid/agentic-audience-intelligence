@@ -1,0 +1,74 @@
+{
+  "kind": "release_manifest",
+  "schema_version": "1.0.0",
+  "release_id": "rel_seed_web_0001",
+  "release_version": "1.0.0",
+  "tenant_id": "tenant_demo",
+  "artifacts": [
+    {
+      "artifact_ref": {
+        "id": "membership_file_0001",
+        "version": "1.0.0"
+      },
+      "artifact_type": "cohort_membership",
+      "sha256": "sha256:67e6a474e7c8c2a25ed31b72438654442641be7b354f577695f80fefcb3cd9d1"
+    }
+  ],
+  "content_checksum": "sha256:5c113f4390e4c615aa94eb5fa359a11a7178f861f92987b98fa4788525677608",
+  "evidence_card_ref": {
+    "id": "card_seed_web_0001",
+    "version": "1.0.0"
+  },
+  "task_decision_ref": "dec_task_release_seed_web_v1",
+  "populations": [
+    {
+      "stage": "input",
+      "value": 1200000,
+      "unit": {
+        "type_id": "browser_cookie",
+        "type_version": "1.0.0",
+        "namespace": "web_demo_cookie"
+      },
+      "basis": "exact"
+    },
+    {
+      "stage": "scoreable",
+      "value": 830000,
+      "unit": {
+        "type_id": "browser_cookie",
+        "type_version": "1.0.0",
+        "namespace": "web_demo_cookie"
+      },
+      "basis": "exact"
+    },
+    {
+      "stage": "selected",
+      "value": 120000,
+      "unit": {
+        "type_id": "browser_cookie",
+        "type_version": "1.0.0",
+        "namespace": "web_demo_cookie"
+      },
+      "basis": "exact"
+    }
+  ],
+  "policy_versions": [
+    {
+      "id": "output_workspace_demo",
+      "version": "1.0.0"
+    },
+    {
+      "id": "exec_workspace_demo",
+      "version": "1.0.0"
+    }
+  ],
+  "destination_ref": "dest_demo_dsp",
+  "expires_at": "2026-11-10T00:00:00Z",
+  "lifecycle_state": "prepared",
+  "prepared_by": {
+    "actor_id": "svc_release",
+    "actor_type": "service",
+    "role": "release_service"
+  },
+  "prepared_at": "2026-10-11T04:00:00Z"
+}

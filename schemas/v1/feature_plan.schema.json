@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/feature_plan.schema.json",
+  "title": "Feature plan",
+  "description": "Point-in-time feature definitions. Event time and availability time must both precede the cutoff.",
+  "x-prd-requirements": [
+    "FR07",
+    "FR12",
+    "FR06"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "feature_plan"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "feature_plan_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "feature_plan_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "run_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "prediction_cutoff": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "output_unit": {
+      "$ref": "common.schema.json#/$defs/unit"
+    },
+    "allowed_source_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/versioned_ref"
+      },
+      "minItems": 1
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "feature_id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "feature_version": {
+            "$ref": "common.schema.json#/$defs/semver"
+          },
+          "representation": {
+            "type": "string",
+            "enum": [
+              "numeric",
+              "categorical",
+              "behavioral",
+              "temporal",
+              "geographic",
+              "semantic"
+            ]
+          },
+          "source_signal_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/id"
+            },
+            "minItems": 1
+          },
+          "transform_ref": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          },
+          "window_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "input_unit": {
+            "$ref": "common.schema.json#/$defs/unit"
+          },
+          "output_unit": {
+            "$ref": "common.schema.json#/$defs/unit"
+          },
+          "mapping_ref": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/versioned_ref"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "missingness_rule": {
+            "type": "string",
+            "enum": [
+              "keep_unknown",
+              "indicator",
+              "documented_imputation"
+            ]
+          },
+          "imputation_ref": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/versioned_ref"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "feature_id",
+          "feature_version",
+          "representation",
+          "source_signal_refs",
+          "transform_ref",
+          "window_days",
+          "input_unit",
+          "output_unit",
+          "mapping_ref",
+          "missingness_rule",
+          "imputation_ref"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "missingness_rule": {
+                  "const": "documented_imputation"
+                }
+              },
+              "required": [
+                "missingness_rule"
+              ]
+            },
+            "then": {
+              "properties": {
+                "imputation_ref": {
+                  "$ref": "common.schema.json#/$defs/versioned_ref"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "minItems": 1
+    },
+    "availability_rule": {
+      "const": "event_time_and_available_at_not_after_cutoff"
+    },
+    "relationship_rule": {
+      "const": "valid_interval_covers_use_and_available_at_not_after_cutoff"
+    },
+    "preprocessing_fit_partition": {
+      "const": "training"
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "feature_plan_id",
+    "feature_plan_version",
+    "run_ref",
+    "prediction_cutoff",
+    "output_unit",
+    "allowed_source_refs",
+    "features",
+    "availability_rule",
+    "relationship_rule",
+    "preprocessing_fit_partition"
+  ],
+  "unevaluatedProperties": false
+}

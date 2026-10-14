@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/run.schema.json",
+  "title": "Run",
+  "description": "Groups tasks under one objective with immutable inputs and recorded experiment settings.",
+  "x-prd-requirements": [
+    "FR20",
+    "FR12"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "run"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "tenant_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "objective_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "task_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/versioned_ref"
+      },
+      "minItems": 1
+    },
+    "input_snapshot_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/versioned_ref"
+      },
+      "minItems": 1
+    },
+    "execution_location_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "feature_plan_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/versioned_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "split_plan_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/versioned_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "model_allowlist": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/id"
+      }
+    },
+    "prediction_cutoff": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "budget_refs": {
+      "$ref": "common.schema.json#/$defs/budget_refs"
+    },
+    "created_by": {
+      "$ref": "common.schema.json#/$defs/actor"
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "run_id",
+    "tenant_id",
+    "objective_ref",
+    "task_refs",
+    "input_snapshot_refs",
+    "execution_location_ref",
+    "feature_plan_ref",
+    "split_plan_ref",
+    "model_allowlist",
+    "prediction_cutoff",
+    "budget_refs",
+    "created_by",
+    "created_at"
+  ],
+  "unevaluatedProperties": false
+}

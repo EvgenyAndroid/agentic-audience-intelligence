@@ -1,0 +1,32 @@
+{
+  "kind": "alignment_test_set",
+  "schema_version": "1.0.0",
+  "gts_version": "aip-gts-demo-1",
+  "space_ids": [
+    "text-embed-demo-d512-v1"
+  ],
+  "pairs": [
+    {
+      "pair_id": "food-cooking-related",
+      "concept_a": "cnt_prog_cooking_17",
+      "concept_b": "cnt_url_8842",
+      "rationale": "Cooking program and quick-dinner article share a topic",
+      "expected_min": 0.5,
+      "expected_max": null
+    },
+    {
+      "pair_id": "food-finance-orthogonal",
+      "concept_a": "cnt_url_8842",
+      "concept_b": "cnt_url_9910",
+      "rationale": "Recipes and bond-market commentary should be distant",
+      "expected_min": null,
+      "expected_max": 0.3
+    }
+  ],
+  "authored_by": {
+    "actor_id": "user_steward_01",
+    "actor_type": "human",
+    "role": "data_steward"
+  },
+  "created_at": "2026-10-01T00:00:00Z"
+}

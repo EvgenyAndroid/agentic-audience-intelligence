@@ -1,0 +1,27 @@
+{
+  "kind": "content_item",
+  "schema_version": "1.0.0",
+  "content_key": "cnt_url_8842",
+  "tenant_id": "tenant_demo",
+  "content_type": "url_page",
+  "source_profile_ref": {
+    "id": "prof_url_content_ref",
+    "version": "1.0.0"
+  },
+  "canonical_ref": "https://news.example/food/quick-dinners",
+  "label": null,
+  "approved_text_ref": "text://url_demo/8842",
+  "language": "en",
+  "taxonomy_refs": [
+    "iab_ct_food_drink"
+  ],
+  "content_time": "2026-09-20T08:00:00Z",
+  "resolution": {
+    "method": "Canonicalization rules v3",
+    "quality": null
+  },
+  "rights_policy_ref": {
+    "id": "rights_demo_2026",
+    "version": "1.0.0"
+  }
+}

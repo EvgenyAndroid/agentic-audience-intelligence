@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/type_registry_entry.schema.json",
+  "title": "Type registry entry",
+  "description": "Declares what a unit or identifier type represents. Every source family uses the same registry rules.",
+  "x-prd-requirements": [
+    "FR31",
+    "FR02",
+    "FR09"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "type_registry_entry"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "type_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "type_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "label": {
+      "$ref": "common.schema.json#/$defs/text"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "identifier",
+        "network_observation",
+        "unit",
+        "area",
+        "content",
+        "custom"
+      ]
+    },
+    "represents": {
+      "$ref": "common.schema.json#/$defs/text"
+    },
+    "grain": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "namespace_rules": {
+      "type": "object",
+      "properties": {
+        "format_pattern": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 500
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "case_sensitive": {
+          "type": "boolean"
+        },
+        "normalization": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "must_remain_string": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "format_pattern",
+        "case_sensitive",
+        "normalization",
+        "must_remain_string"
+      ],
+      "additionalProperties": false
+    },
+    "temporal_validity": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "stable",
+            "time_bound",
+            "rotating"
+          ]
+        },
+        "max_validity_days": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "max_validity_days"
+      ],
+      "additionalProperties": false
+    },
+    "semantic_feature_allowed": {
+      "type": "boolean"
+    },
+    "allowed_relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "relationship_type": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "target_type_id": {
+            "$ref": "common.schema.json#/$defs/id"
+          }
+        },
+        "required": [
+          "relationship_type",
+          "target_type_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "limits": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/text"
+      }
+    },
+    "registration_state": {
+      "type": "string",
+      "enum": [
+        "proposed",
+        "confirmed",
+        "deprecated"
+      ]
+    },
+    "confirmed_by": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/human_actor"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "confirmed_at": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "type_id",
+    "type_version",
+    "label",
+    "category",
+    "represents",
+    "grain",
+    "namespace_rules",
+    "temporal_validity",
+    "semantic_feature_allowed",
+    "allowed_relationships",
+    "limits",
+    "registration_state",
+    "confirmed_by",
+    "confirmed_at"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "enum": [
+              "identifier",
+              "network_observation"
+            ]
+          }
+        },
+        "required": [
+          "category"
+        ]
+      },
+      "then": {
+        "properties": {
+          "semantic_feature_allowed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "registration_state": {
+            "const": "confirmed"
+          }
+        },
+        "required": [
+          "registration_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "confirmed_by": {
+            "$ref": "common.schema.json#/$defs/human_actor"
+          },
+          "confirmed_at": {
+            "$ref": "common.schema.json#/$defs/timestamp"
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

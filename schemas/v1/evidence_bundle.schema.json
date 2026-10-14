@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/evidence_bundle.schema.json",
+  "title": "Evidence bundle",
+  "description": "Facts available to the router for one task, each with its establishing authority. Agents cannot establish facts.",
+  "x-prd-requirements": [
+    "FR38",
+    "FR25"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "evidence_bundle"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "bundle_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "task_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "document_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/versioned_ref"
+      }
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "prerequisite_id": {
+            "type": "string",
+            "pattern": "^P-[A-Z0-9-]+$"
+          },
+          "value": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "established_by": {
+            "type": "string",
+            "enum": [
+              "deterministic_check",
+              "steward_confirmation",
+              "policy_service",
+              "reviewer"
+            ]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/id"
+            }
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/reason_code"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "observed_at": {
+            "$ref": "common.schema.json#/$defs/timestamp"
+          }
+        },
+        "required": [
+          "prerequisite_id",
+          "value",
+          "established_by",
+          "evidence_refs",
+          "reason_code",
+          "observed_at"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "assembled_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "bundle_id",
+    "task_ref",
+    "document_refs",
+    "facts",
+    "assembled_at"
+  ],
+  "unevaluatedProperties": false
+}

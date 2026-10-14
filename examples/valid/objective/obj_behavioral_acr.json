@@ -1,0 +1,26 @@
+{
+  "kind": "objective",
+  "schema_version": "1.0.0",
+  "objective_id": "obj_behavioral_acr",
+  "objective_version": "1.0.0",
+  "tenant_id": "tenant_demo",
+  "statement": "Households with viewing behavior similar to a seed",
+  "task_family": "behavioral_affinity",
+  "intended_use": "Audience exploration",
+  "requested_by": {
+    "actor_id": "user_analyst_01",
+    "actor_type": "human",
+    "role": "analyst"
+  },
+  "claim_sought": "behavioral_affinity",
+  "eligible_universe_ref": {
+    "id": "universe_acr_eligible",
+    "version": "1.0.0"
+  },
+  "seed_ref": {
+    "id": "seed_cooking_viewers",
+    "version": "1.0.0"
+  },
+  "content_brief_ref": null,
+  "target": null
+}

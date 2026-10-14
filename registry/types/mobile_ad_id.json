@@ -1,0 +1,37 @@
+{
+  "kind": "type_registry_entry",
+  "schema_version": "1.0.0",
+  "type_id": "mobile_ad_id",
+  "type_version": "1.0.0",
+  "label": "Mobile advertising ID",
+  "category": "identifier",
+  "represents": "A device advertising identifier within its platform",
+  "grain": "device",
+  "namespace_rules": {
+    "format_pattern": null,
+    "case_sensitive": true,
+    "normalization": "none",
+    "must_remain_string": true
+  },
+  "temporal_validity": {
+    "kind": "rotating",
+    "max_validity_days": null
+  },
+  "semantic_feature_allowed": false,
+  "allowed_relationships": [
+    {
+      "relationship_type": "device_in_household",
+      "target_type_id": "provider_household_key"
+    }
+  ],
+  "limits": [
+    "Resettable; permission status must accompany use"
+  ],
+  "registration_state": "confirmed",
+  "confirmed_by": {
+    "actor_id": "user_steward_01",
+    "actor_type": "human",
+    "role": "data_steward"
+  },
+  "confirmed_at": "2026-10-01T00:00:00Z"
+}

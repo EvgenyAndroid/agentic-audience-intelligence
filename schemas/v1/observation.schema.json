@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/observation.schema.json",
+  "title": "Observation",
+  "description": "An attribute value about an entity. Missing, unobserved, zero and false remain distinct states.",
+  "x-prd-requirements": [
+    "FR08",
+    "FR07",
+    "FR23"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "observation"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "observation_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "entity_key": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "attribute_key": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "value_state": {
+      "type": "string",
+      "enum": [
+        "present",
+        "missing",
+        "unobserved",
+        "not_applicable"
+      ]
+    },
+    "value": {
+      "type": [
+        "number",
+        "string",
+        "boolean"
+      ]
+    },
+    "unit_of_measure": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 64
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "observed_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "available_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "evidence_kind": {
+      "$ref": "common.schema.json#/$defs/evidence_kind"
+    },
+    "source_dataset_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "observation_context_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "observation_id",
+    "entity_key",
+    "attribute_key",
+    "value_state",
+    "unit_of_measure",
+    "observed_at",
+    "available_at",
+    "evidence_kind",
+    "source_dataset_ref",
+    "observation_context_ref"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "value_state": {
+            "const": "present"
+          }
+        },
+        "required": [
+          "value_state"
+        ]
+      },
+      "then": {
+        "required": [
+          "value"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "value"
+          ]
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

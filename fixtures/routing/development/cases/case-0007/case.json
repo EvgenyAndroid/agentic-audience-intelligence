@@ -1,0 +1,20 @@
+{
+  "kind": "routing_case",
+  "schema_version": "1.0.0",
+  "case_id": "case-0007",
+  "suite": "development",
+  "task_path": "cases/case-0007/task.json",
+  "evidence_bundle_path": "cases/case-0007/bundle.json",
+  "visible_document_paths": [
+    "world/ds_acr_demo.json",
+    "world/ds_new_vendor.json",
+    "world/ds_url_demo.json",
+    "world/ds_web_demo.json",
+    "world/obj_aggregate_acr.json",
+    "world/obj_behavioral_acr.json",
+    "world/obj_propensity_web.json",
+    "world/obj_seed_affinity_web.json",
+    "world/obj_semantic_url.json",
+    "world/prof_new_vendor.json"
+  ]
+}

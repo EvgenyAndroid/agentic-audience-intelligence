@@ -1,0 +1,118 @@
+{
+  "kind": "source_profile",
+  "schema_version": "1.0.0",
+  "profile_id": "prof_acr_viewing_ref",
+  "profile_version": "1.0.0",
+  "tenant_id": "tenant_demo",
+  "family_label": "ACR viewing (reference)",
+  "source_ref": "source_prof_acr_viewing_ref",
+  "source_schema_version": "2026-09",
+  "transport_adapter_ref": {
+    "id": "adapter_file_batch",
+    "version": "1.0.0"
+  },
+  "collection_method": "fingerprint_match",
+  "collection_method_detail": "Audio/video fingerprint matched to a reference content library.",
+  "observation_units": [
+    {
+      "unit": {
+        "type_id": "provider_household_key",
+        "type_version": "1.0.0",
+        "namespace": "acr_demo_hh"
+      },
+      "key_field": "hh_key",
+      "contract_evidence_ref": "contract_acr_demo_section_4_2"
+    }
+  ],
+  "signals": [
+    {
+      "signal_id": "acr_view",
+      "field": "view_start",
+      "primitive": "event",
+      "value_type": "timestamp",
+      "unit_of_measure": null,
+      "evidence_kind": "observed",
+      "description": "Viewing event start for matched content"
+    },
+    {
+      "signal_id": "acr_duration",
+      "field": "duration_s",
+      "primitive": "observation",
+      "value_type": "number",
+      "unit_of_measure": "seconds",
+      "evidence_kind": "observed",
+      "description": "Matched viewing duration"
+    },
+    {
+      "signal_id": "acr_content",
+      "field": "content_id",
+      "primitive": "content_item",
+      "value_type": "string",
+      "unit_of_measure": null,
+      "evidence_kind": "observed",
+      "description": "Matched program or ad"
+    }
+  ],
+  "time_semantics": {
+    "event_time_field": "view_start",
+    "event_time_meaning": "Start of matched viewing on the declared unit",
+    "availability_rule": "Delivered in daily files; available_at = file landing time",
+    "source_timezone": "UTC",
+    "expected_delivery_lag_hours": 36,
+    "backfill_policy": "corrections_versioned"
+  },
+  "coverage": {
+    "observable_population": "Opted-in supported smart TVs in the provider panel",
+    "coverage_ref": "coverage_acr_demo_2026q3",
+    "known_gaps": [
+      "Unsupported TV models",
+      "Unmatched content is unknown, not absent"
+    ]
+  },
+  "missingness_semantics": {
+    "absent_event_means": "unknown",
+    "null_value_means": "unknown"
+  },
+  "content_resolution": {
+    "method": "Fingerprint library match to program metadata",
+    "quality_field": "match_confidence"
+  },
+  "quality_checks_ref": {
+    "id": "checks_prof_acr_viewing_ref",
+    "version": "1.0.0"
+  },
+  "rights_policy_ref": {
+    "id": "rights_demo_2026",
+    "version": "1.0.0"
+  },
+  "intake_policy_ref": {
+    "id": "exec_cleanroom_demo",
+    "version": "1.0.0"
+  },
+  "execution_policy_refs": [
+    {
+      "id": "exec_cleanroom_demo",
+      "version": "1.0.0"
+    }
+  ],
+  "output_policy_refs": [
+    {
+      "id": "output_cleanroom_aggregate_only",
+      "version": "1.0.0"
+    }
+  ],
+  "supplied_relationships": [],
+  "known_limits": [
+    "Measures exposure on the declared unit, not attention or who watched",
+    "Key meaning set by contract section 4.2: household"
+  ],
+  "profile_state": "confirmed",
+  "steward_confirmation": {
+    "actor": {
+      "actor_id": "user_steward_01",
+      "actor_type": "human",
+      "role": "data_steward"
+    },
+    "confirmed_at": "2026-10-01T00:00:00Z"
+  }
+}

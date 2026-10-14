@@ -1,0 +1,53 @@
+{
+  "kind": "evidence_bundle",
+  "schema_version": "1.0.0",
+  "bundle_id": "bundle_case-0006",
+  "task_ref": {
+    "id": "task_case_0006",
+    "version": "1.0.0"
+  },
+  "document_refs": [],
+  "facts": [
+    {
+      "prerequisite_id": "P-RIGHTS-USE",
+      "value": true,
+      "established_by": "policy_service",
+      "evidence_refs": [
+        "evidence_p-rights-use"
+      ],
+      "reason_code": null,
+      "observed_at": "2026-10-10T00:00:00Z"
+    },
+    {
+      "prerequisite_id": "P-SENSITIVE-EXCLUSION",
+      "value": true,
+      "established_by": "deterministic_check",
+      "evidence_refs": [
+        "evidence_p-sensitive-exclusion"
+      ],
+      "reason_code": null,
+      "observed_at": "2026-10-10T00:00:00Z"
+    },
+    {
+      "prerequisite_id": "P-FEATURE-TIMING",
+      "value": false,
+      "established_by": "deterministic_check",
+      "evidence_refs": [
+        "pit_report_demo_006"
+      ],
+      "reason_code": "temporal_leakage",
+      "observed_at": "2026-10-10T00:00:00Z"
+    },
+    {
+      "prerequisite_id": "P-LABELS-QUALIFIED",
+      "value": true,
+      "established_by": "deterministic_check",
+      "evidence_refs": [
+        "evidence_p-labels-qualified"
+      ],
+      "reason_code": null,
+      "observed_at": "2026-10-10T00:00:00Z"
+    }
+  ],
+  "assembled_at": "2026-10-10T00:00:00Z"
+}

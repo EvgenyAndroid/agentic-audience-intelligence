@@ -1,0 +1,74 @@
+{
+  "kind": "task",
+  "schema_version": "1.0.0",
+  "task_id": "task_case_0003",
+  "task_version": "1.0.0",
+  "run_ref": "run_demo_0001",
+  "tenant_id": "tenant_demo",
+  "objective_ref": {
+    "id": "obj_aggregate_acr",
+    "version": "1.0.0"
+  },
+  "task_family": "aggregate_measurement",
+  "operation": "export_aggregate",
+  "input_snapshot_refs": [
+    {
+      "id": "ds_acr_demo",
+      "version": "1.0.0"
+    }
+  ],
+  "units": {
+    "observation_units": [
+      {
+        "dataset_ref": {
+          "id": "ds_acr_demo",
+          "version": "1.0.0"
+        },
+        "unit": {
+          "type_id": "provider_household_key",
+          "type_version": "1.0.0",
+          "namespace": "acr_demo_hh"
+        }
+      }
+    ],
+    "modeling_unit": {
+      "type_id": "provider_household_key",
+      "type_version": "1.0.0",
+      "namespace": "acr_demo_hh"
+    },
+    "output_unit": {
+      "type_id": "provider_household_key",
+      "type_version": "1.0.0",
+      "namespace": "acr_demo_hh"
+    },
+    "activation_unit": null,
+    "measurement_unit": null,
+    "mapping_refs": []
+  },
+  "requested_artifact": "aggregate_report",
+  "execution_location_ref": "loc_cleanroom_demo",
+  "destination_ref": "dest_tenant_reports",
+  "policy_refs": {
+    "execution": [],
+    "output": [],
+    "rights": [
+      {
+        "id": "rights_demo_2026",
+        "version": "1.0.0"
+      }
+    ]
+  },
+  "model_ref": null,
+  "budget_refs": [
+    {
+      "id": "budget_pilot_demo",
+      "version": "1.0.0"
+    }
+  ],
+  "created_by": {
+    "actor_id": "user_analyst_01",
+    "actor_type": "human",
+    "role": "analyst"
+  },
+  "created_at": "2026-10-10T00:00:00Z"
+}

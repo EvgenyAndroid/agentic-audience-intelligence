@@ -1,0 +1,118 @@
+{
+  "cases": 11,
+  "missing_predictions": [],
+  "verdict_accuracy": 1.0,
+  "verdict_and_reason_accuracy": 1.0,
+  "macro_f1": 1.0,
+  "critical_false_safe_rate": 0.0,
+  "premature_clearance_rate": 0.0,
+  "false_block_rate": 0.0,
+  "unnecessary_deferral_rate": 0.0,
+  "expected_distribution": {
+    "BLOCKED": 5,
+    "ELIGIBLE": 3,
+    "PROVISIONAL": 3
+  },
+  "rows": [
+    {
+      "case_id": "case-0001",
+      "expected": "BLOCKED",
+      "predicted": "BLOCKED",
+      "verdict_match": true,
+      "mandatory_reasons_present": true,
+      "critical": true,
+      "defect_pattern": "forbidden_row_egress"
+    },
+    {
+      "case_id": "case-0002",
+      "expected": "ELIGIBLE",
+      "predicted": "ELIGIBLE",
+      "verdict_match": true,
+      "mandatory_reasons_present": true,
+      "critical": false,
+      "defect_pattern": "clean_control_aggregate"
+    },
+    {
+      "case_id": "case-0003",
+      "expected": "BLOCKED",
+      "predicted": "BLOCKED",
+      "verdict_match": true,
+      "mandatory_reasons_present": true,
+      "critical": true,
+      "defect_pattern": "aggregate_threshold_failed"
+    },
+    {
+      "case_id": "case-0004",
+      "expected": "PROVISIONAL",
+      "predicted": "PROVISIONAL",
+      "verdict_match": true,
+      "mandatory_reasons_present": true,
+      "critical": false,
+      "defect_pattern": "missing_execution_policy"
+    },
+    {
+      "case_id": "case-0005",
+      "expected": "PROVISIONAL",
+      "predicted": "PROVISIONAL",
+      "verdict_match": true,
+      "mandatory_reasons_present": true,
+      "critical": true,
+      "defect_pattern": "missing_labels"
+    },
+    {
+      "case_id": "case-0006",
+      "expected": "BLOCKED",
+      "predicted": "BLOCKED",
+      "verdict_match": true,
+      "mandatory_reasons_present": true,
+      "critical": true,
+      "defect_pattern": "availability_leakage"
+    },
+    {
+      "case_id": "case-0007",
+      "expected": "ELIGIBLE",
+      "predicted": "ELIGIBLE",
+      "verdict_match": true,
+      "mandatory_reasons_present": true,
+      "critical": false,
+      "defect_pattern": "repaired_leakage_counterpart"
+    },
+    {
+      "case_id": "case-0008",
+      "expected": "BLOCKED",
+      "predicted": "BLOCKED",
+      "verdict_match": true,
+      "mandatory_reasons_present": true,
+      "critical": false,
+      "defect_pattern": "mixed_grains"
+    },
+    {
+      "case_id": "case-0009",
+      "expected": "BLOCKED",
+      "predicted": "BLOCKED",
+      "verdict_match": true,
+      "mandatory_reasons_present": true,
+      "critical": true,
+      "defect_pattern": "provider_artifact"
+    },
+    {
+      "case_id": "case-0010",
+      "expected": "ELIGIBLE",
+      "predicted": "ELIGIBLE",
+      "verdict_match": true,
+      "mandatory_reasons_present": true,
+      "critical": false,
+      "defect_pattern": "quarantine_profiling_control"
+    },
+    {
+      "case_id": "case-0011",
+      "expected": "PROVISIONAL",
+      "predicted": "PROVISIONAL",
+      "verdict_match": true,
+      "mandatory_reasons_present": true,
+      "critical": false,
+      "defect_pattern": "unconfirmed_source"
+    }
+  ],
+  "comparator": "deterministic_rules_router"
+}

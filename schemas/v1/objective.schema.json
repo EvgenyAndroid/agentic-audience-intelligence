@@ -1,0 +1,218 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/objective.schema.json",
+  "title": "Objective",
+  "description": "The buyer's requested value: task family, intended use, claim sought and task-specific inputs.",
+  "x-prd-requirements": [
+    "FR03",
+    "FR25",
+    "FR10"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "objective"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "objective_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "objective_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "tenant_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "statement": {
+      "$ref": "common.schema.json#/$defs/text"
+    },
+    "task_family": {
+      "$ref": "common.schema.json#/$defs/task_family"
+    },
+    "intended_use": {
+      "$ref": "common.schema.json#/$defs/text"
+    },
+    "requested_by": {
+      "$ref": "common.schema.json#/$defs/actor"
+    },
+    "claim_sought": {
+      "$ref": "common.schema.json#/$defs/claim_type"
+    },
+    "eligible_universe_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/versioned_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "seed_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/versioned_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "content_brief_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/versioned_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "target": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "event": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "horizon_days": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "event",
+            "horizon_days"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "objective_id",
+    "objective_version",
+    "tenant_id",
+    "statement",
+    "task_family",
+    "intended_use",
+    "requested_by",
+    "claim_sought",
+    "eligible_universe_ref",
+    "seed_ref",
+    "content_brief_ref",
+    "target"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "task_family": {
+            "const": "seed_affinity"
+          }
+        },
+        "required": [
+          "task_family"
+        ]
+      },
+      "then": {
+        "properties": {
+          "seed_ref": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          },
+          "eligible_universe_ref": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "task_family": {
+            "const": "semantic_similarity"
+          }
+        },
+        "required": [
+          "task_family"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content_brief_ref": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "task_family": {
+            "const": "outcome_propensity"
+          }
+        },
+        "required": [
+          "task_family"
+        ]
+      },
+      "then": {
+        "properties": {
+          "target": {
+            "type": "object",
+            "properties": {
+              "event": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "horizon_days": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "event",
+              "horizon_days"
+            ],
+            "additionalProperties": false
+          },
+          "eligible_universe_ref": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "claim_sought": {
+            "const": "outcome_probability"
+          }
+        },
+        "required": [
+          "claim_sought"
+        ]
+      },
+      "then": {
+        "properties": {
+          "task_family": {
+            "const": "outcome_propensity"
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

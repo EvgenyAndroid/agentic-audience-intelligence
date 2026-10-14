@@ -1,0 +1,969 @@
+{
+  "description": "Each case patches a valid document; it must fail at the stated layer, keyword and instance path.",
+  "cases": [
+    {
+      "id": "inv-001",
+      "description": "Seed affinity cannot carry an outcome target",
+      "base": "examples/valid/score/score_seed_affinity_included.json",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/target",
+          "value": {
+            "event": "conversion",
+            "horizon_days": 30
+          }
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "not",
+        "path": ""
+      }
+    },
+    {
+      "id": "inv-002",
+      "description": "Outcome probability requires a target",
+      "base": "examples/valid/score/score_outcome_probability.json",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/target"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "required",
+        "path": ""
+      }
+    },
+    {
+      "id": "inv-003",
+      "description": "Abstained score must be null",
+      "base": "examples/valid/score/score_seed_affinity_abstained.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/score_value",
+          "value": 0.2
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/score_value"
+      }
+    },
+    {
+      "id": "inv-004",
+      "description": "Abstained score needs a reason",
+      "base": "examples/valid/score/score_seed_affinity_abstained.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/reason_codes",
+          "value": []
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "minItems",
+        "path": "/reason_codes"
+      }
+    },
+    {
+      "id": "inv-005",
+      "description": "Probability must lie in [0, 1]",
+      "base": "examples/valid/score/score_outcome_probability.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/score_value",
+          "value": 1.2
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "anyOf",
+        "path": "/score_value"
+      }
+    },
+    {
+      "id": "inv-006",
+      "description": "Unknown top-level field is rejected",
+      "base": "examples/valid/score/score_seed_affinity_included.json",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/probability",
+          "value": 0.4
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "unevaluatedProperties",
+        "path": ""
+      }
+    },
+    {
+      "id": "inv-007",
+      "description": "Affinity cannot use the probability scale",
+      "base": "examples/valid/score/score_seed_affinity_included.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/scale",
+          "value": "probability"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "not",
+        "path": "/scale"
+      }
+    },
+    {
+      "id": "inv-008",
+      "description": "Included score must have a numeric value",
+      "base": "examples/valid/score/score_seed_affinity_included.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/score_value",
+          "value": null
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/score_value"
+      }
+    },
+    {
+      "id": "inv-009",
+      "description": "Schema version is pinned",
+      "base": "examples/valid/score/score_seed_affinity_included.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/schema_version",
+          "value": "2.0.0"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "const",
+        "path": "/schema_version"
+      }
+    },
+    {
+      "id": "inv-010",
+      "description": "ELIGIBLE cannot hold a missing prerequisite",
+      "base": "examples/valid/task_decision/decision_seed_affinity_eligible.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/prerequisites/0/outcome",
+          "value": "missing"
+        },
+        {
+          "op": "replace",
+          "path": "/prerequisites/0/reason_code",
+          "value": "missing_document"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "const",
+        "path": "/prerequisites/0/outcome"
+      }
+    },
+    {
+      "id": "inv-011",
+      "description": "PROVISIONAL cannot hold a violated prerequisite",
+      "base": "examples/valid/task_decision/decision_propensity_no_labels_provisional.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/prerequisites/0/outcome",
+          "value": "violated"
+        },
+        {
+          "op": "replace",
+          "path": "/prerequisites/0/reason_code",
+          "value": "contract_invalid"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "not",
+        "path": "/prerequisites"
+      }
+    },
+    {
+      "id": "inv-012",
+      "description": "BLOCKED requires a violated prerequisite",
+      "base": "examples/valid/task_decision/decision_aggregate_only_rows_blocked.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/verdict",
+          "value": "BLOCKED"
+        },
+        {
+          "op": "replace",
+          "path": "/prerequisites",
+          "value": [
+            {
+              "prerequisite_id": "P-CONTRACT-VALID",
+              "outcome": "satisfied",
+              "established_by": "deterministic_check",
+              "check_ref": "aip-task-router:P-CONTRACT-VALID",
+              "evidence_refs": [],
+              "reason_code": null
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "contains",
+        "path": "/prerequisites"
+      }
+    },
+    {
+      "id": "inv-013",
+      "description": "Only three verdict values exist",
+      "base": "examples/valid/task_decision/decision_seed_affinity_eligible.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/verdict",
+          "value": "READY"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "enum",
+        "path": "/verdict"
+      }
+    },
+    {
+      "id": "inv-014",
+      "description": "Agents cannot establish prerequisites",
+      "base": "examples/valid/task_decision/decision_seed_affinity_eligible.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/prerequisites/0/established_by",
+          "value": "agent"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "enum",
+        "path": "/prerequisites/0/established_by"
+      }
+    },
+    {
+      "id": "inv-015",
+      "description": "Only the router issues decisions",
+      "base": "examples/valid/task_decision/decision_seed_affinity_eligible.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/decided_by/authority",
+          "value": "agent"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "const",
+        "path": "/decided_by/authority"
+      }
+    },
+    {
+      "id": "inv-016",
+      "description": "Decision must carry valid_until",
+      "base": "examples/valid/task_decision/decision_seed_affinity_eligible.json",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/valid_until"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "required",
+        "path": ""
+      }
+    },
+    {
+      "id": "inv-017",
+      "description": "Agent proposals are advisory",
+      "base": "examples/valid/agent_proposal/proposal_fitness_rows.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/authority",
+          "value": "binding"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "const",
+        "path": "/authority"
+      }
+    },
+    {
+      "id": "inv-018",
+      "description": "Identifier types cannot be semantic features",
+      "base": "registry/types/browser_cookie.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/semantic_feature_allowed",
+          "value": true
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "const",
+        "path": "/semantic_feature_allowed"
+      }
+    },
+    {
+      "id": "inv-019",
+      "description": "Confirmed profile requires steward confirmation",
+      "base": "registry/profiles/prof_web_events_ref.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/steward_confirmation",
+          "value": null
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/steward_confirmation"
+      }
+    },
+    {
+      "id": "inv-020",
+      "description": "Profile needs at least one execution policy",
+      "base": "registry/profiles/prof_web_events_ref.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/execution_policy_refs",
+          "value": []
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "minItems",
+        "path": "/execution_policy_refs"
+      }
+    },
+    {
+      "id": "inv-021",
+      "description": "Unobserved value cannot carry a value",
+      "base": "examples/valid/observation/observation_unobserved.json",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/value",
+          "value": 0
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "not",
+        "path": ""
+      }
+    },
+    {
+      "id": "inv-022",
+      "description": "Present observation requires a value",
+      "base": "examples/valid/observation/observation_present.json",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/value"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "required",
+        "path": ""
+      }
+    },
+    {
+      "id": "inv-023",
+      "description": "Negative labels require a mature window",
+      "base": "examples/valid/outcome_label/label_positive.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/outcome_state",
+          "value": "negative"
+        },
+        {
+          "op": "replace",
+          "path": "/maturity",
+          "value": "immature"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "const",
+        "path": "/maturity"
+      }
+    },
+    {
+      "id": "inv-024",
+      "description": "Probabilistic relationship needs confidence",
+      "base": "examples/valid/relationship/relationship_browser_household.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/confidence",
+          "value": null
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/confidence"
+      }
+    },
+    {
+      "id": "inv-025",
+      "description": "Timestamps must be UTC with Z",
+      "base": "examples/valid/event/event_acr_view.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/event_time",
+          "value": "2026-09-12T19:03:00+02:00"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "pattern",
+        "path": "/event_time"
+      }
+    },
+    {
+      "id": "inv-026",
+      "description": "Snapshots are immutable",
+      "base": "examples/valid/dataset_manifest/ds_web_demo.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/snapshot/immutable",
+          "value": false
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "const",
+        "path": "/snapshot/immutable"
+      }
+    },
+    {
+      "id": "inv-027",
+      "description": "Row export requires a destination",
+      "base": "examples/valid/task/task_cr_export_rows.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/destination_ref",
+          "value": null
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/destination_ref"
+      }
+    },
+    {
+      "id": "inv-028",
+      "description": "Activation requires an activation unit",
+      "base": "examples/valid/task/task_cr_export_rows.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/operation",
+          "value": "activate"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/units/activation_unit"
+      }
+    },
+    {
+      "id": "inv-029",
+      "description": "Seed affinity objective needs a seed",
+      "base": "examples/valid/objective/obj_seed_affinity_web.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/seed_ref",
+          "value": null
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/seed_ref"
+      }
+    },
+    {
+      "id": "inv-030",
+      "description": "Probability claims belong to propensity tasks",
+      "base": "examples/valid/objective/obj_seed_affinity_web.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/claim_sought",
+          "value": "outcome_probability"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "const",
+        "path": "/task_family"
+      }
+    },
+    {
+      "id": "inv-031",
+      "description": "Reviewers must be human",
+      "base": "examples/valid/authorization/authorization_approved.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/authorized_by/actor_type",
+          "value": "agent"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "const",
+        "path": "/authorized_by/actor_type"
+      }
+    },
+    {
+      "id": "inv-032",
+      "description": "Acceptance needs destination confirmation",
+      "base": "examples/valid/export_receipt/receipt_accepted_confirmed.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/confirmed_by_destination",
+          "value": false
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "const",
+        "path": "/confirmed_by_destination"
+      }
+    },
+    {
+      "id": "inv-033",
+      "description": "Unknown delivery requires reconciliation",
+      "base": "examples/valid/export_receipt/receipt_unknown_state.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/reconciliation_required",
+          "value": false
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "const",
+        "path": "/reconciliation_required"
+      }
+    },
+    {
+      "id": "inv-034",
+      "description": "Unconfirmed receipts cannot report acceptance counts",
+      "base": "examples/valid/export_receipt/receipt_unknown_state.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/accepted_count",
+          "value": {
+            "value": 1,
+            "unit": {
+              "type_id": "browser_cookie",
+              "type_version": "1.0.0",
+              "namespace": "web_demo_cookie"
+            },
+            "basis": "exact"
+          }
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/accepted_count"
+      }
+    },
+    {
+      "id": "inv-035",
+      "description": "Observational designs cannot claim causal effects",
+      "base": "examples/valid/measurement_feedback/feedback_randomized_holdout.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/design/design_type",
+          "value": "observational_exposed_unexposed"
+        },
+        {
+          "op": "replace",
+          "path": "/design/assignment_ref",
+          "value": null
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "const",
+        "path": "/claim_type"
+      }
+    },
+    {
+      "id": "inv-036",
+      "description": "Experimental claims use intention-to-treat",
+      "base": "examples/valid/measurement_feedback/feedback_randomized_holdout.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/design/primary_estimand",
+          "value": "exposure_effect"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "const",
+        "path": "/design/primary_estimand"
+      }
+    },
+    {
+      "id": "inv-037",
+      "description": "Allocated cost needs an allocation method",
+      "base": "examples/valid/usage_cost_record/usage_run_completed_no_signal.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/costs/2/allocation_method_ref",
+          "value": null
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/costs/2/allocation_method_ref"
+      }
+    },
+    {
+      "id": "inv-038",
+      "description": "Money is a decimal string",
+      "base": "examples/valid/usage_cost_record/usage_run_completed_no_signal.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/costs/0/amount",
+          "value": 4.2
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/costs/0/amount"
+      }
+    },
+    {
+      "id": "inv-039",
+      "description": "Pseudo vectors are nonsemantic",
+      "base": "examples/valid/representation_descriptor/rep_vac_pseudo_nonsemantic.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/representation_semantics",
+          "value": "semantic"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "const",
+        "path": "/representation_semantics"
+      }
+    },
+    {
+      "id": "inv-040",
+      "description": "Projector route requires alignment evidence",
+      "base": "examples/valid/representation_descriptor/rep_semantic_direct.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/alignment/route",
+          "value": "projector"
+        },
+        {
+          "op": "replace",
+          "path": "/alignment/projector_ref",
+          "value": {
+            "id": "proj_1",
+            "version": "1.0.0"
+          }
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/alignment/alignment_evidence_ref"
+      }
+    },
+    {
+      "id": "inv-041",
+      "description": "Cross-client reuse requires rights",
+      "base": "registry/policies/output_workspace_demo.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/cross_client_reuse/permitted",
+          "value": true
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/cross_client_reuse/rights_ref"
+      }
+    },
+    {
+      "id": "inv-042",
+      "description": "Monitoring under threshold proposes nothing",
+      "base": "examples/valid/monitoring_report/monitoring_psi_exceeded.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/threshold_exceeded",
+          "value": false
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "const",
+        "path": "/proposed_action"
+      }
+    },
+    {
+      "id": "inv-043",
+      "description": "Failed job needs a failure record",
+      "base": "examples/valid/job/job_failed_budget.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/failure",
+          "value": null
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/failure"
+      }
+    },
+    {
+      "id": "inv-044",
+      "description": "Succeeded job has no failure record",
+      "base": "examples/valid/job/job_succeeded_no_signal.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/failure",
+          "value": {
+            "code": "internal_error",
+            "detail": "x"
+          }
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/failure"
+      }
+    },
+    {
+      "id": "inv-045",
+      "description": "Evidence cards disclose at least one limitation",
+      "base": "examples/valid/evidence_card/card_seed_affinity_exploratory.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/limitations",
+          "value": []
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "minItems",
+        "path": "/limitations"
+      }
+    },
+    {
+      "id": "inv-046",
+      "description": "Extensions are namespaced",
+      "base": "examples/valid/score/score_seed_affinity_included.json",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/extensions",
+          "value": [
+            {
+              "namespace": "nonamespace",
+              "name": "x",
+              "version": "1.0.0",
+              "value": 1
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "pattern",
+        "path": "/extensions/0/namespace"
+      }
+    },
+    {
+      "id": "inv-047",
+      "description": "Excluded membership needs a reason",
+      "base": "examples/valid/cohort_membership/membership_rule_cohort.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/inclusion_disposition",
+          "value": "excluded"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "minItems",
+        "path": "/reason_codes"
+      }
+    },
+    {
+      "id": "inv-048",
+      "description": "GTS pairs need at least one bound",
+      "base": "examples/valid/alignment_test_set/gts_demo.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/pairs/0/expected_min",
+          "value": null
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "anyOf",
+        "path": "/pairs/0"
+      }
+    },
+    {
+      "id": "inv-049",
+      "description": "Documented imputation needs a reference",
+      "base": "examples/valid/feature_plan/fp_seed_web.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/features/0/missingness_rule",
+          "value": "documented_imputation"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "type",
+        "path": "/features/0/imputation_ref"
+      }
+    },
+    {
+      "id": "inv-050",
+      "description": "Oracles are human-authored",
+      "base": "examples/valid/routing_oracle/oracle_example.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/authored_by/actor_type",
+          "value": "agent"
+        }
+      ],
+      "expect": {
+        "layer": "schema",
+        "keyword": "const",
+        "path": "/authored_by/actor_type"
+      }
+    },
+    {
+      "id": "inv-051",
+      "description": "Availability cannot precede the event",
+      "base": "examples/valid/event/event_acr_view.json",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/available_at",
+          "value": "2026-09-12T00:00:00Z"
+        }
+      ],
+      "expect": {
+        "layer": "semantic",
+        "keyword": "semantic",
+        "path": "/available_at"
+      }
+    },
+    {
+      "id": "inv-052",
+      "description": "An operation appears once per execution policy",
+      "base": "registry/policies/exec_workspace_demo.json",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/operations/-",
+          "value": {
+            "operation": "train",
+            "permission": "prohibited",
+            "conditions": []
+          }
+        }
+      ],
+      "expect": {
+        "layer": "semantic",
+        "keyword": "semantic",
+        "path": "/operations"
+      }
+    },
+    {
+      "id": "inv-053",
+      "description": "NaN is rejected by the strict loader",
+      "raw": "{\"score_value\": NaN}",
+      "expect": {
+        "layer": "strict_json"
+      }
+    },
+    {
+      "id": "inv-054",
+      "description": "Duplicate keys are rejected by the strict loader",
+      "raw": "{\"verdict\": \"BLOCKED\", \"verdict\": \"ELIGIBLE\"}",
+      "expect": {
+        "layer": "strict_json"
+      }
+    }
+  ]
+}

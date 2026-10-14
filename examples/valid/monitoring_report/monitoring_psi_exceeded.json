@@ -1,0 +1,22 @@
+{
+  "kind": "monitoring_report",
+  "schema_version": "1.0.0",
+  "report_id": "mon_0001",
+  "subject_ref": {
+    "id": "affinity_centroid_v1",
+    "version": "1.0.0"
+  },
+  "metric": "population_stability_index",
+  "value": 0.27,
+  "threshold_ref": {
+    "id": "monitor_thresholds_pilot",
+    "version": "1.0.0"
+  },
+  "window": {
+    "start": "2026-11-01T00:00:00Z",
+    "end": "2026-11-08T00:00:00Z"
+  },
+  "threshold_exceeded": true,
+  "proposed_action": "reassess",
+  "computed_at": "2026-11-08T06:00:00Z"
+}

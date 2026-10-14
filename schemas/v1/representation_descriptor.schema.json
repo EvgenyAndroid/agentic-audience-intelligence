@@ -1,0 +1,265 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/representation_descriptor.schema.json",
+  "title": "Representation descriptor",
+  "description": "Vector space declaration reusing Vector Alignment Contract field names. Identifiers are never represented.",
+  "x-prd-requirements": [
+    "FR24",
+    "FR09"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "representation_descriptor"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "descriptor_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "descriptor_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "model_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "model_family": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "model_revision": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 128
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "space_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "dimensions": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "encoding": {
+      "type": "string",
+      "enum": [
+        "float32",
+        "float16",
+        "int8",
+        "binary"
+      ]
+    },
+    "normalization": {
+      "type": "string",
+      "enum": [
+        "l2",
+        "none"
+      ]
+    },
+    "distance_metric": {
+      "type": "string",
+      "enum": [
+        "cosine",
+        "dot_product",
+        "euclidean"
+      ]
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "v1",
+        "pseudo-v1",
+        "llm-v1",
+        "trained-v1"
+      ]
+    },
+    "representation_semantics": {
+      "type": "string",
+      "enum": [
+        "semantic",
+        "nonsemantic"
+      ]
+    },
+    "transformation_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "represented_unit": {
+      "type": "string",
+      "enum": [
+        "content_item",
+        "attribute_description",
+        "taxonomy_label",
+        "seed_prototype",
+        "query"
+      ]
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "content",
+        "query",
+        "prototype"
+      ]
+    },
+    "time_validity": {
+      "type": "object",
+      "properties": {
+        "valid_from": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "valid_until": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "valid_from",
+        "valid_until"
+      ],
+      "additionalProperties": false
+    },
+    "permitted_uses": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/text"
+      },
+      "minItems": 1
+    },
+    "provenance_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "gts_version": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "alignment": {
+      "type": "object",
+      "properties": {
+        "route": {
+          "type": "string",
+          "enum": [
+            "direct",
+            "projector",
+            "none"
+          ]
+        },
+        "projector_ref": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/versioned_ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "alignment_evidence_ref": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/versioned_ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "route",
+        "projector_ref",
+        "alignment_evidence_ref"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "route": {
+                "const": "projector"
+              }
+            },
+            "required": [
+              "route"
+            ]
+          },
+          "then": {
+            "properties": {
+              "projector_ref": {
+                "$ref": "common.schema.json#/$defs/versioned_ref"
+              },
+              "alignment_evidence_ref": {
+                "$ref": "common.schema.json#/$defs/versioned_ref"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "descriptor_id",
+    "descriptor_version",
+    "model_id",
+    "model_family",
+    "model_revision",
+    "space_id",
+    "dimensions",
+    "encoding",
+    "normalization",
+    "distance_metric",
+    "phase",
+    "representation_semantics",
+    "transformation_version",
+    "represented_unit",
+    "role",
+    "time_validity",
+    "permitted_uses",
+    "provenance_ref",
+    "gts_version",
+    "alignment"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "pseudo-v1"
+          }
+        },
+        "required": [
+          "phase"
+        ]
+      },
+      "then": {
+        "properties": {
+          "representation_semantics": {
+            "const": "nonsemantic"
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

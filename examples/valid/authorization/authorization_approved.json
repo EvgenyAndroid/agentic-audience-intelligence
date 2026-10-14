@@ -1,0 +1,32 @@
+{
+  "kind": "authorization",
+  "schema_version": "1.0.0",
+  "authorization_id": "auth_0001",
+  "release_ref": {
+    "id": "rel_seed_web_0001",
+    "version": "1.0.0"
+  },
+  "release_checksum": "sha256:5c113f4390e4c615aa94eb5fa359a11a7178f861f92987b98fa4788525677608",
+  "decision": "approved",
+  "destination_ref": "dest_demo_dsp",
+  "purpose": "Food brand pilot audience",
+  "policy_versions": [
+    {
+      "id": "output_workspace_demo",
+      "version": "1.0.0"
+    },
+    {
+      "id": "exec_workspace_demo",
+      "version": "1.0.0"
+    }
+  ],
+  "authorized_by": {
+    "actor_id": "user_reviewer_01",
+    "actor_type": "human",
+    "role": "release_reviewer"
+  },
+  "authorized_at": "2026-10-12T09:00:00Z",
+  "valid_from": "2026-10-12T09:00:00Z",
+  "valid_until": "2026-10-19T09:00:00Z",
+  "notes": null
+}

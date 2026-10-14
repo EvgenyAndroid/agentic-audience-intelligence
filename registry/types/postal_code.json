@@ -1,0 +1,33 @@
+{
+  "kind": "type_registry_entry",
+  "schema_version": "1.0.0",
+  "type_id": "postal_code",
+  "type_version": "1.0.0",
+  "label": "Postal code",
+  "category": "area",
+  "represents": "A geographic area with country qualifier",
+  "grain": "area",
+  "namespace_rules": {
+    "format_pattern": "^[0-9]{5}$",
+    "case_sensitive": true,
+    "normalization": "none",
+    "must_remain_string": true
+  },
+  "temporal_validity": {
+    "kind": "stable",
+    "max_validity_days": null
+  },
+  "semantic_feature_allowed": false,
+  "allowed_relationships": [],
+  "limits": [
+    "Area context only; never a personal trait",
+    "Leading zeros preserved"
+  ],
+  "registration_state": "confirmed",
+  "confirmed_by": {
+    "actor_id": "user_steward_01",
+    "actor_type": "human",
+    "role": "data_steward"
+  },
+  "confirmed_at": "2026-10-01T00:00:00Z"
+}

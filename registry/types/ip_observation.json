@@ -1,0 +1,32 @@
+{
+  "kind": "type_registry_entry",
+  "schema_version": "1.0.0",
+  "type_id": "ip_observation",
+  "type_version": "1.0.0",
+  "label": "IP observation",
+  "category": "network_observation",
+  "represents": "A time-bound network observation",
+  "grain": "network_observation",
+  "namespace_rules": {
+    "format_pattern": null,
+    "case_sensitive": true,
+    "normalization": "none",
+    "must_remain_string": true
+  },
+  "temporal_validity": {
+    "kind": "time_bound",
+    "max_validity_days": 1
+  },
+  "semantic_feature_allowed": false,
+  "allowed_relationships": [],
+  "limits": [
+    "Shared IP does not establish that two keys are the same entity"
+  ],
+  "registration_state": "confirmed",
+  "confirmed_by": {
+    "actor_id": "user_steward_01",
+    "actor_type": "human",
+    "role": "data_steward"
+  },
+  "confirmed_at": "2026-10-01T00:00:00Z"
+}

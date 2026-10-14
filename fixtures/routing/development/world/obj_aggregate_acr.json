@@ -1,0 +1,20 @@
+{
+  "kind": "objective",
+  "schema_version": "1.0.0",
+  "objective_id": "obj_aggregate_acr",
+  "objective_version": "1.0.0",
+  "tenant_id": "tenant_demo",
+  "statement": "Viewing-pattern aggregates for cooking-show households",
+  "task_family": "aggregate_measurement",
+  "intended_use": "Media planning report inside the clean room",
+  "requested_by": {
+    "actor_id": "user_analyst_01",
+    "actor_type": "human",
+    "role": "analyst"
+  },
+  "claim_sought": "aggregate_measurement",
+  "eligible_universe_ref": null,
+  "seed_ref": null,
+  "content_brief_ref": null,
+  "target": null
+}

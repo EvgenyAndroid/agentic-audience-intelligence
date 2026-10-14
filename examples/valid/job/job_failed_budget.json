@@ -1,0 +1,36 @@
+{
+  "kind": "job",
+  "schema_version": "1.0.0",
+  "job_id": "job_0008",
+  "tenant_id": "tenant_demo",
+  "run_ref": "run_demo_0001",
+  "task_ref": {
+    "id": "task_seed_affinity_score",
+    "version": "1.0.0"
+  },
+  "task_decision_ref": "dec_task_seed_affinity_score_v1",
+  "idempotency_key": "idem_job_0008",
+  "actor_context_ref": "ctx_analyst_01",
+  "budget_refs": [
+    {
+      "id": "budget_pilot_demo",
+      "version": "1.0.0"
+    }
+  ],
+  "model_allowlist": [
+    "multi_prototype_cosine"
+  ],
+  "execution_state": "failed",
+  "failure": {
+    "code": "budget_exceeded",
+    "detail": "Compute budget exhausted at prototype search"
+  },
+  "statistical_outcome": null,
+  "checkpoints": [],
+  "artifact_refs": [],
+  "computed_metrics_ref": null,
+  "usage_record_ref": "usage_job_0008",
+  "submitted_at": "2026-10-11T03:00:00Z",
+  "started_at": "2026-10-11T03:01:00Z",
+  "ended_at": "2026-10-11T03:40:00Z"
+}

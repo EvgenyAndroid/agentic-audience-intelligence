@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/routing_oracle.schema.json",
+  "title": "Routing benchmark oracle",
+  "description": "Hidden expected decision for one case. Authored independently of the evaluated model.",
+  "x-prd-requirements": [
+    "FR32"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "routing_oracle"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "case_id": {
+      "type": "string",
+      "pattern": "^case-[0-9]{4}$"
+    },
+    "oracle_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "expected_verdict": {
+      "$ref": "common.schema.json#/$defs/verdict"
+    },
+    "mandatory_reason_codes": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/reason_code"
+      }
+    },
+    "acceptable_next_actions": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/text"
+      }
+    },
+    "critical": {
+      "type": "boolean"
+    },
+    "defect_pattern": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "authored_by": {
+      "$ref": "common.schema.json#/$defs/human_actor"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "case_id",
+    "oracle_version",
+    "expected_verdict",
+    "mandatory_reason_codes",
+    "acceptable_next_actions",
+    "critical",
+    "defect_pattern",
+    "authored_by"
+  ],
+  "unevaluatedProperties": false
+}

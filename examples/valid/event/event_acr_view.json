@@ -1,0 +1,18 @@
+{
+  "kind": "event",
+  "schema_version": "1.0.0",
+  "event_id": "evt_0001",
+  "entity_key": "ent_hh_000042",
+  "event_type": "content_view",
+  "event_time": "2026-09-12T19:03:00Z",
+  "available_at": "2026-09-14T07:00:00Z",
+  "content_ref": "cnt_prog_cooking_17",
+  "value": null,
+  "duration_seconds": 1620,
+  "evidence_kind": "observed",
+  "source_dataset_ref": {
+    "id": "ds_acr_demo",
+    "version": "1.0.0"
+  },
+  "deduplication_key": "acr:000042:cooking-17:20260912T1903"
+}

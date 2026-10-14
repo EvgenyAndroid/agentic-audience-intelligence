@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/routing_case.schema.json",
+  "title": "Routing benchmark case",
+  "description": "Neutral case visible to an evaluated agent. Expected decisions live only in the separate oracle.",
+  "x-prd-requirements": [
+    "FR32"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "routing_case"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "case_id": {
+      "type": "string",
+      "pattern": "^case-[0-9]{4}$"
+    },
+    "suite": {
+      "type": "string",
+      "enum": [
+        "development",
+        "locked"
+      ]
+    },
+    "task_path": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._/-]+\\.json$"
+    },
+    "evidence_bundle_path": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._/-]+\\.json$"
+    },
+    "visible_document_paths": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9._/-]+\\.json$"
+      }
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "case_id",
+    "suite",
+    "task_path",
+    "evidence_bundle_path",
+    "visible_document_paths"
+  ],
+  "unevaluatedProperties": false
+}

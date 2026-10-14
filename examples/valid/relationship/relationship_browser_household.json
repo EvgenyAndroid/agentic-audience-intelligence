@@ -1,0 +1,21 @@
+{
+  "kind": "relationship",
+  "schema_version": "1.0.0",
+  "relationship_id": "rel_0001",
+  "source_entity_key": "ent_ck_77",
+  "target_entity_key": "ent_hh_000042",
+  "relationship_type": "browser_in_household",
+  "method": "supplied_probabilistic",
+  "confidence": 0.82,
+  "valid_from": "2026-08-01T00:00:00Z",
+  "valid_until": "2026-11-01T00:00:00Z",
+  "available_at": "2026-08-02T00:00:00Z",
+  "permitted_uses": [
+    "measurement_mapping"
+  ],
+  "evidence_ref": "graph_vendor_demo_release_2026_08",
+  "policy_ref": {
+    "id": "rights_demo_2026",
+    "version": "1.0.0"
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/reason_code_registry.schema.json",
+  "title": "Reason code registry",
+  "description": "Single registry of reason codes, each bound to one dimension. Legacy aliases resolve to canonical codes.",
+  "x-prd-requirements": [
+    "FR41"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "reason_code_registry"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "registry_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "codes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "common.schema.json#/$defs/reason_code"
+          },
+          "dimension": {
+            "type": "string",
+            "enum": [
+              "task_decision",
+              "execution_failure",
+              "inclusion",
+              "delivery"
+            ]
+          },
+          "decision_effect": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "violated",
+                  "missing"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "$ref": "common.schema.json#/$defs/text"
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/reason_code"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "dimension",
+          "decision_effect",
+          "description",
+          "aliases"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "dimension": {
+                  "const": "task_decision"
+                }
+              },
+              "required": [
+                "dimension"
+              ]
+            },
+            "then": {
+              "properties": {
+                "decision_effect": {
+                  "type": "string",
+                  "enum": [
+                    "violated",
+                    "missing"
+                  ]
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "decision_effect": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "registry_version",
+    "codes"
+  ],
+  "unevaluatedProperties": false
+}

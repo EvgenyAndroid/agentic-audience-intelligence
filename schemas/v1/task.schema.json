@@ -1,0 +1,303 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/task.schema.json",
+  "title": "Task",
+  "description": "One exact requested operation. Each task receives its own decision; parent runs may hold several tasks.",
+  "x-prd-requirements": [
+    "FR03",
+    "FR25",
+    "FR27",
+    "FR28",
+    "FR40"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "task"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "task_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "task_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "run_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "tenant_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "objective_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "task_family": {
+      "$ref": "common.schema.json#/$defs/task_family"
+    },
+    "operation": {
+      "$ref": "common.schema.json#/$defs/operation"
+    },
+    "input_snapshot_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/versioned_ref"
+      },
+      "minItems": 1
+    },
+    "units": {
+      "type": "object",
+      "properties": {
+        "observation_units": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "dataset_ref": {
+                "$ref": "common.schema.json#/$defs/versioned_ref"
+              },
+              "unit": {
+                "$ref": "common.schema.json#/$defs/unit"
+              }
+            },
+            "required": [
+              "dataset_ref",
+              "unit"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        },
+        "modeling_unit": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/unit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output_unit": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/unit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "activation_unit": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/unit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "measurement_unit": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/unit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mapping_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          }
+        }
+      },
+      "required": [
+        "observation_units",
+        "modeling_unit",
+        "output_unit",
+        "activation_unit",
+        "measurement_unit",
+        "mapping_refs"
+      ],
+      "additionalProperties": false
+    },
+    "requested_artifact": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/artifact_type"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "execution_location_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "destination_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "policy_refs": {
+      "type": "object",
+      "properties": {
+        "execution": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          }
+        },
+        "output": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          }
+        },
+        "rights": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          }
+        }
+      },
+      "required": [
+        "execution",
+        "output",
+        "rights"
+      ],
+      "additionalProperties": false
+    },
+    "model_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/versioned_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "budget_refs": {
+      "$ref": "common.schema.json#/$defs/budget_refs"
+    },
+    "created_by": {
+      "$ref": "common.schema.json#/$defs/actor"
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "task_id",
+    "task_version",
+    "run_ref",
+    "tenant_id",
+    "objective_ref",
+    "task_family",
+    "operation",
+    "input_snapshot_refs",
+    "units",
+    "requested_artifact",
+    "execution_location_ref",
+    "destination_ref",
+    "policy_refs",
+    "model_ref",
+    "budget_refs",
+    "created_by",
+    "created_at"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "enum": [
+              "export_rows",
+              "export_aggregate",
+              "activate"
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "destination_ref": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "requested_artifact": {
+            "$ref": "common.schema.json#/$defs/artifact_type"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "activate"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "units": {
+            "properties": {
+              "activation_unit": {
+                "$ref": "common.schema.json#/$defs/unit"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "infer"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "model_ref": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

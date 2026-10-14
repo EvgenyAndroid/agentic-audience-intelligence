@@ -1,0 +1,77 @@
+{
+  "kind": "feature_plan",
+  "schema_version": "1.0.0",
+  "feature_plan_id": "fp_seed_web",
+  "feature_plan_version": "1.0.0",
+  "run_ref": "run_demo_0001",
+  "prediction_cutoff": "2026-09-30T00:00:00Z",
+  "output_unit": {
+    "type_id": "browser_cookie",
+    "type_version": "1.0.0",
+    "namespace": "web_demo_cookie"
+  },
+  "allowed_source_refs": [
+    {
+      "id": "ds_web_demo",
+      "version": "1.0.0"
+    }
+  ],
+  "features": [
+    {
+      "feature_id": "f_food_pages_30d",
+      "feature_version": "1.0.0",
+      "representation": "behavioral",
+      "source_signal_refs": [
+        "web_view",
+        "web_page"
+      ],
+      "transform_ref": {
+        "id": "tx_count_topic_window",
+        "version": "1.0.0"
+      },
+      "window_days": 30,
+      "input_unit": {
+        "type_id": "browser_cookie",
+        "type_version": "1.0.0",
+        "namespace": "web_demo_cookie"
+      },
+      "output_unit": {
+        "type_id": "browser_cookie",
+        "type_version": "1.0.0",
+        "namespace": "web_demo_cookie"
+      },
+      "mapping_ref": null,
+      "missingness_rule": "keep_unknown",
+      "imputation_ref": null
+    },
+    {
+      "feature_id": "f_page_topic_semantic",
+      "feature_version": "1.0.0",
+      "representation": "semantic",
+      "source_signal_refs": [
+        "web_page"
+      ],
+      "transform_ref": {
+        "id": "tx_mean_page_embedding",
+        "version": "1.0.0"
+      },
+      "window_days": 30,
+      "input_unit": {
+        "type_id": "browser_cookie",
+        "type_version": "1.0.0",
+        "namespace": "web_demo_cookie"
+      },
+      "output_unit": {
+        "type_id": "browser_cookie",
+        "type_version": "1.0.0",
+        "namespace": "web_demo_cookie"
+      },
+      "mapping_ref": null,
+      "missingness_rule": "indicator",
+      "imputation_ref": null
+    }
+  ],
+  "availability_rule": "event_time_and_available_at_not_after_cutoff",
+  "relationship_rule": "valid_interval_covers_use_and_available_at_not_after_cutoff",
+  "preprocessing_fit_partition": "training"
+}

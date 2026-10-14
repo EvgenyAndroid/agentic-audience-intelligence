@@ -1,0 +1,9 @@
+{
+  "kind": "routing_case",
+  "schema_version": "1.0.0",
+  "case_id": "case-0001",
+  "suite": "development",
+  "task_path": "cases/case-0001/task.json",
+  "evidence_bundle_path": "cases/case-0001/bundle.json",
+  "visible_document_paths": []
+}

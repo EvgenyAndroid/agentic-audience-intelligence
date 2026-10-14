@@ -1,0 +1,146 @@
+{
+  "kind": "evidence_card",
+  "schema_version": "1.0.0",
+  "card_id": "card_seed_web_0001",
+  "card_version": "1.0.0",
+  "task_decision_ref": "dec_task_seed_affinity_score_v1",
+  "claim": {
+    "type": "seed_affinity",
+    "qualifier": "exploratory"
+  },
+  "output_unit": {
+    "type_id": "browser_cookie",
+    "type_version": "1.0.0",
+    "namespace": "web_demo_cookie"
+  },
+  "source_profiles": [
+    {
+      "profile_ref": {
+        "id": "prof_web_events_ref",
+        "version": "1.0.0"
+      },
+      "collection_method": "tag_or_pixel",
+      "coverage_ref": "coverage_web_demo_2026q3",
+      "known_limits": [
+        "Tagged properties only"
+      ]
+    }
+  ],
+  "seed_ref": {
+    "id": "seed_cooking_readers",
+    "version": "1.0.0"
+  },
+  "target": null,
+  "content_brief_ref": null,
+  "universe_ref": {
+    "id": "universe_web_eligible",
+    "version": "1.0.0"
+  },
+  "time_windows": [
+    {
+      "name": "behavior_window",
+      "window": {
+        "start": "2026-09-01T00:00:00Z",
+        "end": "2026-09-30T00:00:00Z"
+      }
+    }
+  ],
+  "representation_refs": [
+    {
+      "id": "rep_text_embed_demo",
+      "version": "1.0.0"
+    }
+  ],
+  "baselines": [
+    {
+      "name": "random_ranking",
+      "metrics": [
+        {
+          "name": "heldout_seed_recall_at_10pct",
+          "value": 0.1,
+          "denominator": {
+            "value": 2400,
+            "unit": {
+              "type_id": "browser_cookie",
+              "type_version": "1.0.0",
+              "namespace": "web_demo_cookie"
+            },
+            "basis": "exact"
+          },
+          "population_ref": "pop_heldout_seed",
+          "uncertainty": null
+        }
+      ]
+    }
+  ],
+  "metrics": [
+    {
+      "name": "heldout_seed_recall_at_10pct",
+      "value": 0.31,
+      "denominator": {
+        "value": 2400,
+        "unit": {
+          "type_id": "browser_cookie",
+          "type_version": "1.0.0",
+          "namespace": "web_demo_cookie"
+        },
+        "basis": "exact"
+      },
+      "population_ref": "pop_heldout_seed",
+      "uncertainty": {
+        "method": "bootstrap_percentile",
+        "level": 0.95,
+        "lower": 0.28,
+        "upper": 0.34
+      }
+    }
+  ],
+  "populations": [
+    {
+      "stage": "input",
+      "value": 1200000,
+      "unit": {
+        "type_id": "browser_cookie",
+        "type_version": "1.0.0",
+        "namespace": "web_demo_cookie"
+      },
+      "basis": "exact"
+    },
+    {
+      "stage": "scoreable",
+      "value": 830000,
+      "unit": {
+        "type_id": "browser_cookie",
+        "type_version": "1.0.0",
+        "namespace": "web_demo_cookie"
+      },
+      "basis": "exact"
+    },
+    {
+      "stage": "selected",
+      "value": 120000,
+      "unit": {
+        "type_id": "browser_cookie",
+        "type_version": "1.0.0",
+        "namespace": "web_demo_cookie"
+      },
+      "basis": "exact"
+    }
+  ],
+  "limitations": [
+    "Resemblance to the seed only; not a purchase probability",
+    "Fixture values for contract illustration"
+  ],
+  "permitted_uses": [
+    "Audience planning within the pilot"
+  ],
+  "execution_boundary_ref": "loc_workspace_demo",
+  "output_policy_refs": [
+    {
+      "id": "output_workspace_demo",
+      "version": "1.0.0"
+    }
+  ],
+  "measured_claims": [],
+  "issued_at": "2026-10-11T03:00:00Z"
+}

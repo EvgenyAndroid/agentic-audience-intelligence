@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/monitoring_report.schema.json",
+  "title": "Monitoring report",
+  "description": "Post-release drift, coverage or base-rate check against a supplied threshold. It can propose reassessment, never a release.",
+  "x-prd-requirements": [
+    "FR42"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "monitoring_report"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "report_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "subject_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "metric": {
+      "type": "string",
+      "enum": [
+        "population_stability_index",
+        "coverage_change",
+        "base_rate_shift",
+        "score_distribution_shift"
+      ]
+    },
+    "value": {
+      "type": "number"
+    },
+    "threshold_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "window": {
+      "$ref": "common.schema.json#/$defs/time_window"
+    },
+    "threshold_exceeded": {
+      "type": "boolean"
+    },
+    "proposed_action": {
+      "type": "string",
+      "enum": [
+        "none",
+        "reassess",
+        "refresh_proposal"
+      ]
+    },
+    "computed_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "report_id",
+    "subject_ref",
+    "metric",
+    "value",
+    "threshold_ref",
+    "window",
+    "threshold_exceeded",
+    "proposed_action",
+    "computed_at"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "threshold_exceeded": {
+            "const": false
+          }
+        },
+        "required": [
+          "threshold_exceeded"
+        ]
+      },
+      "then": {
+        "properties": {
+          "proposed_action": {
+            "const": "none"
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

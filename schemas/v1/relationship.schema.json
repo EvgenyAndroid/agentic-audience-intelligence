@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/relationship.schema.json",
+  "title": "Relationship",
+  "description": "A permitted, evidenced, time-bounded link between typed units. Permitted uses are explicit.",
+  "x-prd-requirements": [
+    "FR06",
+    "FR02",
+    "FR07"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "relationship"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "relationship_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "source_entity_key": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "target_entity_key": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "relationship_type": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "supplied_deterministic",
+        "supplied_probabilistic",
+        "derived_deterministic"
+      ]
+    },
+    "confidence": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/probability"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "valid_from": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "valid_until": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "available_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "permitted_uses": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "feature_join",
+          "activation_mapping",
+          "measurement_mapping",
+          "alias_exclusion"
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "evidence_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "policy_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "relationship_id",
+    "source_entity_key",
+    "target_entity_key",
+    "relationship_type",
+    "method",
+    "confidence",
+    "valid_from",
+    "valid_until",
+    "available_at",
+    "permitted_uses",
+    "evidence_ref",
+    "policy_ref"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "supplied_probabilistic"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "properties": {
+          "confidence": {
+            "$ref": "common.schema.json#/$defs/probability"
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/execution_policy.schema.json",
+  "title": "Execution policy",
+  "description": "Where computation may run and which operations are permitted there. Operations not listed are unknown, not permitted.",
+  "x-prd-requirements": [
+    "FR27",
+    "FR05",
+    "FR40",
+    "NFR06"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "execution_policy"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "policy_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "policy_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "tenant_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "issuer": {
+      "$ref": "common.schema.json#/$defs/actor"
+    },
+    "authority_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "effective_from": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "effective_until": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "enforcement": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": [
+            "platform_enforced",
+            "service_enforced",
+            "contractual"
+          ]
+        },
+        "evidence_ref": {
+          "$ref": "common.schema.json#/$defs/id"
+        }
+      },
+      "required": [
+        "method",
+        "evidence_ref"
+      ],
+      "additionalProperties": false
+    },
+    "locations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "location_id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "location_type": {
+            "type": "string",
+            "enum": [
+              "tenant_environment",
+              "warehouse",
+              "clean_room",
+              "partner_environment",
+              "other"
+            ]
+          },
+          "residency": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/country"
+            }
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            }
+          }
+        },
+        "required": [
+          "location_id",
+          "location_type",
+          "residency",
+          "capabilities"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "$ref": "common.schema.json#/$defs/operation"
+          },
+          "permission": {
+            "type": "string",
+            "enum": [
+              "permitted",
+              "prohibited"
+            ]
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/text"
+            }
+          }
+        },
+        "required": [
+          "operation",
+          "permission",
+          "conditions"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "policy_id",
+    "policy_version",
+    "tenant_id",
+    "issuer",
+    "authority_ref",
+    "effective_from",
+    "effective_until",
+    "enforcement",
+    "locations",
+    "operations"
+  ],
+  "unevaluatedProperties": false
+}

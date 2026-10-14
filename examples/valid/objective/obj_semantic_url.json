@@ -1,0 +1,23 @@
+{
+  "kind": "objective",
+  "schema_version": "1.0.0",
+  "objective_id": "obj_semantic_url",
+  "objective_version": "1.0.0",
+  "tenant_id": "tenant_demo",
+  "statement": "Pages related to a quick-dinner content brief",
+  "task_family": "semantic_similarity",
+  "intended_use": "Contextual placement list",
+  "requested_by": {
+    "actor_id": "user_analyst_01",
+    "actor_type": "human",
+    "role": "analyst"
+  },
+  "claim_sought": "semantic_similarity",
+  "eligible_universe_ref": null,
+  "seed_ref": null,
+  "content_brief_ref": {
+    "id": "brief_quick_dinners",
+    "version": "1.0.0"
+  },
+  "target": null
+}

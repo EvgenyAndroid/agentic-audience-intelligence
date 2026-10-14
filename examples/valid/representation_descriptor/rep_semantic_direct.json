@@ -1,0 +1,33 @@
+{
+  "kind": "representation_descriptor",
+  "schema_version": "1.0.0",
+  "descriptor_id": "rep_text_embed_demo",
+  "descriptor_version": "1.0.0",
+  "model_id": "text-embedding-demo",
+  "model_family": "vendor/text-embedding-demo",
+  "model_revision": "2026-06",
+  "space_id": "text-embed-demo-d512-v1",
+  "dimensions": 512,
+  "encoding": "float32",
+  "normalization": "l2",
+  "distance_metric": "cosine",
+  "phase": "llm-v1",
+  "representation_semantics": "semantic",
+  "transformation_version": "1.0.0",
+  "represented_unit": "content_item",
+  "role": "content",
+  "time_validity": {
+    "valid_from": "2026-10-01T00:00:00Z",
+    "valid_until": null
+  },
+  "permitted_uses": [
+    "Contextual retrieval within tenant_demo"
+  ],
+  "provenance_ref": "embed_job_demo_0001",
+  "gts_version": "aip-gts-demo-1",
+  "alignment": {
+    "route": "direct",
+    "projector_ref": null,
+    "alignment_evidence_ref": null
+  }
+}

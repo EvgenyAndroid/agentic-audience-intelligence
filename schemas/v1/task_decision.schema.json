@@ -1,0 +1,306 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/task_decision.schema.json",
+  "title": "Task decision",
+  "description": "Authoritative per-task verdict assembled by the router from established prerequisites. Precedence: violated > missing > satisfied.",
+  "x-prd-requirements": [
+    "FR25",
+    "FR38",
+    "FR39",
+    "FR10",
+    "FR41",
+    "NFR06"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "task_decision"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "decision_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "task_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "task_checksum": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "verdict": {
+      "$ref": "common.schema.json#/$defs/verdict"
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "prerequisite_id": {
+            "type": "string",
+            "pattern": "^P-[A-Z0-9-]+$"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "satisfied",
+              "missing",
+              "violated"
+            ]
+          },
+          "established_by": {
+            "type": "string",
+            "enum": [
+              "deterministic_check",
+              "steward_confirmation",
+              "policy_service",
+              "reviewer"
+            ]
+          },
+          "check_ref": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/id"
+            }
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/reason_code"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "prerequisite_id",
+          "outcome",
+          "established_by",
+          "check_ref",
+          "evidence_refs",
+          "reason_code"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "outcome": {
+                  "enum": [
+                    "missing",
+                    "violated"
+                  ]
+                }
+              },
+              "required": [
+                "outcome"
+              ]
+            },
+            "then": {
+              "properties": {
+                "reason_code": {
+                  "$ref": "common.schema.json#/$defs/reason_code"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "minItems": 1
+    },
+    "reasons": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/reason"
+      }
+    },
+    "next_actions": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/text"
+      }
+    },
+    "decided_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "valid_until": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "validity_basis": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/id"
+      },
+      "minItems": 1
+    },
+    "policy_versions": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/versioned_ref"
+      }
+    },
+    "contract_versions": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/versioned_ref"
+      },
+      "minItems": 1
+    },
+    "supersedes": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "agent_proposal_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/id"
+      }
+    },
+    "decided_by": {
+      "type": "object",
+      "properties": {
+        "service_id": {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "service_version": {
+          "$ref": "common.schema.json#/$defs/semver"
+        },
+        "authority": {
+          "const": "router"
+        }
+      },
+      "required": [
+        "service_id",
+        "service_version",
+        "authority"
+      ],
+      "additionalProperties": false
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "decision_id",
+    "task_ref",
+    "task_checksum",
+    "verdict",
+    "prerequisites",
+    "reasons",
+    "next_actions",
+    "decided_at",
+    "valid_until",
+    "validity_basis",
+    "policy_versions",
+    "contract_versions",
+    "supersedes",
+    "agent_proposal_refs",
+    "decided_by"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "verdict": {
+            "const": "ELIGIBLE"
+          }
+        },
+        "required": [
+          "verdict"
+        ]
+      },
+      "then": {
+        "properties": {
+          "prerequisites": {
+            "items": {
+              "properties": {
+                "outcome": {
+                  "const": "satisfied"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "verdict": {
+            "const": "BLOCKED"
+          }
+        },
+        "required": [
+          "verdict"
+        ]
+      },
+      "then": {
+        "properties": {
+          "prerequisites": {
+            "contains": {
+              "properties": {
+                "outcome": {
+                  "const": "violated"
+                }
+              }
+            }
+          },
+          "reasons": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "verdict": {
+            "const": "PROVISIONAL"
+          }
+        },
+        "required": [
+          "verdict"
+        ]
+      },
+      "then": {
+        "properties": {
+          "prerequisites": {
+            "contains": {
+              "properties": {
+                "outcome": {
+                  "const": "missing"
+                }
+              }
+            },
+            "not": {
+              "contains": {
+                "properties": {
+                  "outcome": {
+                    "const": "violated"
+                  }
+                }
+              }
+            }
+          },
+          "reasons": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/export_receipt.schema.json",
+  "title": "Export receipt",
+  "description": "Delivery record. Acceptance or matching requires destination confirmation; unknown state requires reconciliation before retry.",
+  "x-prd-requirements": [
+    "FR17",
+    "FR15"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "export_receipt"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "receipt_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "release_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "authorization_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "destination_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "idempotency_key": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "delivery_state": {
+      "type": "string",
+      "enum": [
+        "submitted",
+        "accepted",
+        "matched",
+        "live",
+        "failed",
+        "unknown"
+      ]
+    },
+    "confirmed_by_destination": {
+      "type": "boolean"
+    },
+    "remote_ref": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 512
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "submitted_count": {
+      "$ref": "common.schema.json#/$defs/count"
+    },
+    "accepted_count": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/count"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "matched_count": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/count"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reconciliation_required": {
+      "type": "boolean"
+    },
+    "recorded_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "receipt_id",
+    "release_ref",
+    "authorization_ref",
+    "destination_ref",
+    "idempotency_key",
+    "delivery_state",
+    "confirmed_by_destination",
+    "remote_ref",
+    "submitted_count",
+    "accepted_count",
+    "matched_count",
+    "reconciliation_required",
+    "recorded_at"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "delivery_state": {
+            "enum": [
+              "accepted",
+              "matched",
+              "live"
+            ]
+          }
+        },
+        "required": [
+          "delivery_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "confirmed_by_destination": {
+            "const": true
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "delivery_state": {
+            "const": "unknown"
+          }
+        },
+        "required": [
+          "delivery_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "reconciliation_required": {
+            "const": true
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "confirmed_by_destination": {
+            "const": false
+          }
+        },
+        "required": [
+          "confirmed_by_destination"
+        ]
+      },
+      "then": {
+        "properties": {
+          "accepted_count": {
+            "type": "null"
+          },
+          "matched_count": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

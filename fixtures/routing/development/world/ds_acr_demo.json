@@ -1,0 +1,27 @@
+{
+  "kind": "dataset_manifest",
+  "schema_version": "1.0.0",
+  "dataset_id": "ds_acr_demo",
+  "dataset_version": "1.0.0",
+  "tenant_id": "tenant_demo",
+  "source_profile_ref": {
+    "id": "prof_acr_viewing_ref",
+    "version": "1.0.0"
+  },
+  "snapshot": {
+    "storage_ref": "tenant-store://tenant_demo/ds_acr_demo/v1",
+    "sha256": "sha256:8040be570d682ae750cf3358199401047605536fcb1ccff89b79134f3731c53a",
+    "format": "parquet",
+    "row_count": null,
+    "byte_count": null,
+    "created_at": "2026-10-01T00:00:00Z",
+    "immutable": true
+  },
+  "received_at": "2026-10-01T00:00:00Z",
+  "observation_period": {
+    "start": "2026-07-01T00:00:00Z",
+    "end": "2026-09-30T23:59:59Z"
+  },
+  "dataset_state": "confirmed",
+  "lineage_parents": []
+}

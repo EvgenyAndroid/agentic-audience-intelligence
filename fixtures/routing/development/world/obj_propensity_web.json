@@ -1,0 +1,26 @@
+{
+  "kind": "objective",
+  "schema_version": "1.0.0",
+  "objective_id": "obj_propensity_web",
+  "objective_version": "1.0.0",
+  "tenant_id": "tenant_demo",
+  "statement": "Estimate 30-day conversion probability",
+  "task_family": "outcome_propensity",
+  "intended_use": "Prioritize browsers for a retargeting test",
+  "requested_by": {
+    "actor_id": "user_analyst_01",
+    "actor_type": "human",
+    "role": "analyst"
+  },
+  "claim_sought": "outcome_probability",
+  "eligible_universe_ref": {
+    "id": "universe_web_eligible",
+    "version": "1.0.0"
+  },
+  "seed_ref": null,
+  "content_brief_ref": null,
+  "target": {
+    "event": "conversion",
+    "horizon_days": 30
+  }
+}

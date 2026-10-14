@@ -1,0 +1,378 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/score.schema.json",
+  "title": "Score",
+  "description": "Typed record-level score. Cosine, affinity, rank and probability are distinct; abstention is null with reasons.",
+  "x-prd-requirements": [
+    "FR14",
+    "FR10",
+    "FR13",
+    "FR11",
+    "FR18"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "score"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "score_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "entity_key": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "output_unit": {
+      "$ref": "common.schema.json#/$defs/unit"
+    },
+    "score_type": {
+      "type": "string",
+      "enum": [
+        "semantic_similarity",
+        "seed_affinity",
+        "behavioral_affinity",
+        "outcome_probability",
+        "rank"
+      ]
+    },
+    "scale": {
+      "type": "string",
+      "enum": [
+        "cosine",
+        "unit_interval",
+        "probability",
+        "rank_ordinal"
+      ]
+    },
+    "score_value": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "inclusion_disposition": {
+      "type": "string",
+      "enum": [
+        "included",
+        "excluded",
+        "abstained"
+      ]
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/reason_code"
+      }
+    },
+    "model_version": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "feature_snapshot_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "representation_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/versioned_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "seed_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/versioned_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "target": {
+      "type": "object",
+      "properties": {
+        "event": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "horizon_days": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "event",
+        "horizon_days"
+      ],
+      "additionalProperties": false
+    },
+    "prediction_cutoff": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "scored_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "expires_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "task_decision_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "score_id",
+    "entity_key",
+    "output_unit",
+    "score_type",
+    "scale",
+    "score_value",
+    "inclusion_disposition",
+    "reason_codes",
+    "model_version",
+    "feature_snapshot_ref",
+    "representation_ref",
+    "seed_ref",
+    "prediction_cutoff",
+    "scored_at",
+    "expires_at",
+    "task_decision_ref"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "score_type": {
+            "const": "outcome_probability"
+          }
+        },
+        "required": [
+          "score_type"
+        ]
+      },
+      "then": {
+        "required": [
+          "target"
+        ],
+        "properties": {
+          "scale": {
+            "const": "probability"
+          }
+        }
+      },
+      "else": {
+        "not": {
+          "required": [
+            "target"
+          ]
+        },
+        "properties": {
+          "scale": {
+            "not": {
+              "const": "probability"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "score_type": {
+            "enum": [
+              "seed_affinity",
+              "behavioral_affinity"
+            ]
+          }
+        },
+        "required": [
+          "score_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "seed_ref": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "score_type": {
+            "const": "semantic_similarity"
+          }
+        },
+        "required": [
+          "score_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "scale": {
+            "const": "cosine"
+          },
+          "representation_ref": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "score_type": {
+            "const": "rank"
+          }
+        },
+        "required": [
+          "score_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "scale": {
+            "const": "rank_ordinal"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "inclusion_disposition": {
+            "const": "abstained"
+          }
+        },
+        "required": [
+          "inclusion_disposition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "score_value": {
+            "type": "null"
+          },
+          "reason_codes": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "inclusion_disposition": {
+            "const": "included"
+          }
+        },
+        "required": [
+          "inclusion_disposition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "score_value": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "scale": {
+            "const": "cosine"
+          }
+        },
+        "required": [
+          "scale"
+        ]
+      },
+      "then": {
+        "properties": {
+          "score_value": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "scale": {
+            "enum": [
+              "unit_interval",
+              "probability"
+            ]
+          }
+        },
+        "required": [
+          "scale"
+        ]
+      },
+      "then": {
+        "properties": {
+          "score_value": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "scale": {
+            "const": "rank_ordinal"
+          }
+        },
+        "required": [
+          "scale"
+        ]
+      },
+      "then": {
+        "properties": {
+          "score_value": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "integer",
+                "minimum": 1
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

@@ -1,0 +1,320 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/measurement_feedback.schema.json",
+  "title": "Measurement feedback",
+  "description": "Downstream evidence bound to one exact release. Observational designs cannot carry causal claims.",
+  "x-prd-requirements": [
+    "FR34",
+    "FR35",
+    "FR36"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "measurement_feedback"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "feedback_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "feedback_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "release_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "release_checksum": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "model_version": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/versioned_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "feature_versions": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/versioned_ref"
+      }
+    },
+    "output_unit": {
+      "$ref": "common.schema.json#/$defs/unit"
+    },
+    "measurement_unit": {
+      "$ref": "common.schema.json#/$defs/unit"
+    },
+    "mapping_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/versioned_ref"
+      }
+    },
+    "campaign_context_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "design": {
+      "type": "object",
+      "properties": {
+        "design_type": {
+          "type": "string",
+          "enum": [
+            "randomized_holdout",
+            "strategy_comparison_randomized",
+            "observational_exposed_unexposed",
+            "pre_post"
+          ]
+        },
+        "assignment_ref": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/versioned_ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "primary_estimand": {
+          "type": "string",
+          "enum": [
+            "intention_to_treat",
+            "association",
+            "exposure_effect"
+          ]
+        },
+        "estimator": {
+          "$ref": "common.schema.json#/$defs/text"
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/text"
+          }
+        }
+      },
+      "required": [
+        "design_type",
+        "assignment_ref",
+        "primary_estimand",
+        "estimator",
+        "assumptions"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "design_type": {
+                "enum": [
+                  "randomized_holdout",
+                  "strategy_comparison_randomized"
+                ]
+              }
+            },
+            "required": [
+              "design_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "assignment_ref": {
+                "$ref": "common.schema.json#/$defs/versioned_ref"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "exposure_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/versioned_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "outcome_definition": {
+      "type": "object",
+      "properties": {
+        "event": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "unit": {
+          "$ref": "common.schema.json#/$defs/unit"
+        }
+      },
+      "required": [
+        "event",
+        "unit"
+      ],
+      "additionalProperties": false
+    },
+    "observation_window": {
+      "$ref": "common.schema.json#/$defs/time_window"
+    },
+    "available_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "maturity": {
+      "type": "string",
+      "enum": [
+        "mature",
+        "immature"
+      ]
+    },
+    "population_coverage": {
+      "type": "object",
+      "properties": {
+        "observable": {
+          "$ref": "common.schema.json#/$defs/count"
+        },
+        "agreed": {
+          "$ref": "common.schema.json#/$defs/count"
+        }
+      },
+      "required": [
+        "observable",
+        "agreed"
+      ],
+      "additionalProperties": false
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/metric"
+      }
+    },
+    "claim_type": {
+      "type": "string",
+      "enum": [
+        "observed_association",
+        "experimental_effect"
+      ]
+    },
+    "permitted_future_training_use": {
+      "type": "boolean"
+    },
+    "reuse_rights_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/versioned_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "feedback_id",
+    "feedback_version",
+    "release_ref",
+    "release_checksum",
+    "model_version",
+    "feature_versions",
+    "output_unit",
+    "measurement_unit",
+    "mapping_refs",
+    "campaign_context_ref",
+    "design",
+    "exposure_ref",
+    "outcome_definition",
+    "observation_window",
+    "available_at",
+    "maturity",
+    "population_coverage",
+    "results",
+    "claim_type",
+    "permitted_future_training_use",
+    "reuse_rights_ref"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "design": {
+            "properties": {
+              "design_type": {
+                "enum": [
+                  "observational_exposed_unexposed",
+                  "pre_post"
+                ]
+              }
+            },
+            "required": [
+              "design_type"
+            ]
+          }
+        },
+        "required": [
+          "design"
+        ]
+      },
+      "then": {
+        "properties": {
+          "claim_type": {
+            "const": "observed_association"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "claim_type": {
+            "const": "experimental_effect"
+          }
+        },
+        "required": [
+          "claim_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "design": {
+            "properties": {
+              "primary_estimand": {
+                "const": "intention_to_treat"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "permitted_future_training_use": {
+            "const": true
+          }
+        },
+        "required": [
+          "permitted_future_training_use"
+        ]
+      },
+      "then": {
+        "properties": {
+          "reuse_rights_ref": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

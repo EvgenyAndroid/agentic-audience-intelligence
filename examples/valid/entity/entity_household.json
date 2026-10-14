@@ -1,0 +1,19 @@
+{
+  "kind": "entity",
+  "schema_version": "1.0.0",
+  "entity_key": "ent_hh_000042",
+  "tenant_id": "tenant_demo",
+  "unit": {
+    "type_id": "provider_household_key",
+    "type_version": "1.0.0",
+    "namespace": "acr_demo_hh"
+  },
+  "raw_id_vault_ref": "vault://tenant_demo/acr_demo_hh/000042",
+  "valid_from": "2026-10-01T00:00:00Z",
+  "valid_until": null,
+  "source_dataset_ref": {
+    "id": "ds_acr_demo",
+    "version": "1.0.0"
+  },
+  "entity_state": "active"
+}

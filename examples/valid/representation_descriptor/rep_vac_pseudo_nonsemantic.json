@@ -1,0 +1,33 @@
+{
+  "kind": "representation_descriptor",
+  "schema_version": "1.0.0",
+  "descriptor_id": "rep_vac_pseudo_bridge",
+  "descriptor_version": "1.0.0",
+  "model_id": "adcp-ucp-bridge-pseudo-v1.0",
+  "model_family": "adcp-bridge/deterministic-taxonomy-v1",
+  "model_revision": null,
+  "space_id": "adcp-bridge-space-v1.0",
+  "dimensions": 512,
+  "encoding": "float32",
+  "normalization": "l2",
+  "distance_metric": "cosine",
+  "phase": "pseudo-v1",
+  "representation_semantics": "nonsemantic",
+  "transformation_version": "1.0.0",
+  "represented_unit": "taxonomy_label",
+  "role": "content",
+  "time_validity": {
+    "valid_from": "2026-10-01T00:00:00Z",
+    "valid_until": null
+  },
+  "permitted_uses": [
+    "Exchange conformance testing only"
+  ],
+  "provenance_ref": "adcp-signals-adaptor@cf5ef0e",
+  "gts_version": "adcp-gts-v1.0",
+  "alignment": {
+    "route": "direct",
+    "projector_ref": null,
+    "alignment_evidence_ref": null
+  }
+}

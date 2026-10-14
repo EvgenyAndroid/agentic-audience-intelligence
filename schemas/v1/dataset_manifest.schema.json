@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/dataset_manifest.schema.json",
+  "title": "Dataset manifest",
+  "description": "Binds one source profile version to one immutable input snapshot.",
+  "x-prd-requirements": [
+    "FR01",
+    "FR20",
+    "FR40",
+    "FR22"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "dataset_manifest"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "dataset_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "dataset_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "tenant_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "source_profile_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "snapshot": {
+      "type": "object",
+      "properties": {
+        "storage_ref": {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "sha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        },
+        "format": {
+          "type": "string",
+          "enum": [
+            "csv",
+            "parquet"
+          ]
+        },
+        "row_count": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "byte_count": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "immutable": {
+          "const": true
+        }
+      },
+      "required": [
+        "storage_ref",
+        "sha256",
+        "format",
+        "row_count",
+        "byte_count",
+        "created_at",
+        "immutable"
+      ],
+      "additionalProperties": false
+    },
+    "received_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "observation_period": {
+      "$ref": "common.schema.json#/$defs/time_window"
+    },
+    "dataset_state": {
+      "type": "string",
+      "enum": [
+        "received",
+        "quarantined",
+        "profiled",
+        "confirmed",
+        "withdrawn"
+      ]
+    },
+    "lineage_parents": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/versioned_ref"
+      }
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "dataset_id",
+    "dataset_version",
+    "tenant_id",
+    "source_profile_ref",
+    "snapshot",
+    "received_at",
+    "observation_period",
+    "dataset_state",
+    "lineage_parents"
+  ],
+  "unevaluatedProperties": false
+}

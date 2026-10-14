@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/content_item.schema.json",
+  "title": "Content item",
+  "description": "A program, ad creative, page, app screen or other content. Content type is data, not a code branch.",
+  "x-prd-requirements": [
+    "FR08",
+    "FR24"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "content_item"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "content_key": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "tenant_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "content_type": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "e.g. tv_program, ad_creative, url_page, app_screen"
+    },
+    "source_profile_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "canonical_ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "label": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 512
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "approved_text_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "language": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/language"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "taxonomy_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/id"
+      }
+    },
+    "content_time": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "resolution": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "$ref": "common.schema.json#/$defs/text"
+        },
+        "quality": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/probability"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "method",
+        "quality"
+      ],
+      "additionalProperties": false
+    },
+    "rights_policy_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "content_key",
+    "tenant_id",
+    "content_type",
+    "source_profile_ref",
+    "canonical_ref",
+    "label",
+    "approved_text_ref",
+    "language",
+    "taxonomy_refs",
+    "content_time",
+    "resolution",
+    "rights_policy_ref"
+  ],
+  "unevaluatedProperties": false
+}

@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/authorization.schema.json",
+  "title": "Release authorization",
+  "description": "A human reviewer's decision bound to an exact prepared checksum, destination, purpose and policy versions.",
+  "x-prd-requirements": [
+    "FR16",
+    "FR38"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "authorization"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "authorization_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "release_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "release_checksum": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "approved",
+        "rejected"
+      ]
+    },
+    "destination_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "purpose": {
+      "$ref": "common.schema.json#/$defs/text"
+    },
+    "policy_versions": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/versioned_ref"
+      },
+      "minItems": 1
+    },
+    "authorized_by": {
+      "$ref": "common.schema.json#/$defs/human_actor"
+    },
+    "authorized_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "valid_from": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "valid_until": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 2000
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "authorization_id",
+    "release_ref",
+    "release_checksum",
+    "decision",
+    "destination_ref",
+    "purpose",
+    "policy_versions",
+    "authorized_by",
+    "authorized_at",
+    "valid_from",
+    "valid_until",
+    "notes"
+  ],
+  "unevaluatedProperties": false
+}

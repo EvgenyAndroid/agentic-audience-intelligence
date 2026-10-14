@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/outcome_label.schema.json",
+  "title": "Outcome label",
+  "description": "An outcome observation for a named event, cutoff and horizon. Negatives require a mature, complete window.",
+  "x-prd-requirements": [
+    "FR10",
+    "FR13",
+    "FR36"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "outcome_label"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "label_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "entity_key": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "unit": {
+      "$ref": "common.schema.json#/$defs/unit"
+    },
+    "target_event": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "prediction_cutoff": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "horizon_end": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "outcome_state": {
+      "type": "string",
+      "enum": [
+        "positive",
+        "negative",
+        "censored",
+        "unobserved"
+      ]
+    },
+    "maturity": {
+      "type": "string",
+      "enum": [
+        "mature",
+        "immature"
+      ]
+    },
+    "observation_coverage_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "available_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "source_dataset_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "label_id",
+    "entity_key",
+    "unit",
+    "target_event",
+    "prediction_cutoff",
+    "horizon_end",
+    "outcome_state",
+    "maturity",
+    "observation_coverage_ref",
+    "available_at",
+    "source_dataset_ref"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "outcome_state": {
+            "const": "negative"
+          }
+        },
+        "required": [
+          "outcome_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "maturity": {
+            "const": "mature"
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

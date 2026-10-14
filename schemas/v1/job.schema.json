@@ -1,0 +1,230 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/job.schema.json",
+  "title": "Asynchronous job",
+  "description": "Execution record. Execution state, failure code and statistical outcome are separate fields.",
+  "x-prd-requirements": [
+    "NFR02",
+    "NFR03",
+    "FR21",
+    "FR20"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "job"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "job_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "tenant_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "run_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "task_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "task_decision_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "idempotency_key": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "actor_context_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "budget_refs": {
+      "$ref": "common.schema.json#/$defs/budget_refs"
+    },
+    "model_allowlist": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/id"
+      }
+    },
+    "execution_state": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "running",
+        "paused",
+        "succeeded",
+        "failed",
+        "cancelled",
+        "reconciling"
+      ]
+    },
+    "failure": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "$ref": "common.schema.json#/$defs/reason_code"
+            },
+            "detail": {
+              "type": "string",
+              "maxLength": 2000
+            }
+          },
+          "required": [
+            "code",
+            "detail"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "statistical_outcome": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "signal_found",
+            "no_useful_signal",
+            "inconclusive",
+            "not_applicable"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "checkpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "stage": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "artifact_ref": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          },
+          "recorded_at": {
+            "$ref": "common.schema.json#/$defs/timestamp"
+          }
+        },
+        "required": [
+          "stage",
+          "artifact_ref",
+          "recorded_at"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "artifact_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/versioned_ref"
+      }
+    },
+    "computed_metrics_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/versioned_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "usage_record_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "submitted_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "started_at": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ended_at": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "job_id",
+    "tenant_id",
+    "run_ref",
+    "task_ref",
+    "task_decision_ref",
+    "idempotency_key",
+    "actor_context_ref",
+    "budget_refs",
+    "model_allowlist",
+    "execution_state",
+    "failure",
+    "statistical_outcome",
+    "checkpoints",
+    "artifact_refs",
+    "computed_metrics_ref",
+    "usage_record_ref",
+    "submitted_at",
+    "started_at",
+    "ended_at"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "execution_state": {
+            "const": "failed"
+          }
+        },
+        "required": [
+          "execution_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "failure": {
+            "type": "object"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "failure": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

@@ -1,0 +1,48 @@
+{
+  "kind": "run",
+  "schema_version": "1.0.0",
+  "run_id": "run_demo_0001",
+  "tenant_id": "tenant_demo",
+  "objective_ref": {
+    "id": "obj_seed_affinity_web",
+    "version": "1.0.0"
+  },
+  "task_refs": [
+    {
+      "id": "task_seed_affinity_score",
+      "version": "1.0.0"
+    }
+  ],
+  "input_snapshot_refs": [
+    {
+      "id": "ds_web_demo",
+      "version": "1.0.0"
+    }
+  ],
+  "execution_location_ref": "loc_workspace_demo",
+  "feature_plan_ref": {
+    "id": "fp_seed_web",
+    "version": "1.0.0"
+  },
+  "split_plan_ref": {
+    "id": "split_heldout_seed_20pct",
+    "version": "1.0.0"
+  },
+  "model_allowlist": [
+    "centroid_cosine",
+    "multi_prototype_cosine"
+  ],
+  "prediction_cutoff": "2026-09-30T00:00:00Z",
+  "budget_refs": [
+    {
+      "id": "budget_pilot_demo",
+      "version": "1.0.0"
+    }
+  ],
+  "created_by": {
+    "actor_id": "user_analyst_01",
+    "actor_type": "human",
+    "role": "analyst"
+  },
+  "created_at": "2026-10-10T00:00:00Z"
+}

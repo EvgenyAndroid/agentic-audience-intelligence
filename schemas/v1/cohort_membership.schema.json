@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/cohort_membership.schema.json",
+  "title": "Cohort membership",
+  "description": "Membership in a versioned cohort. No numeric score is required.",
+  "x-prd-requirements": [
+    "FR14",
+    "FR11",
+    "FR18"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "cohort_membership"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "membership_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "cohort_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "entity_key": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "output_unit": {
+      "$ref": "common.schema.json#/$defs/unit"
+    },
+    "membership_basis": {
+      "type": "string",
+      "enum": [
+        "rule",
+        "cluster",
+        "score_threshold",
+        "content_similarity"
+      ]
+    },
+    "inclusion_disposition": {
+      "type": "string",
+      "enum": [
+        "included",
+        "excluded",
+        "abstained"
+      ]
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/reason_code"
+      }
+    },
+    "assigned_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "expires_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "task_decision_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "membership_id",
+    "cohort_ref",
+    "entity_key",
+    "output_unit",
+    "membership_basis",
+    "inclusion_disposition",
+    "reason_codes",
+    "assigned_at",
+    "expires_at",
+    "task_decision_ref"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "inclusion_disposition": {
+            "enum": [
+              "excluded",
+              "abstained"
+            ]
+          }
+        },
+        "required": [
+          "inclusion_disposition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "reason_codes": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

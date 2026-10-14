@@ -1,0 +1,167 @@
+{
+  "kind": "task_decision",
+  "schema_version": "1.0.0",
+  "decision_id": "dec_task_cr_export_aggregate_1.0.0_20261014T120000Z",
+  "task_ref": {
+    "id": "task_cr_export_aggregate",
+    "version": "1.0.0"
+  },
+  "task_checksum": "sha256:2abf6befd559b41e31cc043ce6daf16c55626061ff78b4b6aa0f18a58275ecfa",
+  "verdict": "ELIGIBLE",
+  "prerequisites": [
+    {
+      "prerequisite_id": "P-CONTRACT-VALID",
+      "outcome": "satisfied",
+      "established_by": "deterministic_check",
+      "check_ref": "aip-task-router:P-CONTRACT-VALID",
+      "evidence_refs": [],
+      "reason_code": null
+    },
+    {
+      "prerequisite_id": "P-TENANT-SCOPE",
+      "outcome": "satisfied",
+      "established_by": "deterministic_check",
+      "check_ref": "aip-task-router:P-TENANT-SCOPE",
+      "evidence_refs": [],
+      "reason_code": null
+    },
+    {
+      "prerequisite_id": "P-SNAPSHOT-IMMUTABLE",
+      "outcome": "satisfied",
+      "established_by": "deterministic_check",
+      "check_ref": "aip-task-router:P-SNAPSHOT-IMMUTABLE",
+      "evidence_refs": [
+        "sha256:8040be570d682ae750cf3358199401047605536fcb1ccff89b79134f3731c53a"
+      ],
+      "reason_code": null
+    },
+    {
+      "prerequisite_id": "P-EXEC-OPERATION",
+      "outcome": "satisfied",
+      "established_by": "deterministic_check",
+      "check_ref": "aip-task-router:P-EXEC-OPERATION",
+      "evidence_refs": [
+        "exec_cleanroom_demo@1.0.0"
+      ],
+      "reason_code": null
+    },
+    {
+      "prerequisite_id": "P-RIGHTS-USE",
+      "outcome": "satisfied",
+      "established_by": "policy_service",
+      "check_ref": "aip-task-router:P-RIGHTS-USE",
+      "evidence_refs": [
+        "evidence_p-rights-use"
+      ],
+      "reason_code": null
+    },
+    {
+      "prerequisite_id": "P-SENSITIVE-EXCLUSION",
+      "outcome": "satisfied",
+      "established_by": "deterministic_check",
+      "check_ref": "aip-task-router:P-SENSITIVE-EXCLUSION",
+      "evidence_refs": [
+        "evidence_p-sensitive-exclusion"
+      ],
+      "reason_code": null
+    },
+    {
+      "prerequisite_id": "P-PROFILE-CONFIRMED",
+      "outcome": "satisfied",
+      "established_by": "deterministic_check",
+      "check_ref": "aip-task-router:P-PROFILE-CONFIRMED",
+      "evidence_refs": [
+        "prof_acr_viewing_ref@1.0.0"
+      ],
+      "reason_code": null
+    },
+    {
+      "prerequisite_id": "P-UNITS-DECLARED",
+      "outcome": "satisfied",
+      "established_by": "deterministic_check",
+      "check_ref": "aip-task-router:P-UNITS-DECLARED",
+      "evidence_refs": [],
+      "reason_code": null
+    },
+    {
+      "prerequisite_id": "P-GRAIN-COMPATIBLE",
+      "outcome": "satisfied",
+      "established_by": "deterministic_check",
+      "check_ref": "aip-task-router:P-GRAIN-COMPATIBLE",
+      "evidence_refs": [],
+      "reason_code": null
+    },
+    {
+      "prerequisite_id": "P-AGGREGATION-RULES",
+      "outcome": "satisfied",
+      "established_by": "deterministic_check",
+      "check_ref": "aip-task-router:P-AGGREGATION-RULES",
+      "evidence_refs": [
+        "agg_min_households"
+      ],
+      "reason_code": null
+    },
+    {
+      "prerequisite_id": "P-AGGREGATION-THRESHOLD",
+      "outcome": "satisfied",
+      "established_by": "deterministic_check",
+      "check_ref": "aip-task-router:P-AGGREGATION-THRESHOLD",
+      "evidence_refs": [
+        "aggcheck_report_demo_001"
+      ],
+      "reason_code": null
+    },
+    {
+      "prerequisite_id": "P-OUTPUT-ARTIFACT",
+      "outcome": "satisfied",
+      "established_by": "deterministic_check",
+      "check_ref": "aip-task-router:P-OUTPUT-ARTIFACT",
+      "evidence_refs": [
+        "output_cleanroom_aggregate_only@1.0.0"
+      ],
+      "reason_code": null
+    },
+    {
+      "prerequisite_id": "P-DESTINATION-COMPATIBLE",
+      "outcome": "satisfied",
+      "established_by": "deterministic_check",
+      "check_ref": "aip-task-router:P-DESTINATION-COMPATIBLE",
+      "evidence_refs": [
+        "evidence_p-destination-compatible"
+      ],
+      "reason_code": null
+    }
+  ],
+  "reasons": [],
+  "next_actions": [],
+  "decided_at": "2026-10-14T12:00:00Z",
+  "valid_until": "2026-10-21T12:00:00Z",
+  "validity_basis": [
+    "max_decision_ttl",
+    "exec_cleanroom_demo@1.0.0",
+    "output_cleanroom_aggregate_only@1.0.0"
+  ],
+  "policy_versions": [
+    {
+      "id": "exec_cleanroom_demo",
+      "version": "1.0.0"
+    },
+    {
+      "id": "output_cleanroom_aggregate_only",
+      "version": "1.0.0"
+    }
+  ],
+  "contract_versions": [
+    {
+      "id": "aip-contracts",
+      "version": "1.0.0"
+    }
+  ],
+  "supersedes": null,
+  "agent_proposal_refs": [],
+  "decided_by": {
+    "service_id": "aip-task-router",
+    "service_version": "0.1.0",
+    "authority": "router"
+  }
+}

@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/alignment_test_set.schema.json",
+  "title": "Alignment golden test set",
+  "description": "Golden Test Set pairs with expected similarity bands, reusing the existing GTS pair fields.",
+  "x-prd-requirements": [
+    "FR24"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "alignment_test_set"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "gts_version": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "space_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/id"
+      },
+      "minItems": 1
+    },
+    "pairs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "pair_id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "concept_a": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "concept_b": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "rationale": {
+            "$ref": "common.schema.json#/$defs/text"
+          },
+          "expected_min": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expected_max": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "pair_id",
+          "concept_a",
+          "concept_b",
+          "rationale",
+          "expected_min",
+          "expected_max"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "anyOf": [
+              {
+                "properties": {
+                  "expected_min": {
+                    "type": "number"
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "expected_max": {
+                    "type": "number"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "minItems": 1
+    },
+    "authored_by": {
+      "$ref": "common.schema.json#/$defs/actor"
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "gts_version",
+    "space_ids",
+    "pairs",
+    "authored_by",
+    "created_at"
+  ],
+  "unevaluatedProperties": false
+}

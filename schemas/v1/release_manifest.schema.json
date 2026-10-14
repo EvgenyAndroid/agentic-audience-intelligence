@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/release_manifest.schema.json",
+  "title": "Release manifest",
+  "description": "Immutable prepared release. Any membership or policy change requires a new prepared version.",
+  "x-prd-requirements": [
+    "FR15",
+    "FR16",
+    "FR18",
+    "FR22"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "release_manifest"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "release_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "release_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "tenant_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "artifact_ref": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          },
+          "artifact_type": {
+            "$ref": "common.schema.json#/$defs/artifact_type"
+          },
+          "sha256": {
+            "$ref": "common.schema.json#/$defs/sha256"
+          }
+        },
+        "required": [
+          "artifact_ref",
+          "artifact_type",
+          "sha256"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "content_checksum": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "evidence_card_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "task_decision_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "populations": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/population_count"
+      },
+      "minItems": 1
+    },
+    "policy_versions": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/versioned_ref"
+      },
+      "minItems": 1
+    },
+    "destination_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "expires_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "lifecycle_state": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "prepared",
+        "approved",
+        "released",
+        "expired",
+        "revoked"
+      ]
+    },
+    "prepared_by": {
+      "$ref": "common.schema.json#/$defs/actor"
+    },
+    "prepared_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "release_id",
+    "release_version",
+    "tenant_id",
+    "artifacts",
+    "content_checksum",
+    "evidence_card_ref",
+    "task_decision_ref",
+    "populations",
+    "policy_versions",
+    "destination_ref",
+    "expires_at",
+    "lifecycle_state",
+    "prepared_by",
+    "prepared_at"
+  ],
+  "unevaluatedProperties": false
+}

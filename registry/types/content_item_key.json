@@ -1,0 +1,32 @@
+{
+  "kind": "type_registry_entry",
+  "schema_version": "1.0.0",
+  "type_id": "content_item_key",
+  "type_version": "1.0.0",
+  "label": "Content item key",
+  "category": "content",
+  "represents": "A page, program, creative or app screen",
+  "grain": "content_item",
+  "namespace_rules": {
+    "format_pattern": null,
+    "case_sensitive": true,
+    "normalization": "none",
+    "must_remain_string": true
+  },
+  "temporal_validity": {
+    "kind": "stable",
+    "max_validity_days": null
+  },
+  "semantic_feature_allowed": false,
+  "allowed_relationships": [],
+  "limits": [
+    "Content context does not prove reader or viewer intent"
+  ],
+  "registration_state": "confirmed",
+  "confirmed_by": {
+    "actor_id": "user_steward_01",
+    "actor_type": "human",
+    "role": "data_steward"
+  },
+  "confirmed_at": "2026-10-01T00:00:00Z"
+}

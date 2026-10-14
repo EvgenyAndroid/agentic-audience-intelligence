@@ -1,0 +1,22 @@
+{
+  "kind": "outcome_label",
+  "schema_version": "1.0.0",
+  "label_id": "lbl_0001",
+  "entity_key": "ent_ck_77",
+  "unit": {
+    "type_id": "browser_cookie",
+    "type_version": "1.0.0",
+    "namespace": "web_demo_cookie"
+  },
+  "target_event": "conversion",
+  "prediction_cutoff": "2026-08-01T00:00:00Z",
+  "horizon_end": "2026-08-31T00:00:00Z",
+  "outcome_state": "positive",
+  "maturity": "mature",
+  "observation_coverage_ref": "coverage_web_demo_2026q3",
+  "available_at": "2026-09-02T00:00:00Z",
+  "source_dataset_ref": {
+    "id": "ds_web_demo",
+    "version": "1.0.0"
+  }
+}

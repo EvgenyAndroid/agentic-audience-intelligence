@@ -1,0 +1,20 @@
+{
+  "kind": "routing_oracle",
+  "schema_version": "1.0.0",
+  "case_id": "case-0006",
+  "oracle_version": "1.0.0",
+  "expected_verdict": "BLOCKED",
+  "mandatory_reason_codes": [
+    "temporal_leakage"
+  ],
+  "acceptable_next_actions": [
+    "Rebuild the feature plan"
+  ],
+  "critical": true,
+  "defect_pattern": "availability_leakage",
+  "authored_by": {
+    "actor_id": "user_steward_01",
+    "actor_type": "human",
+    "role": "data_steward"
+  }
+}

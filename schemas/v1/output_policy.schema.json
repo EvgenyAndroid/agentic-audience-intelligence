@@ -1,0 +1,282 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/output_policy.schema.json",
+  "title": "Output policy",
+  "description": "Which artifacts, grains and destinations may leave an execution boundary, with supplied disclosure controls.",
+  "x-prd-requirements": [
+    "FR28",
+    "FR29",
+    "FR05",
+    "NFR06"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "output_policy"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "policy_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "policy_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "tenant_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "issuer": {
+      "$ref": "common.schema.json#/$defs/actor"
+    },
+    "authority_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "effective_from": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "effective_until": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "enforcement": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": [
+            "platform_enforced",
+            "service_enforced",
+            "contractual"
+          ]
+        },
+        "evidence_ref": {
+          "$ref": "common.schema.json#/$defs/id"
+        }
+      },
+      "required": [
+        "method",
+        "evidence_ref"
+      ],
+      "additionalProperties": false
+    },
+    "applies_to_locations": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/id"
+      },
+      "minItems": 1
+    },
+    "artifact_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "artifact_type": {
+            "$ref": "common.schema.json#/$defs/artifact_type"
+          },
+          "permission": {
+            "type": "string",
+            "enum": [
+              "permitted",
+              "prohibited"
+            ]
+          },
+          "permitted_output_type_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/id"
+            }
+          },
+          "permitted_destinations": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/id"
+            }
+          }
+        },
+        "required": [
+          "artifact_type",
+          "permission",
+          "permitted_output_type_ids",
+          "permitted_destinations"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "aggregation_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rule_id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "counted_unit": {
+            "$ref": "common.schema.json#/$defs/unit"
+          },
+          "min_distinct_count": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Supplied by the policy owner. The platform has no default."
+          },
+          "approved_dimensions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            }
+          },
+          "small_cell_handling": {
+            "type": "string",
+            "enum": [
+              "suppress_cell",
+              "block_release"
+            ]
+          },
+          "applies_to": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/artifact_type"
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "rule_id",
+          "counted_unit",
+          "min_distinct_count",
+          "approved_dimensions",
+          "small_cell_handling",
+          "applies_to"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "query_controls": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "max_releases_per_period": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "period_days": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "cumulative_budget_ref": {
+              "anyOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/versioned_ref"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "max_releases_per_period",
+            "period_days",
+            "cumulative_budget_ref"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cross_client_reuse": {
+      "type": "object",
+      "properties": {
+        "permitted": {
+          "type": "boolean"
+        },
+        "rights_ref": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/versioned_ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "permitted",
+        "rights_ref"
+      ],
+      "additionalProperties": false
+    },
+    "retention_days": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "policy_id",
+    "policy_version",
+    "tenant_id",
+    "issuer",
+    "authority_ref",
+    "effective_from",
+    "effective_until",
+    "enforcement",
+    "applies_to_locations",
+    "artifact_rules",
+    "aggregation_rules",
+    "query_controls",
+    "cross_client_reuse",
+    "retention_days"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "cross_client_reuse": {
+            "properties": {
+              "permitted": {
+                "const": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "cross_client_reuse": {
+            "properties": {
+              "rights_ref": {
+                "$ref": "common.schema.json#/$defs/versioned_ref"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

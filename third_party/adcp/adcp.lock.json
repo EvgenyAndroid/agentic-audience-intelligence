@@ -1,0 +1,13 @@
+{
+  "repository": "https://github.com/adcontextprotocol/adcp",
+  "commit": "d033baef9adab46204db6c24a86f315580b40faf",
+  "commit_date": "2026-10-14T07:18:42-04:00",
+  "accessed": "2026-10-14",
+  "adcp_schema_version": "3.1.20",
+  "license": "Apache-2.0 (see third_party/adcp/LICENSE); files vendored unmodified",
+  "files": {
+    "3.1.20/get-signals-response.json": {"source_path": "dist/schemas/3.1.20/bundled/signals/get-signals-response.json", "sha256": "4aebb0cf64d12fd1b8539ac51f0550df3c5524776381ddf05c604e5659019550"},
+    "3.1.20/activate-signal-request.json": {"source_path": "dist/schemas/3.1.20/bundled/signals/activate-signal-request.json", "sha256": "8fcf76bed1ddfe144bd6ec89f307110f36b9ee5df937bbe4d3d0b819325e2952"}
+  },
+  "dialect": "http://json-schema.org/draft-07/schema#"
+}

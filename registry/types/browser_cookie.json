@@ -1,0 +1,37 @@
+{
+  "kind": "type_registry_entry",
+  "schema_version": "1.0.0",
+  "type_id": "browser_cookie",
+  "type_version": "1.0.0",
+  "label": "Browser cookie",
+  "category": "identifier",
+  "represents": "A browser within a provider namespace",
+  "grain": "browser",
+  "namespace_rules": {
+    "format_pattern": null,
+    "case_sensitive": true,
+    "normalization": "none",
+    "must_remain_string": true
+  },
+  "temporal_validity": {
+    "kind": "rotating",
+    "max_validity_days": 400
+  },
+  "semantic_feature_allowed": false,
+  "allowed_relationships": [
+    {
+      "relationship_type": "browser_in_household",
+      "target_type_id": "provider_household_key"
+    }
+  ],
+  "limits": [
+    "Does not establish a person or a household without a relationship"
+  ],
+  "registration_state": "confirmed",
+  "confirmed_by": {
+    "actor_id": "user_steward_01",
+    "actor_type": "human",
+    "role": "data_steward"
+  },
+  "confirmed_at": "2026-10-01T00:00:00Z"
+}

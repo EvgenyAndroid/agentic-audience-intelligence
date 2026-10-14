@@ -1,0 +1,28 @@
+{
+  "kind": "export_receipt",
+  "schema_version": "1.0.0",
+  "receipt_id": "rcpt_0001",
+  "release_ref": {
+    "id": "rel_seed_web_0001",
+    "version": "1.0.0"
+  },
+  "authorization_ref": "auth_0001",
+  "destination_ref": "dest_demo_dsp",
+  "idempotency_key": "idem_rel_0001",
+  "delivery_state": "unknown",
+  "confirmed_by_destination": false,
+  "remote_ref": null,
+  "submitted_count": {
+    "value": 120000,
+    "unit": {
+      "type_id": "browser_cookie",
+      "type_version": "1.0.0",
+      "namespace": "web_demo_cookie"
+    },
+    "basis": "exact"
+  },
+  "accepted_count": null,
+  "matched_count": null,
+  "reconciliation_required": true,
+  "recorded_at": "2026-10-12T10:00:00Z"
+}

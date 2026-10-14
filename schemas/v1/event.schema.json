@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/event.schema.json",
+  "title": "Event",
+  "description": "A time-stamped action or exposure by an entity, optionally referencing a content item.",
+  "x-prd-requirements": [
+    "FR07",
+    "FR08"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "event"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "event_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "entity_key": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "event_type": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "event_time": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "available_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "content_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": [
+            "number",
+            "string",
+            "boolean"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "duration_seconds": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "evidence_kind": {
+      "$ref": "common.schema.json#/$defs/evidence_kind"
+    },
+    "source_dataset_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "deduplication_key": {
+      "$ref": "common.schema.json#/$defs/id"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "event_id",
+    "entity_key",
+    "event_type",
+    "event_time",
+    "available_at",
+    "content_ref",
+    "value",
+    "duration_seconds",
+    "evidence_kind",
+    "source_dataset_ref",
+    "deduplication_key"
+  ],
+  "unevaluatedProperties": false
+}

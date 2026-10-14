@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/entity.schema.json",
+  "title": "Entity",
+  "description": "A tokenized unit. Raw identifiers stay in the tenant vault; only a vault reference appears here.",
+  "x-prd-requirements": [
+    "FR02",
+    "FR09"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "entity"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "entity_key": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "tenant_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "unit": {
+      "$ref": "common.schema.json#/$defs/unit"
+    },
+    "raw_id_vault_ref": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "valid_from": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "valid_until": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "source_dataset_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "entity_state": {
+      "type": "string",
+      "enum": [
+        "active",
+        "suppressed",
+        "withdrawn"
+      ]
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "entity_key",
+    "tenant_id",
+    "unit",
+    "raw_id_vault_ref",
+    "valid_from",
+    "valid_until",
+    "source_dataset_ref",
+    "entity_state"
+  ],
+  "unevaluatedProperties": false
+}
