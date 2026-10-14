@@ -32,6 +32,12 @@ def standardize_apply(x: np.ndarray, mean: np.ndarray, std: np.ndarray) -> np.nd
     return (x - mean) / std
 
 
+def _require_finite_or_unknown(*arrays: np.ndarray) -> None:
+    """NaN means unknown; infinities are invalid input and would otherwise produce untyped NaN scores."""
+    if any(np.isinf(a).any() for a in arrays):
+        raise ValueError("feature matrices must be finite; use NaN for unknown values")
+
+
 def _masked_cosine(candidates: np.ndarray, prototype: np.ndarray, min_coverage: float) -> AffinityResult:
     scores = np.full(candidates.shape[0], np.nan)
     reasons: list[str | None] = []
@@ -54,6 +60,7 @@ def _masked_cosine(candidates: np.ndarray, prototype: np.ndarray, min_coverage: 
 
 def centroid_affinity(seed: np.ndarray, candidates: np.ndarray, min_coverage: float) -> AffinityResult:
     """Cosine to the seed centroid. min_coverage is a required parameter (no platform default)."""
+    _require_finite_or_unknown(seed, candidates)
     return _masked_cosine(candidates, np.nanmean(seed, axis=0), min_coverage)
 
 
@@ -77,6 +84,7 @@ def multi_prototype_affinity(
     seed: np.ndarray, candidates: np.ndarray, k: int, min_coverage: float, rng_seed: int
 ) -> AffinityResult:
     """Max cosine over k seed prototypes. Seed rows with unknowns are mean-filled for clustering only."""
+    _require_finite_or_unknown(seed, candidates)
     filled = np.where(np.isnan(seed), np.nanmean(seed, axis=0), seed)
     prototypes = _kmeans(filled, k, np.random.default_rng(rng_seed))
     results = [_masked_cosine(candidates, p, min_coverage) for p in prototypes]

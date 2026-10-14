@@ -22,7 +22,10 @@
       "outcome": "satisfied",
       "established_by": "deterministic_check",
       "check_ref": "aip-task-router:P-TENANT-SCOPE",
-      "evidence_refs": [],
+      "evidence_refs": [
+        "execution_policy:exec_cleanroom_demo@1.0.0",
+        "output_policy:output_cleanroom_aggregate_only@1.0.0"
+      ],
       "reason_code": null
     },
     {

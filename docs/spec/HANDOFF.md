@@ -71,7 +71,9 @@ Work inside this repository. Attach or read the v3.1 prompt, BRD, PRD Revision 2
 
 ## Open items found in Session 2
 
-- No unit-mapping contract exists. `task.units.mapping_refs` cannot be resolved or verified, so the router returns PROVISIONAL `missing_unit_mapping` for any unit mismatch that cites a mapping. Define the contract (source and target unit types, approval, validity, permitted uses) before mapped-grain tasks can be ELIGIBLE.
+- No unit-mapping contract exists, so `task.units.mapping_refs` cannot be verified. A unit mismatch is BLOCKED `grain_incompatible` when the type registry declares no relationship between the types, and PROVISIONAL `missing_unit_mapping` otherwise, whether or not a mapping ref is cited. Session 2 must define the mapping definition and the bound relationship snapshot (effective and availability times, corrections, revocation, cardinality, ambiguity and unmatched handling, approvals) before mapped-grain tasks can be ELIGIBLE.
+- Platform-wide policies: until an explicit platform scope exists, represent them as tenant-bound policy instances that reference the authoritative platform template and version. `tenant_id` stays required; mandatory platform exclusions cannot be relaxed by tenant policy.
+- Task-level output policy refs can tighten aggregation rules but never supply a contributing source's missing rules. The same separation is not yet applied to execution and output permission checks, where a task-level policy silent on the operation still yields `missing_execution_policy` or `missing_output_policy`.
 - The evidence format for platform-enforced execution and output policies in real clean rooms.
 - AdCP `data_sources`, signal type, training jurisdictions and AI Act class for each actual source profile.
 - Whether cross-party exchange needs signed canonical hashes (RFC 8785 JCS) rather than the platform's sorted-key hashing.

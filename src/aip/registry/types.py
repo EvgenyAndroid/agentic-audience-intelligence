@@ -34,6 +34,17 @@ class TypeRegistry:
         entry = self.get(unit["type_id"], unit["type_version"])
         return entry["grain"] if entry else None
 
+    def relationship_allowed(self, a: dict[str, Any], b: dict[str, Any]) -> bool:
+        """True when either unit's registry entry declares a permitted relationship to the other's type."""
+
+        def declares(src: dict[str, Any], dst: dict[str, Any]) -> bool:
+            entry = self.get(src["type_id"], src["type_version"])
+            if entry is None:
+                return False
+            return any(r["target_type_id"] == dst["type_id"] for r in entry["allowed_relationships"])
+
+        return declares(a, b) or declares(b, a)
+
     def semantic_feature_allowed(self, type_id: str, type_version: str) -> bool:
         entry = self.get(type_id, type_version)
         return bool(entry and entry["semantic_feature_allowed"])

@@ -8,6 +8,7 @@ from aip.policy import artifact_permission, check_aggregate_release, compose_agg
 EXEC_CR = registry_doc("policies/exec_cleanroom_demo")
 OUT_CR = registry_doc("policies/output_cleanroom_aggregate_only")
 HH = "provider_household_key|acr_demo_hh"
+CR = "loc_cleanroom_demo"
 
 
 def test_every_source_must_permit_and_prohibition_wins():
@@ -53,14 +54,14 @@ def test_aggregation_composition_is_most_restrictive():
     stricter["aggregation_rules"][0].update(
         min_distinct_count=100, small_cell_handling="block_release", approved_dimensions=["genre"]
     )
-    [rule] = compose_aggregation_rules([OUT_CR, stricter], "aggregate_report", NOW)
+    [rule] = compose_aggregation_rules([OUT_CR, stricter], "aggregate_report", NOW, location_id=CR)
     assert (
         rule.min_distinct_count == 100 and rule.block_on_small_cell and rule.approved_dimensions == frozenset({"genre"})
     )
 
 
 def test_small_cells_are_suppressed_when_permitted():
-    rules = compose_aggregation_rules([OUT_CR], "aggregate_report", NOW)
+    rules = compose_aggregation_rules([OUT_CR], "aggregate_report", NOW, location_id=CR)
     cells = [
         {"dimensions": {"genre": "cooking"}, "distinct_counts": {HH: 120}},
         {"dimensions": {"genre": "opera"}, "distinct_counts": {HH: 7}},
@@ -70,13 +71,13 @@ def test_small_cells_are_suppressed_when_permitted():
 
 
 def test_threshold_failure_blocks_when_nothing_is_releasable():
-    rules = compose_aggregation_rules([OUT_CR], "aggregate_report", NOW)
+    rules = compose_aggregation_rules([OUT_CR], "aggregate_report", NOW, location_id=CR)
     outcome, _ = check_aggregate_release([{"dimensions": {"genre": "opera"}, "distinct_counts": {HH: 7}}], rules)
     assert outcome.outcome == "violated" and outcome.reason_code == "aggregation_threshold_not_met"
 
 
 def test_unapproved_dimension_and_missing_counts():
-    rules = compose_aggregation_rules([OUT_CR], "aggregate_report", NOW)
+    rules = compose_aggregation_rules([OUT_CR], "aggregate_report", NOW, location_id=CR)
     bad_dim, _ = check_aggregate_release([{"dimensions": {"zip": "10001"}, "distinct_counts": {HH: 500}}], rules)
     no_count, _ = check_aggregate_release([{"dimensions": {"genre": "x"}, "distinct_counts": {}}], rules)
     assert bad_dim.reason_code == "dimension_not_approved" and no_count.reason_code == "aggregate_counts_unavailable"

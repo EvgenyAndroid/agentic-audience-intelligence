@@ -76,3 +76,27 @@ def test_multi_prototype_reasons_agree_with_scores():
         for score, reason in zip(result.scores, result.abstain_reasons, strict=True):
             assert np.isnan(score) == (reason is not None), rng_seed
         assert result.abstain_reasons == ["zero_vector", None]
+
+
+def test_every_abstention_carries_a_registered_inclusion_reason():
+    from aip.registry import ReasonCodeRegistry
+
+    registry = ReasonCodeRegistry.load()
+    seed = np.array([[1.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.0, 1.0]])
+    pool = np.array([[0.0, 0.0], [np.nan, np.nan], [1.0, 0.0]])
+    result = multi_prototype_affinity(seed, pool, k=2, min_coverage=0.5, rng_seed=0)
+    assert np.isfinite(result.scores[~result.abstained]).all()
+    for reason in result.abstain_reasons[:2]:
+        assert reason is not None
+        registry.require(reason, "inclusion")
+
+
+@pytest.mark.parametrize("bad", ["seed", "pool"])
+def test_infinite_features_are_rejected(bad):
+    seed = np.ones((3, 2))
+    pool = np.ones((2, 2))
+    (seed if bad == "seed" else pool)[0, 0] = np.inf
+    with pytest.raises(ValueError):
+        centroid_affinity(seed, pool, min_coverage=0.5)
+    with pytest.raises(ValueError):
+        multi_prototype_affinity(seed, pool, k=1, min_coverage=0.5, rng_seed=0)
