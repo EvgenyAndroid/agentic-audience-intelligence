@@ -1,0 +1,592 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/model_registration.schema.json",
+  "title": "Model registration",
+  "description": "Identity and declared requirements of an existing or bring-your-own scoring model. Registration establishes what the model is and what it needs; it does not establish validation, which stays claim-specific evidence.",
+  "x-prd-requirements": [
+    "FR44",
+    "FR45",
+    "FR13",
+    "FR14",
+    "FR09"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "model_registration"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "model_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "model_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "tenant_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "owner": {
+      "$ref": "common.schema.json#/$defs/actor"
+    },
+    "task_family": {
+      "$ref": "common.schema.json#/$defs/task_family"
+    },
+    "score_type": {
+      "type": "string",
+      "enum": [
+        "semantic_similarity",
+        "seed_affinity",
+        "behavioral_affinity",
+        "outcome_probability",
+        "rank"
+      ]
+    },
+    "scale": {
+      "type": "string",
+      "enum": [
+        "cosine",
+        "unit_interval",
+        "probability",
+        "rank_ordinal"
+      ]
+    },
+    "target": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "event": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "horizon_days": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "event",
+            "horizon_days"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "artifact": {
+      "type": "object",
+      "properties": {
+        "artifact_sha256": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "served_version": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "artifact_sha256",
+        "served_version"
+      ],
+      "additionalProperties": false
+    },
+    "preprocessing": {
+      "type": "object",
+      "properties": {
+        "definition_ref": {
+          "$ref": "common.schema.json#/$defs/versioned_ref"
+        },
+        "sha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        }
+      },
+      "required": [
+        "definition_ref",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "input_features": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "feature_id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "feature_version": {
+            "$ref": "common.schema.json#/$defs/semver"
+          },
+          "unit": {
+            "$ref": "common.schema.json#/$defs/unit"
+          },
+          "value_type": {
+            "type": "string",
+            "enum": [
+              "numeric",
+              "categorical",
+              "boolean",
+              "text",
+              "embedding"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "preprocessing": {
+            "$ref": "common.schema.json#/$defs/text"
+          },
+          "categorical_vocabulary_ref": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/versioned_ref"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "missing_value_behavior": {
+            "type": "string",
+            "enum": [
+              "abstain",
+              "model_handles_missing",
+              "documented_imputation"
+            ]
+          }
+        },
+        "required": [
+          "feature_id",
+          "feature_version",
+          "unit",
+          "value_type",
+          "required",
+          "preprocessing",
+          "categorical_vocabulary_ref",
+          "missing_value_behavior"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Ordered as the model consumes them."
+    },
+    "coverage_rule": {
+      "type": "object",
+      "properties": {
+        "abstain_when": {
+          "type": "string",
+          "enum": [
+            "any_required_missing",
+            "below_min_feature_count"
+          ]
+        },
+        "min_feature_count": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "abstain_when",
+        "min_feature_count"
+      ],
+      "additionalProperties": false
+    },
+    "modeling_unit": {
+      "$ref": "common.schema.json#/$defs/unit"
+    },
+    "output_unit": {
+      "$ref": "common.schema.json#/$defs/unit"
+    },
+    "validation_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "evidence_ref": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "bound_model_sha256": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/sha256"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "bound_served_version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "bound_preprocessing_sha256": {
+            "$ref": "common.schema.json#/$defs/sha256"
+          },
+          "population_ref": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          },
+          "period": {
+            "$ref": "common.schema.json#/$defs/time_window"
+          }
+        },
+        "required": [
+          "evidence_ref",
+          "bound_model_sha256",
+          "bound_served_version",
+          "bound_preprocessing_sha256",
+          "population_ref",
+          "period"
+        ],
+        "additionalProperties": false,
+        "anyOf": [
+          {
+            "properties": {
+              "bound_model_sha256": {
+                "$ref": "common.schema.json#/$defs/sha256"
+              }
+            }
+          },
+          {
+            "properties": {
+              "bound_served_version": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "valid_from": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "valid_until": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "rights": {
+      "type": "object",
+      "properties": {
+        "source_rights_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common.schema.json#/$defs/versioned_ref"
+          }
+        },
+        "cross_client_reuse_permitted": {
+          "type": "boolean"
+        },
+        "reuse_rights_ref": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/versioned_ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "source_rights_refs",
+        "cross_client_reuse_permitted",
+        "reuse_rights_ref"
+      ],
+      "additionalProperties": false
+    },
+    "execution": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "in_boundary",
+            "remote_endpoint"
+          ]
+        },
+        "permitted_location_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.schema.json#/$defs/id"
+          }
+        },
+        "endpoint": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "endpoint_id": {
+                  "$ref": "common.schema.json#/$defs/id"
+                },
+                "identity_ref": {
+                  "$ref": "common.schema.json#/$defs/id"
+                },
+                "payload_artifact_type": {
+                  "$ref": "common.schema.json#/$defs/artifact_type"
+                },
+                "recipients": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "common.schema.json#/$defs/id"
+                  }
+                },
+                "provider_retention_days": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "provider_reuse_permitted": {
+                  "type": "boolean"
+                },
+                "resource_limits_ref": {
+                  "anyOf": [
+                    {
+                      "$ref": "common.schema.json#/$defs/id"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "revocation_authority": {
+                  "$ref": "common.schema.json#/$defs/human_actor"
+                }
+              },
+              "required": [
+                "endpoint_id",
+                "identity_ref",
+                "payload_artifact_type",
+                "recipients",
+                "provider_retention_days",
+                "provider_reuse_permitted",
+                "resource_limits_ref",
+                "revocation_authority"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "mode",
+        "permitted_location_ids",
+        "endpoint"
+      ],
+      "additionalProperties": false
+    },
+    "registration_state": {
+      "type": "string",
+      "enum": [
+        "registered",
+        "suspended",
+        "revoked"
+      ]
+    },
+    "registered_by": {
+      "$ref": "common.schema.json#/$defs/human_actor"
+    },
+    "registered_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "model_id",
+    "model_version",
+    "tenant_id",
+    "owner",
+    "task_family",
+    "score_type",
+    "scale",
+    "target",
+    "artifact",
+    "preprocessing",
+    "input_features",
+    "coverage_rule",
+    "modeling_unit",
+    "output_unit",
+    "validation_evidence",
+    "valid_from",
+    "valid_until",
+    "rights",
+    "execution",
+    "registration_state",
+    "registered_by",
+    "registered_at"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "score_type": {
+            "const": "outcome_probability"
+          }
+        },
+        "required": [
+          "score_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "target": {
+            "type": "object"
+          },
+          "scale": {
+            "const": "probability"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "target": {
+            "type": "null"
+          },
+          "scale": {
+            "not": {
+              "const": "probability"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "mode": {
+                "const": "remote_endpoint"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "endpoint": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "endpoint": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "artifact": {
+          "anyOf": [
+            {
+              "properties": {
+                "artifact_sha256": {
+                  "$ref": "common.schema.json#/$defs/sha256"
+                }
+              }
+            },
+            {
+              "properties": {
+                "served_version": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "coverage_rule": {
+            "properties": {
+              "abstain_when": {
+                "const": "below_min_feature_count"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "coverage_rule": {
+            "properties": {
+              "min_feature_count": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

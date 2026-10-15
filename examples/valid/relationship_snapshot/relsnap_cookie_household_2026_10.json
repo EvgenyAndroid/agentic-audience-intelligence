@@ -1,0 +1,37 @@
+{
+  "kind": "relationship_snapshot",
+  "schema_version": "1.0.0",
+  "snapshot_id": "relsnap_cookie_household_2026_10",
+  "snapshot_version": "1.0.0",
+  "tenant_id": "tenant_demo",
+  "mapping_ref": {
+    "id": "map_cookie_household_features",
+    "version": "1.0.0"
+  },
+  "snapshot": {
+    "uri": "tenant://tenant_demo/relationships/cookie_household/2026-10-01.parquet",
+    "sha256": "sha256:4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f"
+  },
+  "relationship_count": 18240,
+  "observed_cardinality": {
+    "max_targets_per_source": 1,
+    "max_sources_per_target": 6
+  },
+  "unmatched": {
+    "source_units": 3105,
+    "target_units": 0
+  },
+  "ambiguous_source_units": 211,
+  "valid_from": "2026-08-01T00:00:00Z",
+  "valid_until": "2026-11-01T00:00:00Z",
+  "as_of": "2026-10-01T00:00:00Z",
+  "available_at": "2026-10-02T00:00:00Z",
+  "snapshot_state": "current",
+  "supersedes": null,
+  "correction_note": null,
+  "produced_by": {
+    "actor_id": "svc_relationship_loader",
+    "actor_type": "service",
+    "role": "ingestion"
+  }
+}

@@ -35,7 +35,14 @@ def world():
         sorted((ROOT / "registry" / "policies").glob("*.json"))
         + sorted((ROOT / "registry" / "profiles").glob("*.json"))
     )
-    for kind in ("dataset_manifest", "objective", "source_profile"):
+    for kind in (
+        "dataset_manifest",
+        "objective",
+        "source_profile",
+        "unit_mapping",
+        "relationship_snapshot",
+        "model_registration",
+    ):
         index.add_paths(sorted((ROOT / "examples" / "valid" / kind).glob("*.json")))
     return index
 

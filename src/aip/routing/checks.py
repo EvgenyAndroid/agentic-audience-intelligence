@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
@@ -13,6 +13,25 @@ from aip.policy.compose import Outcome, artifact_permission, combine, compose_ag
 from aip.registry.documents import DocumentIndex
 from aip.registry.types import TypeRegistry
 from aip.routing.prerequisites import CATALOG
+from aip.timeutil import parse_ts
+
+
+def _cardinality_holds(declared: str, observed: dict[str, int]) -> bool:
+    per_source, per_target = observed["max_targets_per_source"], observed["max_sources_per_target"]
+    return {
+        "one_to_one": per_source <= 1 and per_target <= 1,
+        "many_to_one": per_source <= 1,
+        "one_to_many": per_target <= 1,
+        "many_to_many": True,
+    }[declared]
+
+
+MODEL_SCORE_TYPES = {
+    "seed_affinity": {"seed_affinity", "rank"},
+    "behavioral_affinity": {"behavioral_affinity", "rank"},
+    "semantic_similarity": {"semantic_similarity", "rank"},
+    "outcome_propensity": {"outcome_probability"},
+}
 
 TASK_SOURCE = "task"  # task-level policy refs; they can tighten constraints but never stand in for a source
 
@@ -112,6 +131,9 @@ class RoutingContext:
     def _tenant_scope(self) -> Outcome:
         tenant = self.task["tenant_id"]
         docs = [d for d in self.datasets() if d] + [p for p in self.profiles().values() if p] + [self.objective() or {}]
+        docs += self._resolved("unit_mapping", self.task["units"]["mapping_refs"])[0]
+        docs += self._resolved("relationship_snapshot", self.task["units"].get("relationship_snapshot_refs", []))[0]
+        docs += [m for m in (self._model(),) if m]
         foreign = [d for d in docs if d and d.get("tenant_id") not in (None, tenant)]
         checked, foreign_refs = [], []
         for kind, profile_field, task_field in (
@@ -171,49 +193,148 @@ class RoutingContext:
                 )
         return Outcome("P-UNITS-DECLARED", "satisfied")
 
+    def _resolved(self, kind: str, refs: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[str]]:
+        found, unresolved = [], []
+        for ref in refs:
+            doc = self.documents.get(kind, ref)
+            if doc is None:
+                unresolved.append(f"{kind}:{ref['id']}@{ref['version']}")
+            else:
+                found.append(doc)
+        return found, unresolved
+
     def _grain_compatible(self) -> Outcome:
+        pid = "P-GRAIN-COMPATIBLE"
         units = self.task["units"]
         modeling, output = units["modeling_unit"], units["output_unit"]
         if modeling is None:
-            return Outcome("P-GRAIN-COMPATIBLE", "satisfied", detail="no modeling unit")
-        mismatched = [o["unit"] for o in units["observation_units"] if o["unit"] != modeling]
+            return Outcome(pid, "satisfied", detail="no modeling unit")
+        needed = [("observation", o["unit"], modeling) for o in units["observation_units"] if o["unit"] != modeling]
         if output is not None and output != modeling:
-            mismatched.append(output)
-        if not mismatched:
-            return Outcome("P-GRAIN-COMPATIBLE", "satisfied")
-        unrelatable = [u["type_id"] for u in mismatched if not self.types.relationship_allowed(u, modeling)]
+            needed.append(("output", modeling, output))
+        if not needed:
+            return Outcome(pid, "satisfied")
+        unrelatable = [
+            (src if role == "observation" else dst)["type_id"]
+            for role, src, dst in needed
+            if not self.types.relationship_allowed(src, dst)
+        ]
         if unrelatable:
             # The registry declares no relationship between these types: no mapping can make them comparable (FR03).
-            return Outcome("P-GRAIN-COMPATIBLE", "violated", "grain_incompatible", tuple(unrelatable))
-        # A relationship is permitted, but no unit-mapping contract exists yet, so no supplied or absent mapping
-        # can establish compatibility. Missing evidence, not a violation (FR03, FR06).
-        return Outcome(
-            "P-GRAIN-COMPATIBLE",
-            "missing",
-            "missing_unit_mapping",
-            tuple(r["id"] for r in units["mapping_refs"]) or tuple(u["type_id"] for u in mismatched),
-            detail="approved unit mapping not established",
-        )
+            return Outcome(pid, "violated", "grain_incompatible", tuple(unrelatable))
+        tenant = self.task["tenant_id"]
+        mappings, unresolved_m = self._resolved("unit_mapping", units["mapping_refs"])
+        snapshots, unresolved_s = self._resolved("relationship_snapshot", units.get("relationship_snapshot_refs", []))
+        mappings = [m for m in mappings if m["tenant_id"] == tenant]  # foreign documents fail P-TENANT-SCOPE
+        snapshots = [x for x in snapshots if x["tenant_id"] == tenant]
+        outcomes = [
+            Outcome(pid, "missing", "missing_document", tuple(labels), detail="unresolved mapping or snapshot refs")
+            for labels in (unresolved_m, unresolved_s)
+            if labels
+        ]
+        for role, src, dst in needed:
+            candidates = [m for m in mappings if m["source_unit"] == src and m["target_unit"] == dst]
+            if not candidates:
+                outcomes.append(
+                    Outcome(
+                        pid,
+                        "missing",
+                        "missing_unit_mapping",
+                        (f"{src['type_id']}/{dst['type_id']}",),
+                        detail=f"no cited {role} mapping from {src['type_id']} to {dst['type_id']}",
+                    )
+                )
+                continue
+            results = [self._mapping_outcome(role, m, snapshots) for m in candidates]
+            usable = [r for r in results if r.outcome == "satisfied"]
+            outcomes.append(usable[0] if usable else combine(pid, results))
+        return combine(pid, outcomes)
+
+    def _required_use(self, role: str, mapping: dict[str, Any]) -> str:
+        """Observation mappings build features (or measurement links); output mappings aggregate or re-key."""
+        if role == "observation":
+            return "measurement_mapping" if self.task["operation"] == "measure" else "feature_join"
+        return "aggregation" if mapping["cardinality"] == "many_to_one" else "activation_mapping"
+
+    def _mapping_outcome(self, role: str, mapping: dict[str, Any], snapshots: list[dict[str, Any]]) -> Outcome:
+        pid = "P-GRAIN-COMPATIBLE"
+        label = f"unit_mapping:{mapping['mapping_id']}@{mapping['mapping_version']}"
+        if mapping["mapping_state"] == "revoked":
+            return Outcome(pid, "violated", "mapping_revoked", (label,))
+        use = self._required_use(role, mapping)
+        if use not in mapping["permitted_uses"]:
+            # A documented restriction: an activation-only mapping cannot build features (PRD section 3).
+            return Outcome(pid, "violated", "mapping_use_not_permitted", (label,), detail=f"{use} not permitted")
+        start, end = parse_ts(mapping["effective_from"]), mapping["effective_until"]
+        if mapping["mapping_state"] != "approved" or start > self.now or (end and parse_ts(end) <= self.now):
+            return Outcome(
+                pid, "missing", "missing_unit_mapping", (label,), detail="mapping not approved or not effective"
+            )
+        bound = [
+            x
+            for x in snapshots
+            if (x["mapping_ref"]["id"], x["mapping_ref"]["version"])
+            == (mapping["mapping_id"], mapping["mapping_version"])
+        ]
+        snap_labels = tuple(f"relationship_snapshot:{x['snapshot_id']}@{x['snapshot_version']}" for x in bound)
+        if any(x["snapshot_state"] == "revoked" for x in bound):
+            return Outcome(pid, "violated", "relationship_snapshot_revoked", snap_labels)
+        known = [x for x in bound if parse_ts(x["available_at"]) <= self.now]
+        if not known:
+            # Cutoff-level availability is checked separately under P-FEATURE-TIMING (FR07).
+            return Outcome(
+                pid,
+                "missing",
+                "missing_relationship_evidence",
+                (label, *snap_labels),
+                detail="no relationship snapshot available at decision time",
+            )
+        for x in known:
+            if not _cardinality_holds(mapping["cardinality"], x["observed_cardinality"]):
+                return Outcome(pid, "violated", "mapping_cardinality_mismatch", (label, *snap_labels))
+        return Outcome(pid, "satisfied", None, (label, *snap_labels))
+
+    def _sources_then_task(
+        self, pid: str, lookup: PolicyLookup, check: Callable[[dict[str, list[dict[str, Any]]]], Outcome]
+    ) -> Outcome:
+        """Contributing sources must each permit; task-level policies can only tighten (ADR 0003).
+
+        A task-level prohibition or restriction applies; task-level silence or permission adds nothing and grants
+        nothing. Unresolved refs from either side stay missing (FR05).
+        """
+        sources = {k: ps for k, ps in lookup.by_source.items() if k != TASK_SOURCE}
+        outcomes = [*self._unresolved(pid, lookup), check(sources)]
+        if TASK_SOURCE in lookup.by_source:
+            task_outcome = check({TASK_SOURCE: lookup.by_source[TASK_SOURCE]})
+            if task_outcome.outcome == "violated":
+                outcomes.append(task_outcome)
+        return combine(pid, outcomes)
 
     def _exec_operation(self) -> Outcome:
         lookup = self._policies("execution_policy", "execution_policy_refs", "execution")
-        outcome = operation_permission(
-            lookup.by_source, self.task["execution_location_ref"], self.task["operation"], self.now
+        return self._sources_then_task(
+            "P-EXEC-OPERATION",
+            lookup,
+            lambda by_source: operation_permission(
+                by_source, self.task["execution_location_ref"], self.task["operation"], self.now
+            ),
         )
-        return combine("P-EXEC-OPERATION", [*self._unresolved("P-EXEC-OPERATION", lookup), outcome])
 
     def _output_artifact(self) -> Outcome:
         lookup = self._policies("output_policy", "output_policy_refs", "output")
         output = self.task["units"]["output_unit"]
-        outcome = artifact_permission(
-            lookup.by_source,
-            self.task["execution_location_ref"],
-            self.task["requested_artifact"],
-            output["type_id"] if output else None,
-            self.task["destination_ref"],
-            self.now,
+        return self._sources_then_task(
+            "P-OUTPUT-ARTIFACT",
+            lookup,
+            lambda by_source: artifact_permission(
+                by_source,
+                self.task["execution_location_ref"],
+                self.task["requested_artifact"],
+                output["type_id"] if output else None,
+                self.task["destination_ref"],
+                self.now,
+            ),
         )
-        return combine("P-OUTPUT-ARTIFACT", [*self._unresolved("P-OUTPUT-ARTIFACT", lookup), outcome])
 
     def _aggregation_rules(self) -> Outcome:
         pid = "P-AGGREGATION-RULES"
@@ -240,6 +361,85 @@ class RoutingContext:
         rules = compose_aggregation_rules(policies, artifact, self.now, location_id=location)
         refs = tuple(r for rule in rules for r in rule.rule_ids)
         return combine(pid, [*unresolved, Outcome(pid, "satisfied", None, refs)])
+
+    # ---------- registered models (FR44, FR45) ----------
+    def _model(self) -> dict[str, Any] | None:
+        ref = self.task["model_ref"]
+        return self.documents.get("model_registration", ref) if ref else None
+
+    def _model_registered(self) -> Outcome:
+        pid = "P-MODEL-REGISTERED"
+        model = self._model()
+        if model is None or model["tenant_id"] != self.task["tenant_id"]:  # a foreign model fails P-TENANT-SCOPE
+            return Outcome(pid, "missing", "missing_model_registration")
+        label = f"model_registration:{model['model_id']}@{model['model_version']}"
+        if model["registration_state"] == "revoked":
+            return Outcome(pid, "violated", "model_registration_revoked", (label,))
+        end = model["valid_until"]
+        current = parse_ts(model["valid_from"]) <= self.now and (end is None or self.now < parse_ts(end))
+        if model["registration_state"] != "registered" or not current:
+            return Outcome(pid, "missing", "model_registration_not_current", (label,))
+        # The returned output must be the claim the task asks for, at the task's units.
+        units, family = self.task["units"], self.task["task_family"]
+        mismatches = []
+        if model["task_family"] != family:
+            mismatches.append("task_family")
+        allowed = MODEL_SCORE_TYPES.get(family)
+        if allowed is not None and model["score_type"] not in allowed:
+            mismatches.append("score_type")
+        if model["modeling_unit"] != units["modeling_unit"] or model["output_unit"] != units["output_unit"]:
+            mismatches.append("units")
+        objective = self.objective()
+        if family == "outcome_propensity" and objective and objective.get("target") != model["target"]:
+            mismatches.append("target")
+        if mismatches:
+            return Outcome(pid, "violated", "model_contract_mismatch", (label,), detail=", ".join(mismatches))
+        return Outcome(pid, "satisfied", None, (label,))
+
+    def _model_execution(self) -> Outcome:
+        pid = "P-MODEL-EXECUTION"
+        model = self._model()
+        if model is None or model["tenant_id"] != self.task["tenant_id"]:
+            return Outcome(pid, "missing", "missing_model_registration")
+        label = f"model_registration:{model['model_id']}@{model['model_version']}"
+        execution, remote = model["execution"], self.task["operation"] == "remote_inference"
+        if execution["mode"] == "remote_endpoint" and not remote:
+            return Outcome(
+                pid,
+                "violated",
+                "model_execution_mismatch",
+                (label,),
+                detail="endpoint model must be run as remote_inference so the payload transfer is checked",
+            )
+        if execution["mode"] == "in_boundary" and remote:
+            return Outcome(
+                pid, "violated", "model_execution_mismatch", (label,), detail="in-boundary model has no endpoint"
+            )
+        if self.task["execution_location_ref"] not in execution["permitted_location_ids"]:
+            return Outcome(pid, "violated", "model_execution_mismatch", (label,), detail="location not registered")
+        return Outcome(pid, "satisfied", None, (label,))
+
+    def _remote_payload(self) -> Outcome:
+        """Calling an endpoint transfers its payload across the boundary even when no file is saved (FR45, FR28)."""
+        pid = "P-REMOTE-PAYLOAD"
+        model = self._model()
+        endpoint = model["execution"]["endpoint"] if model and model["tenant_id"] == self.task["tenant_id"] else None
+        if endpoint is None:
+            return Outcome(pid, "missing", "missing_model_registration")
+        lookup = self._policies("output_policy", "output_policy_refs", "output")
+        modeling = self.task["units"]["modeling_unit"]
+        return self._sources_then_task(
+            pid,
+            lookup,
+            lambda by_source: artifact_permission(
+                by_source,
+                self.task["execution_location_ref"],
+                endpoint["payload_artifact_type"],
+                modeling["type_id"] if modeling else None,
+                endpoint["endpoint_id"],
+                self.now,
+            ),
+        )
 
     def _objective_field(self, pid: str, field_name: str) -> Outcome:
         objective = self.objective()

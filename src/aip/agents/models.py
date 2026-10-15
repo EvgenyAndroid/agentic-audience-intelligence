@@ -61,5 +61,5 @@ class AnthropicReasoningModel:
             system=self._system,
             messages=[{"role": "user", "content": json.dumps({"role": role, "context": context})}],
         )
-        text = "".join(block.text for block in message.content if getattr(block, "type", "") == "text")
+        text = "".join(block.text for block in message.content if block.type == "text")
         return json.loads(text)

@@ -176,7 +176,7 @@ def test_policy_from_another_tenant_violates_tenant_scope_and_is_not_bound(world
     "unit,mapping_refs,verdict,code",
     [
         (HOUSEHOLD, [], "PROVISIONAL", "missing_unit_mapping"),  # relationship permitted, mapping not supplied
-        (HOUSEHOLD, BOGUS_MAPPING, "PROVISIONAL", "missing_unit_mapping"),  # supplied mapping cannot be verified
+        (HOUSEHOLD, BOGUS_MAPPING, "PROVISIONAL", "missing_document"),  # cited mapping does not resolve
         (POSTAL, [], "BLOCKED", "grain_incompatible"),  # registry permits no relationship
         (POSTAL, BOGUS_MAPPING, "BLOCKED", "grain_incompatible"),  # a meaningless ref does not change that
     ],
@@ -238,3 +238,281 @@ def test_task_policy_cannot_fill_a_silent_source(world, types, reasons, config):
     d = _decide(task, documents, "task_cr_export_aggregate", types, reasons, config)
     assert _prerequisite(d, "P-AGGREGATION-RULES")["outcome"] == "missing"
     assert d["verdict"] == "PROVISIONAL" and "aggregation_rules_unknown" in codes(d)
+
+
+def _task_policy(name, kind_doc, **changes):
+    policy = copy.deepcopy(registry_doc(f"policies/{kind_doc}"))
+    policy.update(policy_id=name, **changes)
+    return policy
+
+
+def test_silent_task_execution_policy_adds_no_requirement(world, types, reasons, config):
+    base = registry_doc("policies/exec_cleanroom_demo")
+    unrelated = [op for op in base["operations"] if op["operation"] != "export_aggregate"][:1]
+    silent = _task_policy("exec_task_silent", "exec_cleanroom_demo", operations=unrelated)
+    task = copy.deepcopy(example("task/task_cr_export_aggregate"))
+    task["policy_refs"]["execution"] = [{"id": "exec_task_silent", "version": silent["policy_version"]}]
+    d = _decide(task, _index_with(world, silent), "task_cr_export_aggregate", types, reasons, config)
+    assert _prerequisite(d, "P-EXEC-OPERATION")["outcome"] == "satisfied" and d["verdict"] == "ELIGIBLE"
+
+
+def test_task_execution_prohibition_still_blocks(world, types, reasons, config):
+    base = registry_doc("policies/exec_cleanroom_demo")
+    ops = [{**op, "permission": "prohibited"} for op in base["operations"] if op["operation"] == "export_aggregate"]
+    prohibiting = _task_policy("exec_task_prohibits", "exec_cleanroom_demo", operations=ops)
+    task = copy.deepcopy(example("task/task_cr_export_aggregate"))
+    task["policy_refs"]["execution"] = [{"id": "exec_task_prohibits", "version": prohibiting["policy_version"]}]
+    d = _decide(task, _index_with(world, prohibiting), "task_cr_export_aggregate", types, reasons, config)
+    assert d["verdict"] == "BLOCKED" and "forbidden_operation" in codes(d)
+
+
+def test_task_permission_cannot_fill_a_silent_source(world, types, reasons, config):
+    base = registry_doc("policies/exec_cleanroom_demo")
+    assert "calibrate" not in [op["operation"] for op in base["operations"]]
+    template = base["operations"][0]
+    permits = _task_policy(
+        "exec_task_permits",
+        "exec_cleanroom_demo",
+        operations=[{**template, "operation": "calibrate", "permission": "permitted"}],
+    )
+    task = copy.deepcopy(example("task/task_cr_export_aggregate"))
+    task["operation"] = "calibrate"
+    task["policy_refs"]["execution"] = [{"id": "exec_task_permits", "version": permits["policy_version"]}]
+    d = _decide(task, _index_with(world, permits), "task_cr_export_aggregate", types, reasons, config)
+    assert _prerequisite(d, "P-EXEC-OPERATION")["outcome"] == "missing"
+
+
+def test_task_output_restriction_tightens(world, types, reasons, config):
+    base = registry_doc("policies/output_cleanroom_aggregate_only")
+    rules = [
+        {**r, "permitted_destinations": ["dest_somewhere_else"]}
+        for r in base["artifact_rules"]
+        if r["artifact_type"] == "aggregate_report"
+    ]
+    narrowing = _task_policy("output_task_narrows", "output_cleanroom_aggregate_only", artifact_rules=rules)
+    task = copy.deepcopy(example("task/task_cr_export_aggregate"))
+    task["policy_refs"]["output"] = [{"id": "output_task_narrows", "version": narrowing["policy_version"]}]
+    d = _decide(task, _index_with(world, narrowing), "task_cr_export_aggregate", types, reasons, config)
+    assert d["verdict"] == "BLOCKED" and "destination_not_permitted" in codes(d)
+
+
+FEATURE_MAP = {"id": "map_cookie_household_features", "version": "1.0.0"}
+ACTIVATION_MAP = {"id": "map_cookie_household_activation", "version": "1.0.0"}
+SNAPSHOT = {"id": "relsnap_cookie_household_2026_10", "version": "1.0.0"}
+
+
+def _household_task(mapping_refs, snapshot_refs):
+    task = copy.deepcopy(example("task/task_seed_affinity_score"))
+    task["units"]["modeling_unit"] = task["units"]["output_unit"] = HOUSEHOLD
+    task["units"]["mapping_refs"] = mapping_refs
+    task["units"]["relationship_snapshot_refs"] = snapshot_refs
+    return task
+
+
+def test_approved_feature_mapping_with_available_snapshot_satisfies_grain(world, types, reasons, config):
+    d = _decide(_household_task([FEATURE_MAP], [SNAPSHOT]), world, "task_seed_affinity_score", types, reasons, config)
+    grain = _prerequisite(d, "P-GRAIN-COMPATIBLE")
+    assert grain["outcome"] == "satisfied"
+    assert "unit_mapping:map_cookie_household_features@1.0.0" in grain["evidence_refs"]
+    assert d["verdict"] == "ELIGIBLE"
+
+
+def test_mapping_without_relationship_snapshot_is_provisional(world, types, reasons, config):
+    d = _decide(_household_task([FEATURE_MAP], []), world, "task_seed_affinity_score", types, reasons, config)
+    assert d["verdict"] == "PROVISIONAL" and "missing_relationship_evidence" in codes(d)
+
+
+def test_activation_only_mapping_cannot_build_features(world, types, reasons, config):
+    d = _decide(
+        _household_task([ACTIVATION_MAP], [SNAPSHOT]), world, "task_seed_affinity_score", types, reasons, config
+    )
+    assert d["verdict"] == "BLOCKED" and "mapping_use_not_permitted" in codes(d)
+
+
+def _mapping_variant(world, mapping_changes=None, snapshot_changes=None):
+    mapping = copy.deepcopy(example("unit_mapping/map_cookie_household_features"))
+    snapshot = copy.deepcopy(example("relationship_snapshot/relsnap_cookie_household_2026_10"))
+    mapping.update(mapping_changes or {})
+    snapshot.update(snapshot_changes or {})
+    kinds = ("execution_policy", "output_policy", "source_profile", "dataset_manifest", "objective")
+    return DocumentIndex([d for k in kinds for d in world.all(k)] + [mapping, snapshot])
+
+
+@pytest.mark.parametrize(
+    "mapping_changes,snapshot_changes,verdict,code",
+    [
+        ({"mapping_state": "revoked"}, None, "BLOCKED", "mapping_revoked"),
+        ({"mapping_state": "draft", "approval": None}, None, "PROVISIONAL", "missing_unit_mapping"),
+        ({"effective_until": "2026-10-10T00:00:00Z"}, None, "PROVISIONAL", "missing_unit_mapping"),
+        (None, {"snapshot_state": "revoked"}, "BLOCKED", "relationship_snapshot_revoked"),
+        (None, {"available_at": "2026-11-01T00:00:00Z"}, "PROVISIONAL", "missing_relationship_evidence"),
+        (
+            None,
+            {"observed_cardinality": {"max_targets_per_source": 3, "max_sources_per_target": 6}},
+            "BLOCKED",
+            "mapping_cardinality_mismatch",
+        ),
+        ({"tenant_id": "tenant_other"}, None, "BLOCKED", "tenant_scope_mismatch"),
+    ],
+)
+def test_mapping_and_snapshot_conditions(
+    world, types, reasons, config, mapping_changes, snapshot_changes, verdict, code
+):
+    documents = _mapping_variant(world, mapping_changes, snapshot_changes)
+    d = _decide(
+        _household_task([FEATURE_MAP], [SNAPSHOT]), documents, "task_seed_affinity_score", types, reasons, config
+    )
+    assert d["verdict"] == verdict and code in codes(d)
+
+
+REMOTE_MODEL = {"id": "byom_lookalike_remote", "version": "1.0.0"}
+LOCAL_MODEL = {"id": "propensity_logreg_v1", "version": "1.0.0"}
+
+
+def _fact(pid, value=True, reason=None):
+    return {
+        "prerequisite_id": pid,
+        "value": value,
+        "established_by": "reviewer",
+        "evidence_refs": [f"evidence_{pid.lower()}"],
+        "reason_code": reason,
+        "observed_at": "2026-10-10T00:00:00Z",
+    }
+
+
+def _remote_world(world, payload_permission="permitted", payload_type="feature_snapshot", model_changes=None):
+    exec_ws = copy.deepcopy(registry_doc("policies/exec_workspace_demo"))
+    template = exec_ws["operations"][0]
+    exec_ws["operations"].append({**template, "operation": "remote_inference", "permission": "permitted"})
+    out_ws = copy.deepcopy(registry_doc("policies/output_workspace_demo"))
+    if payload_permission is not None:
+        out_ws["artifact_rules"].append(
+            {
+                "artifact_type": payload_type,
+                "permission": payload_permission,
+                "permitted_output_type_ids": [],
+                "permitted_destinations": ["endpoint_partner_lookalike"] if payload_permission == "permitted" else [],
+            }
+        )
+    models = [
+        copy.deepcopy(example("model_registration/model_byom_lookalike_remote")),
+        example("model_registration/model_propensity_logreg_v1"),
+    ]
+    models[0].update(model_changes or {})
+    kinds = ("execution_policy", "output_policy", "source_profile", "dataset_manifest", "objective")
+    keep = [
+        d
+        for k in kinds
+        for d in world.all(k)
+        if d.get("policy_id") not in ("exec_workspace_demo", "output_workspace_demo")
+    ]
+    return DocumentIndex(keep + [exec_ws, out_ws, *models])
+
+
+def _remote_task(operation="remote_inference", model_ref=REMOTE_MODEL):
+    task = copy.deepcopy(example("task/task_seed_affinity_score"))
+    task.update(operation=operation, model_ref=model_ref)
+    return task
+
+
+def _route_remote(task, documents, types, reasons, config, extra_facts=()):
+    bundle = copy.deepcopy(example("evidence_bundle/bundle_task_seed_affinity_score"))
+    bundle["task_ref"] = {"id": task["task_id"], "version": task["task_version"]}
+    bundle["facts"] += list(extra_facts)
+    return decide(task, documents=documents, bundle=bundle, types=types, reasons=reasons, config=config, now=NOW)
+
+
+REMOTE_FACTS = [_fact("P-MODEL-FEATURES-AVAILABLE"), _fact("P-REMOTE-RECIPIENT-TERMS")]
+
+
+def test_remote_lookalike_with_permitted_payload_is_eligible_without_validation(world, types, reasons, config):
+    # Registration is not validation; a look-alike score keeps an exploratory claim, so no validation is required.
+    d = _route_remote(_remote_task(), _remote_world(world), types, reasons, config, REMOTE_FACTS)
+    assert d["verdict"] == "ELIGIBLE", codes(d)
+    assert "P-MODEL-VALIDATED" not in [p["prerequisite_id"] for p in d["prerequisites"]]
+
+
+def test_remote_inference_without_payload_permission_is_provisional(world, types, reasons, config):
+    d = _route_remote(_remote_task(), _remote_world(world, None), types, reasons, config, REMOTE_FACTS)
+    assert _prerequisite(d, "P-REMOTE-PAYLOAD")["outcome"] == "missing"
+    assert d["verdict"] == "PROVISIONAL" and "missing_output_policy" in codes(d)
+
+
+def test_prohibited_row_payload_blocks_remote_inference(world, types, reasons, config):
+    d = _route_remote(_remote_task(), _remote_world(world, "prohibited"), types, reasons, config, REMOTE_FACTS)
+    assert d["verdict"] == "BLOCKED" and "forbidden_row_level_egress" in codes(d)
+
+
+def test_permitted_aggregate_payload_is_not_blocked_by_row_rules(world, types, reasons, config):
+    endpoint = copy.deepcopy(example("model_registration/model_byom_lookalike_remote")["execution"])
+    endpoint["endpoint"]["payload_artifact_type"] = "aggregate_report"
+    documents = _remote_world(world, "permitted", "aggregate_report", {"execution": endpoint})
+    d = _route_remote(_remote_task(), documents, types, reasons, config, REMOTE_FACTS)
+    assert _prerequisite(d, "P-REMOTE-PAYLOAD")["outcome"] == "satisfied"
+
+
+def test_recipient_terms_must_be_confirmed(world, types, reasons, config):
+    d = _route_remote(_remote_task(), _remote_world(world), types, reasons, config, REMOTE_FACTS[:1])
+    assert d["verdict"] == "PROVISIONAL" and "recipient_terms_unverified" in codes(d)
+
+
+@pytest.mark.parametrize(
+    "operation,model_ref,model_changes,verdict,code",
+    [
+        ("score", REMOTE_MODEL, None, "BLOCKED", "model_execution_mismatch"),  # endpoint model scored as local
+        ("remote_inference", None, None, "PROVISIONAL", "missing_model_registration"),
+        ("remote_inference", REMOTE_MODEL, {"registration_state": "revoked"}, "BLOCKED", "model_registration_revoked"),
+        (
+            "remote_inference",
+            REMOTE_MODEL,
+            {"registration_state": "suspended"},
+            "PROVISIONAL",
+            "model_registration_not_current",
+        ),
+        (
+            "remote_inference",
+            REMOTE_MODEL,
+            {"valid_until": "2026-10-12T00:00:00Z"},
+            "PROVISIONAL",
+            "model_registration_not_current",
+        ),
+        ("remote_inference", REMOTE_MODEL, {"tenant_id": "tenant_other"}, "BLOCKED", "tenant_scope_mismatch"),
+        ("score", LOCAL_MODEL, None, "BLOCKED", "model_contract_mismatch"),  # propensity model on a look-alike task
+    ],
+)
+def test_model_registration_conditions(
+    world, types, reasons, config, operation, model_ref, model_changes, verdict, code
+):
+    task = _remote_task(operation, model_ref)
+    d = _route_remote(task, _remote_world(world, model_changes=model_changes), types, reasons, config, REMOTE_FACTS)
+    assert d["verdict"] == verdict and code in codes(d), codes(d)
+
+
+def test_in_boundary_model_cannot_be_called_remotely(world, types, reasons, config):
+    task = copy.deepcopy(example("task/task_propensity_train_no_labels"))
+    task.update(operation="remote_inference", model_ref=LOCAL_MODEL, requested_artifact="score_file")
+    d = _route_remote(task, _remote_world(world), types, reasons, config, REMOTE_FACTS)
+    assert d["verdict"] == "BLOCKED" and "model_execution_mismatch" in codes(d)
+
+
+def test_existing_registered_model_inference_needs_no_labels(world, types, reasons, config):
+    task = copy.deepcopy(example("task/task_propensity_train_no_labels"))
+    task.update(operation="infer", model_ref=LOCAL_MODEL, requested_artifact="score_file")
+    facts = [
+        _fact(p)
+        for p in ("P-MODEL-VALIDATED", "P-POPULATION-COMPATIBLE", "P-FEATURE-TIMING", "P-MODEL-FEATURES-AVAILABLE")
+    ]
+    exec_ws = copy.deepcopy(registry_doc("policies/exec_workspace_demo"))
+    exec_ws["operations"].append({**exec_ws["operations"][0], "operation": "infer", "permission": "permitted"})
+    kinds = ("output_policy", "source_profile", "dataset_manifest", "objective")
+    docs = DocumentIndex(
+        [d for k in kinds for d in world.all(k)]
+        + [p for p in world.all("execution_policy") if p["policy_id"] != "exec_workspace_demo"]
+        + [exec_ws, example("model_registration/model_propensity_logreg_v1")]
+    )
+    bundle = copy.deepcopy(example("evidence_bundle/bundle_task_propensity_train_no_labels"))
+    bundle["facts"] = [f for f in bundle["facts"] if f["prerequisite_id"] != "P-LABELS-QUALIFIED"] + facts
+    d = decide(task, documents=docs, bundle=bundle, types=types, reasons=reasons, config=config, now=NOW)
+    assert _prerequisite(d, "P-MODEL-REGISTERED")["outcome"] == "satisfied"
+    assert "P-LABELS-QUALIFIED" not in [p["prerequisite_id"] for p in d["prerequisites"]]
+    assert d["verdict"] == "ELIGIBLE", codes(d)

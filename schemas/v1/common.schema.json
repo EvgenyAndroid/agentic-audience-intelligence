@@ -187,6 +187,7 @@
         "calibrate",
         "infer",
         "score",
+        "remote_inference",
         "build_cohort",
         "aggregate",
         "measure",

@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aip.invalid/v1/relationship_snapshot.schema.json",
+  "title": "Relationship snapshot",
+  "description": "An immutable, bound set of relationships produced under one unit mapping, with the time it became known, its validity coverage, observed cardinality, unmatched and ambiguous counts, corrections and revocation.",
+  "x-prd-requirements": [
+    "FR43",
+    "FR06",
+    "FR07",
+    "FR15",
+    "FR22"
+  ],
+  "type": "object",
+  "properties": {
+    "kind": {
+      "const": "relationship_snapshot"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "snapshot_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "snapshot_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "tenant_id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "mapping_ref": {
+      "$ref": "common.schema.json#/$defs/versioned_ref"
+    },
+    "snapshot": {
+      "type": "object",
+      "properties": {
+        "uri": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "sha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        }
+      },
+      "required": [
+        "uri",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "relationship_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "observed_cardinality": {
+      "type": "object",
+      "properties": {
+        "max_targets_per_source": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_sources_per_target": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "max_targets_per_source",
+        "max_sources_per_target"
+      ],
+      "additionalProperties": false
+    },
+    "unmatched": {
+      "type": "object",
+      "properties": {
+        "source_units": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "target_units": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "source_units",
+        "target_units"
+      ],
+      "additionalProperties": false
+    },
+    "ambiguous_source_units": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "valid_from": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "valid_until": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "as_of": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "available_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "snapshot_state": {
+      "type": "string",
+      "enum": [
+        "current",
+        "superseded",
+        "revoked"
+      ]
+    },
+    "supersedes": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/versioned_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "correction_note": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/text"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "produced_by": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/actor"
+        },
+        {
+          "properties": {
+            "actor_type": {
+              "enum": [
+                "human",
+                "service"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "required": [
+    "kind",
+    "schema_version",
+    "snapshot_id",
+    "snapshot_version",
+    "tenant_id",
+    "mapping_ref",
+    "snapshot",
+    "relationship_count",
+    "observed_cardinality",
+    "unmatched",
+    "ambiguous_source_units",
+    "valid_from",
+    "valid_until",
+    "as_of",
+    "available_at",
+    "snapshot_state",
+    "supersedes",
+    "correction_note",
+    "produced_by"
+  ],
+  "unevaluatedProperties": false
+}

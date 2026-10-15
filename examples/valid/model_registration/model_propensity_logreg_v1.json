@@ -1,0 +1,147 @@
+{
+  "kind": "model_registration",
+  "schema_version": "1.0.0",
+  "model_id": "propensity_logreg_v1",
+  "model_version": "1.0.0",
+  "tenant_id": "tenant_demo",
+  "owner": {
+    "actor_id": "user_scientist_01",
+    "actor_type": "human",
+    "role": "scientist"
+  },
+  "task_family": "outcome_propensity",
+  "score_type": "outcome_probability",
+  "scale": "probability",
+  "target": {
+    "event": "conversion",
+    "horizon_days": 30
+  },
+  "artifact": {
+    "artifact_sha256": "sha256:a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+    "served_version": null
+  },
+  "preprocessing": {
+    "definition_ref": {
+      "id": "prep_web_conversion",
+      "version": "1.0.0"
+    },
+    "sha256": "sha256:b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2"
+  },
+  "input_features": [
+    {
+      "feature_id": "sessions_28d",
+      "feature_version": "1.0.0",
+      "unit": {
+        "type_id": "browser_cookie",
+        "type_version": "1.0.0",
+        "namespace": "web_demo_cookie"
+      },
+      "value_type": "numeric",
+      "required": true,
+      "preprocessing": "Standardized on the training partition",
+      "categorical_vocabulary_ref": null,
+      "missing_value_behavior": "abstain"
+    },
+    {
+      "feature_id": "product_views_28d",
+      "feature_version": "1.0.0",
+      "unit": {
+        "type_id": "browser_cookie",
+        "type_version": "1.0.0",
+        "namespace": "web_demo_cookie"
+      },
+      "value_type": "numeric",
+      "required": true,
+      "preprocessing": "Standardized on the training partition",
+      "categorical_vocabulary_ref": null,
+      "missing_value_behavior": "abstain"
+    },
+    {
+      "feature_id": "device_class",
+      "feature_version": "1.0.0",
+      "unit": {
+        "type_id": "browser_cookie",
+        "type_version": "1.0.0",
+        "namespace": "web_demo_cookie"
+      },
+      "value_type": "categorical",
+      "required": true,
+      "preprocessing": "Vocabulary fixed at training time",
+      "categorical_vocabulary_ref": {
+        "id": "vocab_device_class",
+        "version": "1.0.0"
+      },
+      "missing_value_behavior": "abstain"
+    },
+    {
+      "feature_id": "newsletter_signup",
+      "feature_version": "1.0.0",
+      "unit": {
+        "type_id": "browser_cookie",
+        "type_version": "1.0.0",
+        "namespace": "web_demo_cookie"
+      },
+      "value_type": "boolean",
+      "required": false,
+      "preprocessing": "Vocabulary fixed at training time",
+      "categorical_vocabulary_ref": null,
+      "missing_value_behavior": "model_handles_missing"
+    }
+  ],
+  "coverage_rule": {
+    "abstain_when": "any_required_missing",
+    "min_feature_count": null
+  },
+  "modeling_unit": {
+    "type_id": "browser_cookie",
+    "type_version": "1.0.0",
+    "namespace": "web_demo_cookie"
+  },
+  "output_unit": {
+    "type_id": "browser_cookie",
+    "type_version": "1.0.0",
+    "namespace": "web_demo_cookie"
+  },
+  "validation_evidence": [
+    {
+      "evidence_ref": "eval_propensity_logreg_v1_2026_09",
+      "bound_model_sha256": "sha256:a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "bound_served_version": null,
+      "bound_preprocessing_sha256": "sha256:b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+      "population_ref": {
+        "id": "universe_web_demo",
+        "version": "1.0.0"
+      },
+      "period": {
+        "start": "2026-06-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z"
+      }
+    }
+  ],
+  "valid_from": "2026-10-01T00:00:00Z",
+  "valid_until": "2027-01-01T00:00:00Z",
+  "rights": {
+    "source_rights_refs": [
+      {
+        "id": "rights_demo_2026",
+        "version": "1.0.0"
+      }
+    ],
+    "cross_client_reuse_permitted": false,
+    "reuse_rights_ref": null
+  },
+  "execution": {
+    "mode": "in_boundary",
+    "permitted_location_ids": [
+      "loc_workspace_demo"
+    ],
+    "endpoint": null
+  },
+  "registration_state": "registered",
+  "registered_by": {
+    "actor_id": "user_scientist_01",
+    "actor_type": "human",
+    "role": "scientist"
+  },
+  "registered_at": "2026-10-01T00:00:00Z"
+}
