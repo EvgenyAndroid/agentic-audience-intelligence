@@ -31,6 +31,9 @@ class Synthetic:
         return "sha256:" + digest.hexdigest()
 
 
+STABLE_DECIMALS = 9  # values compared against random draws are rounded so ulp-level platform noise cannot flip them
+
+
 def _column(kind: str, means: np.ndarray, rng: np.random.Generator) -> np.ndarray:
     if kind == "count":
         return rng.poisson(means * rng.gamma(2.0, 0.5, size=means.shape)).astype(float)
@@ -45,7 +48,7 @@ def _column(kind: str, means: np.ndarray, rng: np.random.Generator) -> np.ndarra
 def _zscore(col: np.ndarray) -> np.ndarray:
     filled = np.where(np.isnan(col), np.nanmean(col), col)
     sd = filled.std()
-    return (filled - filled.mean()) / (sd if sd > 0 else 1.0)
+    return np.asarray(np.round((filled - filled.mean()) / (sd if sd > 0 else 1.0), STABLE_DECIMALS), dtype=float)
 
 
 def _intercept_for(base_rate: float, linear: np.ndarray) -> float:
@@ -79,14 +82,22 @@ def generate(spec: DatasetSpec) -> Synthetic:
 
     behavior = np.array([], dtype=int)
     if spec.behavior_features:
-        index = sum(_zscore(x[:, names.index(f)]) for f in spec.behavior_features) + rng.normal(0, 1.0, n)
+        index = np.zeros(n)
+        for f in spec.behavior_features:
+            index = index + _zscore(x[:, names.index(f)])
+        index = (index + rng.normal(0, 1.0, n)).round(STABLE_DECIMALS)
         behavior = np.sort(np.argsort(-index)[: int(round(spec.behavior_share * n))])
 
     outcome = None
     if spec.outcome:
-        z = np.column_stack([_zscore(x[:, names.index(f)]) for f in spec.outcome.weights])
-        linear = z @ np.array(list(spec.outcome.weights.values()))
-        b0 = _intercept_for(spec.outcome.base_rate, linear)
-        outcome = (rng.random(n) < 1 / (1 + np.exp(-(b0 + linear)))).astype(np.int8)
+        # Element-wise sums in a fixed order (no BLAS), rounded before thresholding, so the labels are the same
+        # on every platform; a matrix product sums in a platform-dependent order.
+        linear = np.zeros(n)
+        for f, weight in spec.outcome.weights.items():
+            linear = linear + _zscore(x[:, names.index(f)]) * weight
+        linear = linear.round(STABLE_DECIMALS)
+        b0 = round(_intercept_for(spec.outcome.base_rate, linear), STABLE_DECIMALS)
+        p = (1 / (1 + np.exp(-(b0 + linear)))).round(STABLE_DECIMALS)
+        outcome = (rng.random(n) < p).astype(np.int8)
 
     return Synthetic(spec, x, segment, breakdown, seed, behavior, outcome)
