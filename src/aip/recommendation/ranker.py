@@ -128,7 +128,7 @@ def recommend(
     for entry in recommended:
         c = entry.pop("c")
         fit, basis = fits[id(c)]
-        entry.update(claim_type=FAMILY_CLAIM.get(c.task["task_family"], "cohort_pattern"), fit=fit, fit_basis=basis)
+        entry.update(claim_type=FAMILY_CLAIM.get(c.task["task_family"]), fit=fit, fit_basis=basis)
         entry["cost"] = _cost(c)
 
     if not eligible:

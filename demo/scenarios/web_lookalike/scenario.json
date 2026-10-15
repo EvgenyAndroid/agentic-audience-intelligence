@@ -1,0 +1,39 @@
+{
+  "order": 2,
+  "scenario_id": "web_lookalike",
+  "title": "Web events look-alike",
+  "source_label": "Web events (reference profile)",
+  "summary": "A buyer wants browsers that resemble a seed list. The same data is also asked for a new propensity model and a bring-your-own remote look-alike model.",
+  "requested_task": "task_seed_affinity_score",
+  "tasks": [
+    {
+      "task": "examples/valid/task/task_seed_affinity_score.json",
+      "bundle": "examples/valid/evidence_bundle/bundle_task_seed_affinity_score.json"
+    },
+    {
+      "task": "examples/valid/task/task_score_unregistered_location.json",
+      "bundle": "examples/valid/evidence_bundle/bundle_task_score_unregistered_location.json"
+    },
+    {
+      "task": "demo/scenarios/web_lookalike/task_demo_web_byom_remote.json",
+      "bundle": "demo/scenarios/web_lookalike/bundle_task_demo_web_byom_remote.json"
+    },
+    {
+      "task": "examples/valid/task/task_propensity_train_no_labels.json",
+      "bundle": "examples/valid/evidence_bundle/bundle_task_propensity_train_no_labels.json"
+    }
+  ],
+  "lookalike": {
+    "task_id": "task_seed_affinity_score",
+    "rng_seed": 20261014,
+    "n_seed": 120,
+    "n_pool": 2000,
+    "n_lookalikes": 200,
+    "n_features": 8,
+    "missing_rate": 0.12,
+    "min_coverage": 0.6,
+    "prototypes": 3,
+    "heldout_fraction": 0.3,
+    "reach_fraction": 0.1
+  }
+}

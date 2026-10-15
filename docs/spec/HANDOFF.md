@@ -87,6 +87,10 @@ Work inside this repository. Attach or read the v3.1 prompt, BRD, PRD Revision 3
 - The tenant's maximum decision validity.
 - The existing `adcp-signals-adaptor` publishes `pseudo-v1` taxonomy vectors. Semantic phases need Golden Test Set evidence before any similarity use.
 
+## Demonstrator
+
+`app/` is a static demonstrator built from `demo/scenarios` by `aip demo-build`. Bundles are computed at build time with a fixed evaluation time, carry input and engine hashes, and are checked against a fresh build in CI. Synthetic results test software behavior only. Hosting target: Cloudflare Pages (no build command, output directory `app`). The real-data path will add a thin API over the same contracts; the page must then label live results separately from precomputed ones.
+
 ## Decisions still needed for a real pilot
 
 1. Business objective and requested artifact.

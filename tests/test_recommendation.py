@@ -132,3 +132,9 @@ def test_example_matches_the_rankers_output():
         now=NOW,
     )
     assert rec == example("recommendation/rec_seed_affinity_web_0001")
+
+
+def test_families_without_a_claim_carry_no_claim_type():
+    blocked = derived("task_req_blocked", "seed_affinity", "BLOCKED", reasons=["forbidden_row_level_egress"])
+    rec = run(blocked, derived("task_alt_profile", "intake", "ELIGIBLE"))
+    assert rec["recommended_options"][0]["claim_type"] is None

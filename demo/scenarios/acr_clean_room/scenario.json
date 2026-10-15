@@ -1,0 +1,19 @@
+{
+  "order": 1,
+  "scenario_id": "acr_clean_room",
+  "title": "TV viewing in a clean room",
+  "source_label": "ACR viewing (reference profile)",
+  "summary": "A buyer wants act-alike households exported as a score file. The clean room permits internal scoring and qualifying aggregates, and prohibits row-level export.",
+  "requested_task": "task_cr_export_rows",
+  "tasks": [
+    {
+      "task": "examples/valid/task/task_cr_export_rows.json",
+      "bundle": "examples/valid/evidence_bundle/bundle_task_cr_export_rows.json"
+    },
+    {
+      "task": "demo/scenarios/acr_clean_room/task_demo_acr_aggregate_alt.json",
+      "bundle": "demo/scenarios/acr_clean_room/bundle_task_demo_acr_aggregate_alt.json"
+    }
+  ],
+  "lookalike": null
+}

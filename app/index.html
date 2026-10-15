@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en" data-theme="midnight">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agentic Audiences</title>
+  <meta name="description" content="A demonstrator of the Agentic Audience Intelligence engine: one dataset, many tasks, each with its own verdict.">
+  <link rel="stylesheet" href="app.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Agentic Audiences</span>
+      <span class="tag">demonstrator</span>
+    </div>
+    <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch colour theme">Light theme</button>
+  </header>
+
+  <main id="main">
+    <section class="disclosure" aria-label="What this page is">
+      <p id="disclosure-text">Loading the precomputed bundles.</p>
+      <p class="disclosure-meta" id="disclosure-meta"></p>
+    </section>
+
+    <nav class="scenario-tabs" id="scenario-tabs" role="tablist" aria-label="Scenarios"></nav>
+
+    <article id="scenario" aria-live="polite"></article>
+  </main>
+
+  <footer class="footer">
+    <p>Engine and contracts: <a href="https://github.com/EvgenyAndroid/agentic-audience-intelligence">agentic-audience-intelligence</a>. Verdicts: ELIGIBLE, PROVISIONAL, BLOCKED. Agents propose; only the router decides; only people approve releases.</p>
+  </footer>
+  <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+</body>
+</html>

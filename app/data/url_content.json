@@ -1,0 +1,777 @@
+{
+  "bundle_format": "1.0.0",
+  "scenario": {
+    "scenario_id": "url_content",
+    "title": "Pages for a content brief",
+    "source_label": "URL content (reference profile)",
+    "summary": "A buyer wants pages that match a quick-dinner content brief. The available vectors are taxonomy pseudo-vectors without alignment evidence.",
+    "requested_task": "task_demo_url_semantic"
+  },
+  "fingerprint": {
+    "dataset_id": "ds_url_demo",
+    "dataset_state": "confirmed",
+    "profile_id": "prof_url_content_ref",
+    "profile_version": "1.0.0",
+    "family_label": "URL content (reference)",
+    "profile_state": "confirmed",
+    "observation_units": [
+      {
+        "unit": {
+          "type_id": "content_item_key",
+          "type_version": "1.0.0",
+          "namespace": "url_demo"
+        },
+        "key_field": "canonical_url",
+        "label": "Content item key",
+        "represents": "A page, program, creative or app screen",
+        "grain": "content_item",
+        "registration_state": "confirmed"
+      }
+    ],
+    "signals": [
+      {
+        "signal_id": "url_text",
+        "primitive": "content_item",
+        "value_type": "text",
+        "evidence_kind": "observed",
+        "description": "Extracted page text reference"
+      },
+      {
+        "signal_id": "url_topic",
+        "primitive": "observation",
+        "value_type": "categorical",
+        "evidence_kind": "provider_inferred",
+        "description": "Provider topic labels"
+      }
+    ],
+    "known_limits": [
+      "Page context does not prove reader intent"
+    ],
+    "execution_policy_refs": [
+      {
+        "id": "exec_workspace_demo",
+        "version": "1.0.0"
+      }
+    ],
+    "output_policy_refs": [
+      {
+        "id": "output_workspace_demo",
+        "version": "1.0.0"
+      }
+    ]
+  },
+  "tasks": [
+    {
+      "task": {
+        "task_id": "task_demo_url_semantic",
+        "task_family": "semantic_similarity",
+        "operation": "score",
+        "requested_artifact": "score_file",
+        "execution_location_ref": "loc_workspace_demo",
+        "destination_ref": null,
+        "objective_ref": {
+          "id": "obj_semantic_url",
+          "version": "1.0.0"
+        },
+        "model_ref": null,
+        "units": {
+          "observation_units": [
+            {
+              "dataset_ref": {
+                "id": "ds_url_demo",
+                "version": "1.0.0"
+              },
+              "unit": {
+                "type_id": "content_item_key",
+                "type_version": "1.0.0",
+                "namespace": "url_demo"
+              }
+            }
+          ],
+          "modeling_unit": {
+            "type_id": "content_item_key",
+            "type_version": "1.0.0",
+            "namespace": "url_demo"
+          },
+          "output_unit": {
+            "type_id": "content_item_key",
+            "type_version": "1.0.0",
+            "namespace": "url_demo"
+          },
+          "activation_unit": null,
+          "measurement_unit": null,
+          "mapping_refs": []
+        }
+      },
+      "objective": {
+        "kind": "objective",
+        "schema_version": "1.0.0",
+        "objective_id": "obj_semantic_url",
+        "objective_version": "1.0.0",
+        "tenant_id": "tenant_demo",
+        "statement": "Pages related to a quick-dinner content brief",
+        "task_family": "semantic_similarity",
+        "intended_use": "Contextual placement list",
+        "requested_by": {
+          "actor_id": "user_analyst_01",
+          "actor_type": "human",
+          "role": "analyst"
+        },
+        "claim_sought": "semantic_similarity",
+        "eligible_universe_ref": null,
+        "seed_ref": null,
+        "content_brief_ref": {
+          "id": "brief_quick_dinners",
+          "version": "1.0.0"
+        },
+        "target": null
+      },
+      "decision": {
+        "kind": "task_decision",
+        "schema_version": "1.0.0",
+        "decision_id": "dec_task_demo_url_semantic_1.0.0_20261014T120000Z",
+        "task_ref": {
+          "id": "task_demo_url_semantic",
+          "version": "1.0.0"
+        },
+        "task_checksum": "sha256:311a6711dee21eeb4efa364e519adbcc6e60b94686fa680b0d9630ab4a6d38a4",
+        "verdict": "PROVISIONAL",
+        "prerequisites": [
+          {
+            "prerequisite_id": "P-CONTRACT-VALID",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-CONTRACT-VALID",
+            "evidence_refs": [],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-TENANT-SCOPE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-TENANT-SCOPE",
+            "evidence_refs": [
+              "execution_policy:exec_workspace_demo@1.0.0",
+              "output_policy:output_workspace_demo@1.0.0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-SNAPSHOT-IMMUTABLE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-SNAPSHOT-IMMUTABLE",
+            "evidence_refs": [
+              "sha256:845f78dcfc10005d09b01f12c3fb6d805d98d79aa76c6a1bbc9ca06cce4770b0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-EXEC-OPERATION",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-EXEC-OPERATION",
+            "evidence_refs": [
+              "exec_workspace_demo@1.0.0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-RIGHTS-USE",
+            "outcome": "satisfied",
+            "established_by": "policy_service",
+            "check_ref": "aip-task-router:P-RIGHTS-USE",
+            "evidence_refs": [
+              "evidence_p-rights-use"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-SENSITIVE-EXCLUSION",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-SENSITIVE-EXCLUSION",
+            "evidence_refs": [
+              "evidence_p-sensitive-exclusion"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-PROFILE-CONFIRMED",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-PROFILE-CONFIRMED",
+            "evidence_refs": [
+              "prof_url_content_ref@1.0.0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-UNITS-DECLARED",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-UNITS-DECLARED",
+            "evidence_refs": [],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-GRAIN-COMPATIBLE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-GRAIN-COMPATIBLE",
+            "evidence_refs": [],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-CONTENT-BRIEF",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-CONTENT-BRIEF",
+            "evidence_refs": [
+              "brief_quick_dinners"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-REPRESENTATION-COMPATIBLE",
+            "outcome": "missing",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-REPRESENTATION-COMPATIBLE",
+            "evidence_refs": [],
+            "reason_code": "missing_representation_evidence"
+          }
+        ],
+        "reasons": [
+          {
+            "code": "missing_representation_evidence",
+            "detail": "fact not supplied",
+            "evidence_refs": []
+          }
+        ],
+        "next_actions": [
+          "Run the representation compatibility check"
+        ],
+        "decided_at": "2026-10-14T12:00:00Z",
+        "valid_until": "2026-10-21T12:00:00Z",
+        "validity_basis": [
+          "max_decision_ttl",
+          "exec_workspace_demo@1.0.0"
+        ],
+        "policy_versions": [
+          {
+            "id": "exec_workspace_demo",
+            "version": "1.0.0"
+          }
+        ],
+        "contract_versions": [
+          {
+            "id": "aip-contracts",
+            "version": "1.0.0"
+          }
+        ],
+        "supersedes": null,
+        "agent_proposal_refs": [],
+        "decided_by": {
+          "service_id": "aip-task-router",
+          "service_version": "0.1.0",
+          "authority": "router"
+        }
+      }
+    },
+    {
+      "task": {
+        "task_id": "task_demo_url_content_groups",
+        "task_family": "cohort",
+        "operation": "build_cohort",
+        "requested_artifact": "cohort_definition",
+        "execution_location_ref": "loc_workspace_demo",
+        "destination_ref": null,
+        "objective_ref": {
+          "id": "obj_semantic_url",
+          "version": "1.0.0"
+        },
+        "model_ref": null,
+        "units": {
+          "observation_units": [
+            {
+              "dataset_ref": {
+                "id": "ds_url_demo",
+                "version": "1.0.0"
+              },
+              "unit": {
+                "type_id": "content_item_key",
+                "type_version": "1.0.0",
+                "namespace": "url_demo"
+              }
+            }
+          ],
+          "modeling_unit": {
+            "type_id": "content_item_key",
+            "type_version": "1.0.0",
+            "namespace": "url_demo"
+          },
+          "output_unit": {
+            "type_id": "content_item_key",
+            "type_version": "1.0.0",
+            "namespace": "url_demo"
+          },
+          "activation_unit": null,
+          "measurement_unit": null,
+          "mapping_refs": []
+        }
+      },
+      "objective": {
+        "kind": "objective",
+        "schema_version": "1.0.0",
+        "objective_id": "obj_semantic_url",
+        "objective_version": "1.0.0",
+        "tenant_id": "tenant_demo",
+        "statement": "Pages related to a quick-dinner content brief",
+        "task_family": "semantic_similarity",
+        "intended_use": "Contextual placement list",
+        "requested_by": {
+          "actor_id": "user_analyst_01",
+          "actor_type": "human",
+          "role": "analyst"
+        },
+        "claim_sought": "semantic_similarity",
+        "eligible_universe_ref": null,
+        "seed_ref": null,
+        "content_brief_ref": {
+          "id": "brief_quick_dinners",
+          "version": "1.0.0"
+        },
+        "target": null
+      },
+      "decision": {
+        "kind": "task_decision",
+        "schema_version": "1.0.0",
+        "decision_id": "dec_task_demo_url_content_groups_1.0.0_20261014T120000Z",
+        "task_ref": {
+          "id": "task_demo_url_content_groups",
+          "version": "1.0.0"
+        },
+        "task_checksum": "sha256:7f1a873668d379583e19343c7bdf51422b67d06be5f54ebe1bb5ef0daf94a67e",
+        "verdict": "ELIGIBLE",
+        "prerequisites": [
+          {
+            "prerequisite_id": "P-CONTRACT-VALID",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-CONTRACT-VALID",
+            "evidence_refs": [],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-TENANT-SCOPE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-TENANT-SCOPE",
+            "evidence_refs": [
+              "execution_policy:exec_workspace_demo@1.0.0",
+              "output_policy:output_workspace_demo@1.0.0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-SNAPSHOT-IMMUTABLE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-SNAPSHOT-IMMUTABLE",
+            "evidence_refs": [
+              "sha256:845f78dcfc10005d09b01f12c3fb6d805d98d79aa76c6a1bbc9ca06cce4770b0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-EXEC-OPERATION",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-EXEC-OPERATION",
+            "evidence_refs": [
+              "exec_workspace_demo@1.0.0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-RIGHTS-USE",
+            "outcome": "satisfied",
+            "established_by": "policy_service",
+            "check_ref": "aip-task-router:P-RIGHTS-USE",
+            "evidence_refs": [
+              "evidence_p-rights-use"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-SENSITIVE-EXCLUSION",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-SENSITIVE-EXCLUSION",
+            "evidence_refs": [
+              "evidence_p-sensitive-exclusion"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-PROFILE-CONFIRMED",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-PROFILE-CONFIRMED",
+            "evidence_refs": [
+              "prof_url_content_ref@1.0.0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-UNITS-DECLARED",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-UNITS-DECLARED",
+            "evidence_refs": [],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-GRAIN-COMPATIBLE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-GRAIN-COMPATIBLE",
+            "evidence_refs": [],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-FEATURE-COVERAGE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-FEATURE-COVERAGE",
+            "evidence_refs": [
+              "evidence_p-feature-coverage"
+            ],
+            "reason_code": null
+          }
+        ],
+        "reasons": [],
+        "next_actions": [],
+        "decided_at": "2026-10-14T12:00:00Z",
+        "valid_until": "2026-10-21T12:00:00Z",
+        "validity_basis": [
+          "max_decision_ttl",
+          "exec_workspace_demo@1.0.0"
+        ],
+        "policy_versions": [
+          {
+            "id": "exec_workspace_demo",
+            "version": "1.0.0"
+          }
+        ],
+        "contract_versions": [
+          {
+            "id": "aip-contracts",
+            "version": "1.0.0"
+          }
+        ],
+        "supersedes": null,
+        "agent_proposal_refs": [],
+        "decided_by": {
+          "service_id": "aip-task-router",
+          "service_version": "0.1.0",
+          "authority": "router"
+        }
+      }
+    }
+  ],
+  "recommendation": {
+    "kind": "recommendation",
+    "schema_version": "1.0.0",
+    "recommendation_id": "rec_demo_url_content",
+    "tenant_id": "tenant_demo",
+    "objective_ref": {
+      "id": "obj_semantic_url",
+      "version": "1.0.0"
+    },
+    "requested_task": {
+      "task_ref": {
+        "id": "task_demo_url_semantic",
+        "version": "1.0.0"
+      },
+      "decision_ref": "dec_task_demo_url_semantic_1.0.0_20261014T120000Z",
+      "task_family": "semantic_similarity",
+      "verdict": "PROVISIONAL"
+    },
+    "recommended_options": [
+      {
+        "task_ref": {
+          "id": "task_demo_url_content_groups",
+          "version": "1.0.0"
+        },
+        "decision_ref": "dec_task_demo_url_content_groups_1.0.0_20261014T120000Z",
+        "task_family": "cohort",
+        "position": 1,
+        "claim_type": "cohort_pattern",
+        "fit": "alternative",
+        "fit_basis": [
+          "different_question"
+        ],
+        "cost": {
+          "status": "unknown"
+        }
+      }
+    ],
+    "unlock_options": [
+      {
+        "task_ref": {
+          "id": "task_demo_url_semantic",
+          "version": "1.0.0"
+        },
+        "decision_ref": "dec_task_demo_url_semantic_1.0.0_20261014T120000Z",
+        "task_family": "semantic_similarity",
+        "reason_codes": [
+          "missing_representation_evidence"
+        ],
+        "next_actions": [
+          "Run the representation compatibility check"
+        ]
+      }
+    ],
+    "blocked_options": [],
+    "ranking_status": "ranked",
+    "ranking_basis": "The requested task is listed first. Eligible options matching the requested task family follow, then alternatives that answer a different question. Within a group, options are ordered by known cost only; options with unknown cost share a position.",
+    "decision_refs": [
+      "dec_task_demo_url_semantic_1.0.0_20261014T120000Z",
+      "dec_task_demo_url_content_groups_1.0.0_20261014T120000Z"
+    ],
+    "generated_at": "2026-10-14T12:00:00Z",
+    "valid_until": "2026-10-21T12:00:00Z",
+    "generated_by": {
+      "service_id": "aip-recommender",
+      "service_version": "0.1.0",
+      "authority": "deterministic_ranker"
+    }
+  },
+  "lookalike": null,
+  "reason_codes": {
+    "missing_representation_evidence": "Representation compatibility has not been established."
+  },
+  "prerequisites": {
+    "P-CONTENT-BRIEF": {
+      "description": "The content brief or reference resolves",
+      "remedy": "Supply the content brief"
+    },
+    "P-CONTRACT-VALID": {
+      "description": "Task document passes schema and semantic validation",
+      "remedy": "Correct the task contract and resubmit"
+    },
+    "P-EXEC-OPERATION": {
+      "description": "Every contributing source permits the operation at the execution location",
+      "remedy": "Obtain an execution policy that addresses this operation and location"
+    },
+    "P-FEATURE-COVERAGE": {
+      "description": "Feature coverage is adequate for the eligible population",
+      "remedy": "Profile feature coverage for the eligible population"
+    },
+    "P-GRAIN-COMPATIBLE": {
+      "description": "Observation, modeling and output units match or have approved mappings",
+      "remedy": "Supply an approved mapping or choose a compatible modeling unit"
+    },
+    "P-PROFILE-CONFIRMED": {
+      "description": "Every contributing source profile is steward-confirmed",
+      "remedy": "Complete steward confirmation of the source profile"
+    },
+    "P-REPRESENTATION-COMPATIBLE": {
+      "description": "Vector representations are compatible or aligned with evidence",
+      "remedy": "Run the representation compatibility check"
+    },
+    "P-RIGHTS-USE": {
+      "description": "Rights permit this operation and purpose",
+      "remedy": "Obtain rights evidence from the rights owner"
+    },
+    "P-SENSITIVE-EXCLUSION": {
+      "description": "Objective, labels and features avoid excluded sensitive categories",
+      "remedy": "Complete sensitive-category screening"
+    },
+    "P-SNAPSHOT-IMMUTABLE": {
+      "description": "Every input resolves to an immutable, non-withdrawn snapshot",
+      "remedy": "Register the immutable snapshot or replace the withdrawn input"
+    },
+    "P-TENANT-SCOPE": {
+      "description": "Inputs and policies belong to the task's tenant",
+      "remedy": "Use only artifacts from the authenticated tenant"
+    },
+    "P-UNITS-DECLARED": {
+      "description": "Every task unit is registered, confirmed and declared by the source contract",
+      "remedy": "Register and confirm the unit type, or correct the declared unit"
+    }
+  },
+  "trace": [
+    {
+      "step": "route",
+      "task_id": "task_demo_url_semantic",
+      "detail": "11 prerequisites checked",
+      "outcome": "PROVISIONAL"
+    },
+    {
+      "step": "route",
+      "task_id": "task_demo_url_content_groups",
+      "detail": "10 prerequisites checked",
+      "outcome": "ELIGIBLE"
+    },
+    {
+      "step": "recommend",
+      "task_id": "task_demo_url_semantic",
+      "detail": "1 alternative for the same objective",
+      "outcome": "ranked"
+    }
+  ],
+  "manifest": {
+    "evaluated_at": "2026-10-14T12:00:00Z",
+    "max_decision_ttl_hours": 168.0,
+    "engine_version": "0.1.0",
+    "engine_sha256": "sha256:d135fbc7d02199503494b68b6c7a8d6601b6530249105363b806adba7be9c0d0",
+    "inputs": [
+      {
+        "path": "demo/scenarios/url_content/bundle_task_demo_url_content_groups.json",
+        "sha256": "sha256:3a9719d1f7949fb509818722ecf448fc983827462efbbff07b81c3cc8fb1d136"
+      },
+      {
+        "path": "demo/scenarios/url_content/bundle_task_demo_url_semantic.json",
+        "sha256": "sha256:254b4d816c1a22e2a7cb2c51451986519eead1fdbb2925d4377c9969bcafc35a"
+      },
+      {
+        "path": "demo/scenarios/url_content/scenario.json",
+        "sha256": "sha256:a451e3c5c796fced88ae24047e2c5516b5806389f84874201f43093075550f24"
+      },
+      {
+        "path": "demo/scenarios/url_content/task_demo_url_content_groups.json",
+        "sha256": "sha256:7f1a873668d379583e19343c7bdf51422b67d06be5f54ebe1bb5ef0daf94a67e"
+      },
+      {
+        "path": "demo/scenarios/url_content/task_demo_url_semantic.json",
+        "sha256": "sha256:311a6711dee21eeb4efa364e519adbcc6e60b94686fa680b0d9630ab4a6d38a4"
+      },
+      {
+        "path": "examples/valid/dataset_manifest/ds_acr_demo.json",
+        "sha256": "sha256:731db4484d9716ab755b615203e943aa27aa69150da1ba0754f1572566f2075e"
+      },
+      {
+        "path": "examples/valid/dataset_manifest/ds_new_vendor.json",
+        "sha256": "sha256:94d1687ce16fbf8664714a59ce6370d9bc3bad7ce2bee7522f4e95a20189eda0"
+      },
+      {
+        "path": "examples/valid/dataset_manifest/ds_url_demo.json",
+        "sha256": "sha256:8f2e7a97826342257c59e08fe566fedc207d403f109af8927991a78e16cadb0b"
+      },
+      {
+        "path": "examples/valid/dataset_manifest/ds_web_demo.json",
+        "sha256": "sha256:4310f73cc50268d5c943f3449feb5fd27200d560dbb4e4492293b861d90fd974"
+      },
+      {
+        "path": "examples/valid/model_registration/model_byom_lookalike_remote.json",
+        "sha256": "sha256:b671e82dc02781a6ca0ae1114b3f45bc5ea77024e5aa7cc4b334b496ff4d28ad"
+      },
+      {
+        "path": "examples/valid/model_registration/model_propensity_logreg_v1.json",
+        "sha256": "sha256:6e6b862bcd8729633347a51993357aceeac2f57d8502b8e34cd7a6be446e7e16"
+      },
+      {
+        "path": "examples/valid/objective/obj_aggregate_acr.json",
+        "sha256": "sha256:d339d922ad9c596eca7bcb5cdc5ca09e057be5ff240364f4dc1971c7a71cf601"
+      },
+      {
+        "path": "examples/valid/objective/obj_behavioral_acr.json",
+        "sha256": "sha256:b3e5381851a615f42cd2a18cf5cfe305e21911e11551368a0bc318c68a80e4cf"
+      },
+      {
+        "path": "examples/valid/objective/obj_propensity_web.json",
+        "sha256": "sha256:9d7d2412990b3f8d30a3c326d5ec41232b87aa6529976bf28b498776f77194e9"
+      },
+      {
+        "path": "examples/valid/objective/obj_seed_affinity_web.json",
+        "sha256": "sha256:2a1c74ef943d882bafe80ec664a32cc1bc5fd7d88456fce2a1bd576ae7c1f0d9"
+      },
+      {
+        "path": "examples/valid/objective/obj_semantic_url.json",
+        "sha256": "sha256:01449ee132f7821df87aecd6cf7ad5106a7e2be0efbb65b5f7ac466c3c0e19fc"
+      },
+      {
+        "path": "examples/valid/relationship_snapshot/relsnap_cookie_household_2026_10.json",
+        "sha256": "sha256:b5d5a1d08f6cbe48fe6eef3cacf919171ac0d13daa69a75dc40a0bf937bbc45e"
+      },
+      {
+        "path": "examples/valid/source_profile/prof_new_vendor_quarantined.json",
+        "sha256": "sha256:2fc0a725fd4ba1719304ff5049d2d8c927b2890a59720ccdbeda1fa8c61f9b5a"
+      },
+      {
+        "path": "examples/valid/unit_mapping/map_cookie_household_activation.json",
+        "sha256": "sha256:0c242916af172515be9472f3714ab219fd56fbb3e7354fd73deeefebdbefa403"
+      },
+      {
+        "path": "examples/valid/unit_mapping/map_cookie_household_features.json",
+        "sha256": "sha256:b452a9d39fb5b77696ace27161e2e382b08a5a9d6d7f95e75234f3fe661f16cd"
+      },
+      {
+        "path": "registry/policies/exec_cleanroom_demo.json",
+        "sha256": "sha256:6fc2d7026b2b20538b233e5818d60c14f3a62c45fcbfa4f3593fc01ed73a77e3"
+      },
+      {
+        "path": "registry/policies/exec_workspace_demo.json",
+        "sha256": "sha256:28f43182f1bbfed43a23aa96e39ef72ec5cb61fa5f22e2876a20795809747203"
+      },
+      {
+        "path": "registry/policies/output_cleanroom_aggregate_only.json",
+        "sha256": "sha256:5af1213a74c0ead763ceb2849427cbbf85e0a1d8b412aec2a18772b50587947a"
+      },
+      {
+        "path": "registry/policies/output_workspace_demo.json",
+        "sha256": "sha256:b4d36a08a0a503388f49e92d2ad662de70c6171b1b1bc1b1b35df94578952a6c"
+      },
+      {
+        "path": "registry/profiles/prof_acr_viewing_ref.json",
+        "sha256": "sha256:1da9467aa5bbf71eb5eb2a41a4d12be7a99e74746d86fccd145cf3f35a4a49ea"
+      },
+      {
+        "path": "registry/profiles/prof_url_content_ref.json",
+        "sha256": "sha256:28f8eb1ee86d3a37c620c9358b3e20ec83053571cb50c340c53eae7d221183a7"
+      },
+      {
+        "path": "registry/profiles/prof_web_events_ref.json",
+        "sha256": "sha256:4acd82e7bd592c9e3df604adcd5776782eab2d017c7b46576d49a1efd57c9c03"
+      },
+      {
+        "path": "registry/types/browser_cookie.json",
+        "sha256": "sha256:0c34ebd85c0e09d11d04df2e6fa54237d3cbe8b6faf93e1f2fab2400c541bb0d"
+      },
+      {
+        "path": "registry/types/content_item_key.json",
+        "sha256": "sha256:50ee216b9e5e12dde0d0dfba2ed3b1276a36a13e5d1dd658ab6d535494c55903"
+      },
+      {
+        "path": "registry/types/ip_observation.json",
+        "sha256": "sha256:ed2aeb2476395d436f134be81c8b0694d22d460911559dfc59ab32347270ae0d"
+      },
+      {
+        "path": "registry/types/mobile_ad_id.json",
+        "sha256": "sha256:1eace837a92ab2be240f79e4e48d280294bfb98270bdf706d38a69cdc94b0397"
+      },
+      {
+        "path": "registry/types/postal_code.json",
+        "sha256": "sha256:e93b009184bd120bc6ff7adf469808b0ca4fe9d612aab6e35ab398ab94e3c0be"
+      },
+      {
+        "path": "registry/types/provider_household_key.json",
+        "sha256": "sha256:3fba5fd987cbffe2aa3d5e6d2d3afb98a0faa577778192586037bff1f9a79726"
+      },
+      {
+        "path": "registry/types/tv_screen_key.json",
+        "sha256": "sha256:8241ef85b1135d0879a4fa93c49dd43384c13d0323aeb8873f2250cc93b37788"
+      },
+      {
+        "path": "registry/reason_codes.json",
+        "sha256": "sha256:67e7ae2898f68b22e0933dd19ffa3230573b24632cf6b975c4f11435aae38e80"
+      }
+    ],
+    "computed": "build_time",
+    "synthetic": true,
+    "disclosure": "Synthetic scenarios. Every decision, ranking and score on this page was computed by the engine when the site was built, at the evaluation time shown; nothing runs while you browse. Synthetic results test software behavior and are not evidence of data quality, model quality or market performance. The release preview is not an approval and nothing is activated.",
+    "bundle_sha256": "sha256:c8e9303d55d382c0534937e8470dd8aa5b3ec09263d16be488ebce71a1689123"
+  }
+}

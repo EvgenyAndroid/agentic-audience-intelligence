@@ -69,7 +69,15 @@
             "description": "Equal positions are unordered relative to each other."
           },
           "claim_type": {
-            "$ref": "common.schema.json#/$defs/claim_type"
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/claim_type"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null for task families that carry no output claim, such as intake or release."
           },
           "fit": {
             "type": "string",

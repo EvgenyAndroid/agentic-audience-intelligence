@@ -11,7 +11,7 @@ This repository holds the specification and a working scaffold: normative JSON S
 | Schema meta-validation (38 files, JSON Schema 2020-12) | Passed (Linux; Windows in CI) | Session 2 record (34 files) in `reports/session2/` |
 | Valid examples and registry documents (82) | Passed (Linux; Windows in CI) | Session 2 record (76) in `reports/session2/conformance.json` |
 | Invalid cases fail for the stated layer, keyword and path (75) | Passed (Linux; Windows in CI) | Session 2 record (54) in `reports/session2/conformance.json` |
-| Unit and contract tests (275) | Passed (Linux and Windows, Python 3.11 and 3.12, locked dependencies) | Session 2 record in `reports/session2/pytest-linux.xml` (195); tests added since in `tests/` |
+| Unit and contract tests (284) | Passed (Linux and Windows, Python 3.11 and 3.12, locked dependencies) | Session 2 record in `reports/session2/pytest-linux.xml` (195); tests added since in `tests/` |
 | Lint (ruff) and type check (mypy, 46 files) | Passed (Linux) | `reports/session2/README.md` |
 | AdCP adapter output against pinned AdCP 3.1.20 schemas | Passed (Linux) | `tests/test_representation_and_exchange.py` |
 | Rules router on the development routing suite (12 cases) | Passed by construction | Session 2 record (11 cases) in `reports/session2/routing_benchmark_development.json` |
@@ -65,6 +65,8 @@ tests/              pytest suite, including PRD traceability and router golden-o
 third_party/adcp/   Pinned AdCP 3.1.20 schemas (Apache-2.0), hash-locked
 scripts/            PowerShell automation
 reports/session2/   Results of checks actually executed in Session 2
+demo/               Demonstrator scenarios and build settings (separate from the routing benchmark)
+app/                Static demonstrator page and its precomputed bundles (app/data)
 ```
 
 Package modules:
@@ -85,7 +87,24 @@ Package modules:
 | `aip.exchange` | AdCP 3.1.20 boundary adapter |
 | `aip.monitoring` | Population stability index for post-release drift |
 | `aip.recommendation` | Deterministic recommendations over current task decisions, and an admissibility check |
+| `aip.demo` | Build-time demonstrator: routes `demo/scenarios` into static bundles for `app/` |
 | `aip.evaluation` | Routing benchmark harness and metrics |
+
+## Demonstrator
+
+`app/` is a static page that shows the engine's decisions on four synthetic scenarios: an ACR clean room, a web look-alike, URL content and a new source in quarantine. It answers what each dataset can be used for, task by task, with the reasons, what would unlock each task, a deterministic recommendation, synthetic look-alike results with their abstention denominators, and a stored trace.
+
+Nothing runs while a visitor browses. `aip demo-build` routes the scenarios in `demo/scenarios/` through the real router, recommender and baselines, and writes versioned bundles to `app/data/`. Each bundle records its evaluation time (from `demo/build.json`), the engine version and source hash, and the hash of every input. `tests/test_demo.py` fails when the committed bundles differ from a fresh build, so any engine change must ship with rebuilt bundles.
+
+```powershell
+aip demo-build --out app\data          # rebuild after changing the engine, contracts or scenarios
+aip demo-build --out app\data --check  # what CI checks
+python -m http.server --directory app   # preview at http://localhost:8000
+```
+
+UI labels name the claim plainly and keep the task family visible: look-alike is seed affinity, act-alike is behavioral affinity, content similarity is semantic similarity, and propensity reads "Estimated chance of [event] within [horizon]".
+
+Hosting on Cloudflare Pages: create a Pages project from this repository with no build command and `app` as the output directory, or deploy directly with `npx wrangler pages deploy app --project-name <name>`. `app/_headers` sets a strict same-origin content security policy and allows embedding only from nofluffadvisory.com.
 
 ## Suggested review order
 

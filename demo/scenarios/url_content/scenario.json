@@ -1,0 +1,19 @@
+{
+  "order": 3,
+  "scenario_id": "url_content",
+  "title": "Pages for a content brief",
+  "source_label": "URL content (reference profile)",
+  "summary": "A buyer wants pages that match a quick-dinner content brief. The available vectors are taxonomy pseudo-vectors without alignment evidence.",
+  "requested_task": "task_demo_url_semantic",
+  "tasks": [
+    {
+      "task": "demo/scenarios/url_content/task_demo_url_semantic.json",
+      "bundle": "demo/scenarios/url_content/bundle_task_demo_url_semantic.json"
+    },
+    {
+      "task": "demo/scenarios/url_content/task_demo_url_content_groups.json",
+      "bundle": "demo/scenarios/url_content/bundle_task_demo_url_content_groups.json"
+    }
+  ],
+  "lookalike": null
+}
