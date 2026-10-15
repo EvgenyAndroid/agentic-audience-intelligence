@@ -134,3 +134,7 @@ Hosting on Cloudflare Pages: create a Pages project from this repository with no
 - No default thresholds, validity periods, prices or model identifiers. Fixture values illustrate shape only.
 
 Values in `examples/`, `registry/` and `fixtures/` are synthetic fixtures. Synthetic results test software behavior, not market performance.
+
+## License
+
+MIT, see [LICENSE](LICENSE). The pinned AdCP schemas in `third_party/adcp/` keep their own Apache-2.0 license.
