@@ -1452,7 +1452,7 @@
     "evaluated_at": "2026-10-14T12:00:00Z",
     "max_decision_ttl_hours": 168.0,
     "engine_version": "0.1.0",
-    "engine_sha256": "sha256:b3634d58fc701c038739e3930a5dee7290f81e0cbd2dd31b06b00ffda7143813",
+    "engine_sha256": "sha256:f9d555e604a0bc0e4f58dfb617bf7c894dd0e4b8e48b95470d56791f4b513ad5",
     "inputs": [
       {
         "path": "demo/scenarios/web_lookalike/bundle_task_demo_web_byom_remote.json",

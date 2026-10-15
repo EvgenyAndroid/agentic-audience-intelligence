@@ -271,7 +271,7 @@ function driversView(bundle, model) {
   const drivers = model.drivers[nearest];
   const max = Math.max(...drivers.map((x) => Math.abs(x.smd)), 0.5);
   return el("div", {},
-    el("p", { class: "muted", text: `How the audience at ${pct(Number(nearest))} reach differs from the scored pool, in standard deviations. Descriptive, not causal.` }),
+    el("p", { class: "muted", text: `How the audience differs from the scored pool, in standard deviations. Computed at 1, 5, 10, 20 and 50% reach; showing ${pct(Number(nearest))}, the nearest to your setting. Descriptive, not causal.` }),
     el("div", { class: "drivers" }, drivers.map((x) => el("div", { class: "drv-row" },
       el("span", { class: "drv-label", text: bundle.dataset.feature_labels[x.feature] || x.feature }),
       el("span", { class: "drv-track" },
