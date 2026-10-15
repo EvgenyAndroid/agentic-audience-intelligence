@@ -1,28 +1,35 @@
 <!doctype html>
-<html lang="en" data-theme="midnight">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Agentic Audience Intelligence</title>
-  <meta name="description" content="A demonstrator of the Agentic Audience Intelligence engine: one dataset, many tasks, each with its own verdict.">
+  <meta name="description" content="Choose a dataset, take the recommended method and model, and build a scaled audience. Every method is decided first, with reasons. A demonstrator of the Agentic Audience Intelligence engine on synthetic data.">
+  <link rel="preload" href="fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="app.css">
   <script src="app.js" defer></script>
   <script src="workbench.js" defer></script>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">
-      <span class="brand-mark" aria-hidden="true"></span>
-      <span class="brand-name">Agentic Audience Intelligence</span>
-      <span class="tag">demonstrator</span>
-    </div>
-    <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch colour theme">Light theme</button>
+    <a class="brand" href="https://nofluffadvisory.com/building/">No Fluff Advisory<span class="brand-section"><span class="brand-sep" aria-hidden="true">/</span>Building</span></a>
+    <a class="topbar-link" href="https://nofluffadvisory.com/building/audience-intelligence/">Read the case file</a>
   </header>
 
   <main id="main">
+    <section class="hero">
+      <p class="eyebrow">Audience builder · agents recommend, the router decides</p>
+      <h1>Agentic Audience Intelligence<span class="dot">.</span></h1>
+      <p class="hero-sub">Choose a dataset, take the recommended method and model, and build a scaled audience. Every method is decided first, with reasons, so nothing is modeled the data does not allow.</p>
+    </section>
+
     <section class="disclosure" aria-label="What this page is">
-      <p id="disclosure-text">Loading the precomputed bundles.</p>
-      <p class="disclosure-meta" id="disclosure-meta"></p>
+      <span class="stamp stamp--licensed">Synthetic</span>
+      <div>
+        <p id="disclosure-text">Loading the precomputed bundles.</p>
+        <p class="disclosure-meta" id="disclosure-meta"></p>
+      </div>
     </section>
 
     <nav class="mode-tabs" id="mode-tabs" role="tablist" aria-label="Mode">
@@ -39,7 +46,8 @@
   </main>
 
   <footer class="footer">
-    <p>Engine and contracts: <a href="https://github.com/EvgenyAndroid/agentic-audience-intelligence">agentic-audience-intelligence</a>. Verdicts: ELIGIBLE, PROVISIONAL, BLOCKED. Agents propose; only the router decides; only people approve releases.</p>
+    <p class="footer-rule">Agents propose. The router decides. People approve releases.</p>
+    <p>Engine and contracts: <a href="https://github.com/EvgenyAndroid/agentic-audience-intelligence">agentic-audience-intelligence</a>, MIT-licensed. Verdicts: ELIGIBLE, PROVISIONAL, BLOCKED. A <a href="https://nofluffadvisory.com/building/">No Fluff Advisory</a> build.</p>
   </footer>
   <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
 </body>

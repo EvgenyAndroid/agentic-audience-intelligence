@@ -74,8 +74,13 @@ function verdictPill(verdict) {
   return el("span", { class: `verdict ${verdict}` }, el("span", { class: "icon", "aria-hidden": "true", text: VERDICT_ICON[verdict] }), verdict);
 }
 
+// "3 · Choose a method" renders as a numbered step: a serif numeral over an accent rule, then the heading.
 function card(title, sub, ...children) {
-  return el("section", { class: "card" }, el("h2", { text: title }), sub ? el("p", { class: "sub", text: sub }) : null, ...children);
+  const step = /^(\d+) · (.+)$/.exec(title);
+  const head = el("div", { class: "card-head numeral-rule" },
+    step ? el("span", { class: "card-num", "aria-hidden": "true", text: step[1].padStart(2, "0") }) : null,
+    el("h2", {}, step ? el("span", { class: "sr-only", text: `Step ${step[1]}: ` }) : null, step ? step[2] : title));
+  return el("section", { class: "card" }, head, sub ? el("p", { class: "sub", text: sub }) : null, ...children);
 }
 
 // ---------- task matrix ----------
@@ -355,19 +360,7 @@ async function setMode(mode, target) {
     `Evaluated at ${idx.evaluated_at} · engine ${idx.engine_version} · source ${idx.engine_sha256.slice(7, 19)} · bundle format ${idx.bundle_format}`;
 }
 
-function setTheme(theme) {
-  document.documentElement.dataset.theme = theme;
-  document.getElementById("theme-toggle").textContent = theme === "midnight" ? "Light theme" : "Dark theme";
-  try { localStorage.setItem("aai-theme", theme); } catch (_) { /* storage unavailable */ }
-}
-
 async function init() {
-  let theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "daylight" : "midnight";
-  try { theme = localStorage.getItem("aai-theme") || theme; } catch (_) { /* storage unavailable */ }
-  setTheme(theme);
-  document.getElementById("theme-toggle").addEventListener("click", () =>
-    setTheme(document.documentElement.dataset.theme === "midnight" ? "daylight" : "midnight"));
-
   for (const button of document.querySelectorAll("#mode-tabs button")) {
     button.addEventListener("click", () => setMode(button.dataset.mode));
   }
