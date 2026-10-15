@@ -1,0 +1,33 @@
+{
+  "kind": "type_registry_entry",
+  "schema_version": "1.0.0",
+  "type_id": "business_account",
+  "type_version": "1.0.0",
+  "label": "Business account key",
+  "category": "unit",
+  "represents": "A company or account as defined by the issuing provider's contract",
+  "grain": "organization",
+  "namespace_rules": {
+    "format_pattern": null,
+    "case_sensitive": true,
+    "normalization": "none",
+    "must_remain_string": true
+  },
+  "temporal_validity": {
+    "kind": "stable",
+    "max_validity_days": null
+  },
+  "semantic_feature_allowed": false,
+  "allowed_relationships": [],
+  "limits": [
+    "An account is an organization, never a person",
+    "Account hierarchies (parent and subsidiary) are not merged implicitly"
+  ],
+  "registration_state": "confirmed",
+  "confirmed_by": {
+    "actor_id": "user_steward_01",
+    "actor_type": "human",
+    "role": "data_steward"
+  },
+  "confirmed_at": "2026-10-01T00:00:00Z"
+}

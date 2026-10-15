@@ -132,6 +132,44 @@ def cmd_demo_build(args: argparse.Namespace) -> int:
     return 0
 
 
+FLOAT_TOLERANCE = 2e-3  # model scores may differ in the last digits across platforms and BLAS builds
+
+
+def _close(a: object, b: object) -> bool:
+    """Structural equality with float tolerance; bundle hashes follow the floats, so they are not compared."""
+    if isinstance(a, dict) and isinstance(b, dict):
+        return a.keys() == b.keys() and all(k == "bundle_sha256" or _close(a[k], b[k]) for k in a)
+    if isinstance(a, list) and isinstance(b, list):
+        return len(a) == len(b) and all(_close(x, y) for x, y in zip(a, b, strict=True))
+    if isinstance(a, float) or isinstance(b, float):
+        return isinstance(a, (int, float)) and isinstance(b, (int, float)) and abs(a - b) <= FLOAT_TOLERANCE
+    return a == b
+
+
+def cmd_workbench_build(args: argparse.Namespace) -> int:
+    import tempfile
+
+    from aip.demo import load_settings
+    from aip.workbench.build import build_workbench
+
+    now, ttl = load_settings()
+    out = Path(args.out)
+    if not args.check:
+        for path in build_workbench(out, now=now, ttl_hours=ttl):
+            print(path.as_posix())
+        return 0
+    with tempfile.TemporaryDirectory() as tmp:
+        fresh = build_workbench(Path(tmp), now=now, ttl_hours=ttl)
+        stale = [
+            p.name for p in fresh if not (out / p.name).exists() or not _close(load_path(p), load_path(out / p.name))
+        ]
+    if stale:
+        print("workbench bundles are out of date: " + ", ".join(stale) + ". Run: aip workbench-build --out " + args.out)
+        return 1
+    print(f"workbench bundles are current ({len(fresh)} files)")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="aip")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -161,6 +199,10 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument("--out", required=True)
     d.add_argument("--check", action="store_true", help="fail if the bundles in --out differ from a fresh build")
     d.set_defaults(func=cmd_demo_build)
+    w = sub.add_parser("workbench-build", help="build the workbench's static bundles (eight synthetic datasets)")
+    w.add_argument("--out", required=True)
+    w.add_argument("--check", action="store_true", help="fail if the bundles in --out differ from a fresh build")
+    w.set_defaults(func=cmd_workbench_build)
     args = parser.parse_args(argv)
     return int(args.func(args))
 

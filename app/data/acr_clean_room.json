@@ -706,7 +706,7 @@
     "evaluated_at": "2026-10-14T12:00:00Z",
     "max_decision_ttl_hours": 168.0,
     "engine_version": "0.1.0",
-    "engine_sha256": "sha256:d135fbc7d02199503494b68b6c7a8d6601b6530249105363b806adba7be9c0d0",
+    "engine_sha256": "sha256:fab3f28064c951c2a8c15ff43d67c152c0fecc88183914fce367745658960a54",
     "inputs": [
       {
         "path": "demo/scenarios/acr_clean_room/bundle_task_demo_acr_aggregate_alt.json",
@@ -801,6 +801,10 @@
         "sha256": "sha256:5af1213a74c0ead763ceb2849427cbbf85e0a1d8b412aec2a18772b50587947a"
       },
       {
+        "path": "registry/policies/output_workbench_demo.json",
+        "sha256": "sha256:7df813a98b9b6e947ccd1fc267d260cf232c929018d0b6300f9257da4d215364"
+      },
+      {
         "path": "registry/policies/output_workspace_demo.json",
         "sha256": "sha256:b4d36a08a0a503388f49e92d2ad662de70c6171b1b1bc1b1b35df94578952a6c"
       },
@@ -821,6 +825,10 @@
         "sha256": "sha256:0c34ebd85c0e09d11d04df2e6fa54237d3cbe8b6faf93e1f2fab2400c541bb0d"
       },
       {
+        "path": "registry/types/business_account.json",
+        "sha256": "sha256:8469463816c34b16cd6227fad7cdaa51c902c8e13a3410767194fe4b6809918c"
+      },
+      {
         "path": "registry/types/content_item_key.json",
         "sha256": "sha256:50ee216b9e5e12dde0d0dfba2ed3b1276a36a13e5d1dd658ab6d535494c55903"
       },
@@ -831,6 +839,10 @@
       {
         "path": "registry/types/mobile_ad_id.json",
         "sha256": "sha256:1eace837a92ab2be240f79e4e48d280294bfb98270bdf706d38a69cdc94b0397"
+      },
+      {
+        "path": "registry/types/person_key.json",
+        "sha256": "sha256:a9eaad08ab476e6e6f611d35c7e19d1843a6c62296bc069f31a6c805971aa1ce"
       },
       {
         "path": "registry/types/postal_code.json",
