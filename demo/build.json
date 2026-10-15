@@ -1,0 +1,5 @@
+{
+  "evaluated_at": "2026-10-14T12:00:00Z",
+  "max_decision_ttl_hours": 168,
+  "note": "Demo settings supplied for the synthetic scenarios. They match the fixture policies effective 2026-10-01 to 2027-01-01. They are not platform defaults."
+}

@@ -1,0 +1,19 @@
+{
+  "order": 4,
+  "scenario_id": "new_source",
+  "title": "A new source in quarantine",
+  "source_label": "Unregistered vendor feed",
+  "summary": "A new vendor feed arrives before a steward has confirmed what its keys mean. It can be profiled safely; it cannot be scored yet.",
+  "requested_task": "task_quarantine_score",
+  "tasks": [
+    {
+      "task": "examples/valid/task/task_quarantine_score.json",
+      "bundle": "examples/valid/evidence_bundle/bundle_task_quarantine_score.json"
+    },
+    {
+      "task": "examples/valid/task/task_quarantine_profile.json",
+      "bundle": "examples/valid/evidence_bundle/bundle_task_quarantine_profile.json"
+    }
+  ],
+  "lookalike": null
+}

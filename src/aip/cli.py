@@ -110,6 +110,28 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_demo_build(args: argparse.Namespace) -> int:
+    import tempfile
+
+    from aip.demo import build_bundles, load_settings
+
+    now, ttl = load_settings()
+    out = Path(args.out)
+    if not args.check:
+        for path in build_bundles(out, now=now, ttl_hours=ttl):
+            print(path.as_posix())
+        return 0
+    with tempfile.TemporaryDirectory() as tmp:
+        fresh = build_bundles(Path(tmp), now=now, ttl_hours=ttl)
+        # Compare parsed JSON, not bytes: text mode writes CRLF on Windows while Git checks out LF.
+        stale = [p.name for p in fresh if not (out / p.name).exists() or load_path(p) != load_path(out / p.name)]
+    if stale:
+        print("demo bundles are out of date: " + ", ".join(stale) + ". Run: aip demo-build --out " + args.out)
+        return 1
+    print(f"demo bundles are current ({len(fresh)} files)")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="aip")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -135,6 +157,10 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--ttl-hours", type=float, required=True)
     b.add_argument("--report")
     b.set_defaults(func=cmd_benchmark)
+    d = sub.add_parser("demo-build", help="build the demonstrator's static bundles from demo/scenarios")
+    d.add_argument("--out", required=True)
+    d.add_argument("--check", action="store_true", help="fail if the bundles in --out differ from a fresh build")
+    d.set_defaults(func=cmd_demo_build)
     args = parser.parse_args(argv)
     return int(args.func(args))
 

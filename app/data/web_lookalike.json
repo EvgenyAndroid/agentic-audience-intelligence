@@ -1,0 +1,1619 @@
+{
+  "bundle_format": "1.0.0",
+  "scenario": {
+    "scenario_id": "web_lookalike",
+    "title": "Web events look-alike",
+    "source_label": "Web events (reference profile)",
+    "summary": "A buyer wants browsers that resemble a seed list. The same data is also asked for a new propensity model and a bring-your-own remote look-alike model.",
+    "requested_task": "task_seed_affinity_score"
+  },
+  "fingerprint": {
+    "dataset_id": "ds_web_demo",
+    "dataset_state": "confirmed",
+    "profile_id": "prof_web_events_ref",
+    "profile_version": "1.0.0",
+    "family_label": "Web events (reference)",
+    "profile_state": "confirmed",
+    "observation_units": [
+      {
+        "unit": {
+          "type_id": "browser_cookie",
+          "type_version": "1.0.0",
+          "namespace": "web_demo_cookie"
+        },
+        "key_field": "cookie_id",
+        "label": "Browser cookie",
+        "represents": "A browser within a provider namespace",
+        "grain": "browser",
+        "registration_state": "confirmed"
+      }
+    ],
+    "signals": [
+      {
+        "signal_id": "web_view",
+        "primitive": "event",
+        "value_type": "timestamp",
+        "evidence_kind": "observed",
+        "description": "Page view event"
+      },
+      {
+        "signal_id": "web_page",
+        "primitive": "content_item",
+        "value_type": "string",
+        "evidence_kind": "observed",
+        "description": "Visited page"
+      },
+      {
+        "signal_id": "web_conv",
+        "primitive": "label",
+        "value_type": "timestamp",
+        "evidence_kind": "observed",
+        "description": "Conversion event used as outcome label"
+      }
+    ],
+    "known_limits": [
+      "Bot and duplicate traffic filtered upstream; residual rate unknown"
+    ],
+    "execution_policy_refs": [
+      {
+        "id": "exec_workspace_demo",
+        "version": "1.0.0"
+      }
+    ],
+    "output_policy_refs": [
+      {
+        "id": "output_workspace_demo",
+        "version": "1.0.0"
+      }
+    ]
+  },
+  "tasks": [
+    {
+      "task": {
+        "task_id": "task_seed_affinity_score",
+        "task_family": "seed_affinity",
+        "operation": "score",
+        "requested_artifact": "score_file",
+        "execution_location_ref": "loc_workspace_demo",
+        "destination_ref": null,
+        "objective_ref": {
+          "id": "obj_seed_affinity_web",
+          "version": "1.0.0"
+        },
+        "model_ref": null,
+        "units": {
+          "observation_units": [
+            {
+              "dataset_ref": {
+                "id": "ds_web_demo",
+                "version": "1.0.0"
+              },
+              "unit": {
+                "type_id": "browser_cookie",
+                "type_version": "1.0.0",
+                "namespace": "web_demo_cookie"
+              }
+            }
+          ],
+          "modeling_unit": {
+            "type_id": "browser_cookie",
+            "type_version": "1.0.0",
+            "namespace": "web_demo_cookie"
+          },
+          "output_unit": {
+            "type_id": "browser_cookie",
+            "type_version": "1.0.0",
+            "namespace": "web_demo_cookie"
+          },
+          "activation_unit": null,
+          "measurement_unit": null,
+          "mapping_refs": []
+        }
+      },
+      "objective": {
+        "kind": "objective",
+        "schema_version": "1.0.0",
+        "objective_id": "obj_seed_affinity_web",
+        "objective_version": "1.0.0",
+        "tenant_id": "tenant_demo",
+        "statement": "Find browsers resembling recent cooking-content readers",
+        "task_family": "seed_affinity",
+        "intended_use": "Planning audience for a food brand pilot",
+        "requested_by": {
+          "actor_id": "user_analyst_01",
+          "actor_type": "human",
+          "role": "analyst"
+        },
+        "claim_sought": "seed_affinity",
+        "eligible_universe_ref": {
+          "id": "universe_web_eligible",
+          "version": "1.0.0"
+        },
+        "seed_ref": {
+          "id": "seed_cooking_readers",
+          "version": "1.0.0"
+        },
+        "content_brief_ref": null,
+        "target": null
+      },
+      "decision": {
+        "kind": "task_decision",
+        "schema_version": "1.0.0",
+        "decision_id": "dec_task_seed_affinity_score_1.0.0_20261014T120000Z",
+        "task_ref": {
+          "id": "task_seed_affinity_score",
+          "version": "1.0.0"
+        },
+        "task_checksum": "sha256:699fe8d3b169526fa59c4cfd6a259e1fe369c42bcd425b2bda4a079789370e09",
+        "verdict": "ELIGIBLE",
+        "prerequisites": [
+          {
+            "prerequisite_id": "P-CONTRACT-VALID",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-CONTRACT-VALID",
+            "evidence_refs": [],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-TENANT-SCOPE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-TENANT-SCOPE",
+            "evidence_refs": [
+              "execution_policy:exec_workspace_demo@1.0.0",
+              "output_policy:output_workspace_demo@1.0.0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-SNAPSHOT-IMMUTABLE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-SNAPSHOT-IMMUTABLE",
+            "evidence_refs": [
+              "sha256:db8048da7df66c1ed8eca41bdf344ace6f73ff50487e4fc27db4326794e64ed7"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-EXEC-OPERATION",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-EXEC-OPERATION",
+            "evidence_refs": [
+              "exec_workspace_demo@1.0.0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-RIGHTS-USE",
+            "outcome": "satisfied",
+            "established_by": "policy_service",
+            "check_ref": "aip-task-router:P-RIGHTS-USE",
+            "evidence_refs": [
+              "evidence_p-rights-use"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-SENSITIVE-EXCLUSION",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-SENSITIVE-EXCLUSION",
+            "evidence_refs": [
+              "evidence_p-sensitive-exclusion"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-PROFILE-CONFIRMED",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-PROFILE-CONFIRMED",
+            "evidence_refs": [
+              "prof_web_events_ref@1.0.0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-UNITS-DECLARED",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-UNITS-DECLARED",
+            "evidence_refs": [],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-GRAIN-COMPATIBLE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-GRAIN-COMPATIBLE",
+            "evidence_refs": [],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-SEED-PRESENT",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-SEED-PRESENT",
+            "evidence_refs": [
+              "seed_cooking_readers"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-UNIVERSE-DEFINED",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-UNIVERSE-DEFINED",
+            "evidence_refs": [
+              "universe_web_eligible"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-FEATURE-COVERAGE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-FEATURE-COVERAGE",
+            "evidence_refs": [
+              "evidence_p-feature-coverage"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-FEATURE-TIMING",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-FEATURE-TIMING",
+            "evidence_refs": [
+              "evidence_p-feature-timing"
+            ],
+            "reason_code": null
+          }
+        ],
+        "reasons": [],
+        "next_actions": [],
+        "decided_at": "2026-10-14T12:00:00Z",
+        "valid_until": "2026-10-21T12:00:00Z",
+        "validity_basis": [
+          "max_decision_ttl",
+          "exec_workspace_demo@1.0.0"
+        ],
+        "policy_versions": [
+          {
+            "id": "exec_workspace_demo",
+            "version": "1.0.0"
+          }
+        ],
+        "contract_versions": [
+          {
+            "id": "aip-contracts",
+            "version": "1.0.0"
+          }
+        ],
+        "supersedes": null,
+        "agent_proposal_refs": [],
+        "decided_by": {
+          "service_id": "aip-task-router",
+          "service_version": "0.1.0",
+          "authority": "router"
+        }
+      }
+    },
+    {
+      "task": {
+        "task_id": "task_score_unregistered_location",
+        "task_family": "seed_affinity",
+        "operation": "score",
+        "requested_artifact": "score_file",
+        "execution_location_ref": "loc_partner_unregistered",
+        "destination_ref": null,
+        "objective_ref": {
+          "id": "obj_seed_affinity_web",
+          "version": "1.0.0"
+        },
+        "model_ref": null,
+        "units": {
+          "observation_units": [
+            {
+              "dataset_ref": {
+                "id": "ds_web_demo",
+                "version": "1.0.0"
+              },
+              "unit": {
+                "type_id": "browser_cookie",
+                "type_version": "1.0.0",
+                "namespace": "web_demo_cookie"
+              }
+            }
+          ],
+          "modeling_unit": {
+            "type_id": "browser_cookie",
+            "type_version": "1.0.0",
+            "namespace": "web_demo_cookie"
+          },
+          "output_unit": {
+            "type_id": "browser_cookie",
+            "type_version": "1.0.0",
+            "namespace": "web_demo_cookie"
+          },
+          "activation_unit": null,
+          "measurement_unit": null,
+          "mapping_refs": []
+        }
+      },
+      "objective": {
+        "kind": "objective",
+        "schema_version": "1.0.0",
+        "objective_id": "obj_seed_affinity_web",
+        "objective_version": "1.0.0",
+        "tenant_id": "tenant_demo",
+        "statement": "Find browsers resembling recent cooking-content readers",
+        "task_family": "seed_affinity",
+        "intended_use": "Planning audience for a food brand pilot",
+        "requested_by": {
+          "actor_id": "user_analyst_01",
+          "actor_type": "human",
+          "role": "analyst"
+        },
+        "claim_sought": "seed_affinity",
+        "eligible_universe_ref": {
+          "id": "universe_web_eligible",
+          "version": "1.0.0"
+        },
+        "seed_ref": {
+          "id": "seed_cooking_readers",
+          "version": "1.0.0"
+        },
+        "content_brief_ref": null,
+        "target": null
+      },
+      "decision": {
+        "kind": "task_decision",
+        "schema_version": "1.0.0",
+        "decision_id": "dec_task_score_unregistered_location_1.0.0_20261014T120000Z",
+        "task_ref": {
+          "id": "task_score_unregistered_location",
+          "version": "1.0.0"
+        },
+        "task_checksum": "sha256:538a27c811c82f87f7a8886fbb809610096e720eddd457c33a21c245b8f4dc90",
+        "verdict": "PROVISIONAL",
+        "prerequisites": [
+          {
+            "prerequisite_id": "P-CONTRACT-VALID",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-CONTRACT-VALID",
+            "evidence_refs": [],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-TENANT-SCOPE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-TENANT-SCOPE",
+            "evidence_refs": [
+              "execution_policy:exec_workspace_demo@1.0.0",
+              "output_policy:output_workspace_demo@1.0.0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-SNAPSHOT-IMMUTABLE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-SNAPSHOT-IMMUTABLE",
+            "evidence_refs": [
+              "sha256:db8048da7df66c1ed8eca41bdf344ace6f73ff50487e4fc27db4326794e64ed7"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-EXEC-OPERATION",
+            "outcome": "missing",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-EXEC-OPERATION",
+            "evidence_refs": [],
+            "reason_code": "missing_execution_policy"
+          },
+          {
+            "prerequisite_id": "P-RIGHTS-USE",
+            "outcome": "satisfied",
+            "established_by": "policy_service",
+            "check_ref": "aip-task-router:P-RIGHTS-USE",
+            "evidence_refs": [
+              "evidence_p-rights-use"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-SENSITIVE-EXCLUSION",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-SENSITIVE-EXCLUSION",
+            "evidence_refs": [
+              "evidence_p-sensitive-exclusion"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-PROFILE-CONFIRMED",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-PROFILE-CONFIRMED",
+            "evidence_refs": [
+              "prof_web_events_ref@1.0.0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-UNITS-DECLARED",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-UNITS-DECLARED",
+            "evidence_refs": [],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-GRAIN-COMPATIBLE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-GRAIN-COMPATIBLE",
+            "evidence_refs": [],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-SEED-PRESENT",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-SEED-PRESENT",
+            "evidence_refs": [
+              "seed_cooking_readers"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-UNIVERSE-DEFINED",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-UNIVERSE-DEFINED",
+            "evidence_refs": [
+              "universe_web_eligible"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-FEATURE-COVERAGE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-FEATURE-COVERAGE",
+            "evidence_refs": [
+              "evidence_p-feature-coverage"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-FEATURE-TIMING",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-FEATURE-TIMING",
+            "evidence_refs": [
+              "evidence_p-feature-timing"
+            ],
+            "reason_code": null
+          }
+        ],
+        "reasons": [
+          {
+            "code": "missing_execution_policy",
+            "detail": "prof_web_events_ref@1.0.0",
+            "evidence_refs": []
+          }
+        ],
+        "next_actions": [
+          "Obtain an execution policy that addresses this operation and location"
+        ],
+        "decided_at": "2026-10-14T12:00:00Z",
+        "valid_until": "2026-10-21T12:00:00Z",
+        "validity_basis": [
+          "max_decision_ttl",
+          "exec_workspace_demo@1.0.0"
+        ],
+        "policy_versions": [
+          {
+            "id": "exec_workspace_demo",
+            "version": "1.0.0"
+          }
+        ],
+        "contract_versions": [
+          {
+            "id": "aip-contracts",
+            "version": "1.0.0"
+          }
+        ],
+        "supersedes": null,
+        "agent_proposal_refs": [],
+        "decided_by": {
+          "service_id": "aip-task-router",
+          "service_version": "0.1.0",
+          "authority": "router"
+        }
+      }
+    },
+    {
+      "task": {
+        "task_id": "task_demo_web_byom_remote",
+        "task_family": "seed_affinity",
+        "operation": "remote_inference",
+        "requested_artifact": "score_file",
+        "execution_location_ref": "loc_workspace_demo",
+        "destination_ref": null,
+        "objective_ref": {
+          "id": "obj_seed_affinity_web",
+          "version": "1.0.0"
+        },
+        "model_ref": {
+          "id": "byom_lookalike_remote",
+          "version": "1.0.0"
+        },
+        "units": {
+          "observation_units": [
+            {
+              "dataset_ref": {
+                "id": "ds_web_demo",
+                "version": "1.0.0"
+              },
+              "unit": {
+                "type_id": "browser_cookie",
+                "type_version": "1.0.0",
+                "namespace": "web_demo_cookie"
+              }
+            }
+          ],
+          "modeling_unit": {
+            "type_id": "browser_cookie",
+            "type_version": "1.0.0",
+            "namespace": "web_demo_cookie"
+          },
+          "output_unit": {
+            "type_id": "browser_cookie",
+            "type_version": "1.0.0",
+            "namespace": "web_demo_cookie"
+          },
+          "activation_unit": null,
+          "measurement_unit": null,
+          "mapping_refs": []
+        }
+      },
+      "objective": {
+        "kind": "objective",
+        "schema_version": "1.0.0",
+        "objective_id": "obj_seed_affinity_web",
+        "objective_version": "1.0.0",
+        "tenant_id": "tenant_demo",
+        "statement": "Find browsers resembling recent cooking-content readers",
+        "task_family": "seed_affinity",
+        "intended_use": "Planning audience for a food brand pilot",
+        "requested_by": {
+          "actor_id": "user_analyst_01",
+          "actor_type": "human",
+          "role": "analyst"
+        },
+        "claim_sought": "seed_affinity",
+        "eligible_universe_ref": {
+          "id": "universe_web_eligible",
+          "version": "1.0.0"
+        },
+        "seed_ref": {
+          "id": "seed_cooking_readers",
+          "version": "1.0.0"
+        },
+        "content_brief_ref": null,
+        "target": null
+      },
+      "decision": {
+        "kind": "task_decision",
+        "schema_version": "1.0.0",
+        "decision_id": "dec_task_demo_web_byom_remote_1.0.0_20261014T120000Z",
+        "task_ref": {
+          "id": "task_demo_web_byom_remote",
+          "version": "1.0.0"
+        },
+        "task_checksum": "sha256:c5e25277a5abd1d22879b975ea7fc2cef81e16ea3f9fe65b725f668225c6dfda",
+        "verdict": "PROVISIONAL",
+        "prerequisites": [
+          {
+            "prerequisite_id": "P-CONTRACT-VALID",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-CONTRACT-VALID",
+            "evidence_refs": [],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-TENANT-SCOPE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-TENANT-SCOPE",
+            "evidence_refs": [
+              "execution_policy:exec_workspace_demo@1.0.0",
+              "output_policy:output_workspace_demo@1.0.0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-SNAPSHOT-IMMUTABLE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-SNAPSHOT-IMMUTABLE",
+            "evidence_refs": [
+              "sha256:db8048da7df66c1ed8eca41bdf344ace6f73ff50487e4fc27db4326794e64ed7"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-EXEC-OPERATION",
+            "outcome": "missing",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-EXEC-OPERATION",
+            "evidence_refs": [
+              "exec_workspace_demo@1.0.0"
+            ],
+            "reason_code": "missing_execution_policy"
+          },
+          {
+            "prerequisite_id": "P-RIGHTS-USE",
+            "outcome": "satisfied",
+            "established_by": "policy_service",
+            "check_ref": "aip-task-router:P-RIGHTS-USE",
+            "evidence_refs": [
+              "evidence_p-rights-use"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-SENSITIVE-EXCLUSION",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-SENSITIVE-EXCLUSION",
+            "evidence_refs": [
+              "evidence_p-sensitive-exclusion"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-PROFILE-CONFIRMED",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-PROFILE-CONFIRMED",
+            "evidence_refs": [
+              "prof_web_events_ref@1.0.0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-UNITS-DECLARED",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-UNITS-DECLARED",
+            "evidence_refs": [],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-GRAIN-COMPATIBLE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-GRAIN-COMPATIBLE",
+            "evidence_refs": [],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-SEED-PRESENT",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-SEED-PRESENT",
+            "evidence_refs": [
+              "seed_cooking_readers"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-UNIVERSE-DEFINED",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-UNIVERSE-DEFINED",
+            "evidence_refs": [
+              "universe_web_eligible"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-FEATURE-COVERAGE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-FEATURE-COVERAGE",
+            "evidence_refs": [
+              "evidence_p-feature-coverage"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-FEATURE-TIMING",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-FEATURE-TIMING",
+            "evidence_refs": [
+              "evidence_p-feature-timing"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-MODEL-REGISTERED",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-MODEL-REGISTERED",
+            "evidence_refs": [
+              "model_registration:byom_lookalike_remote@1.0.0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-MODEL-EXECUTION",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-MODEL-EXECUTION",
+            "evidence_refs": [
+              "model_registration:byom_lookalike_remote@1.0.0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-MODEL-FEATURES-AVAILABLE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-MODEL-FEATURES-AVAILABLE",
+            "evidence_refs": [
+              "evidence_p-model-features-available"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-REMOTE-PAYLOAD",
+            "outcome": "missing",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-REMOTE-PAYLOAD",
+            "evidence_refs": [],
+            "reason_code": "missing_output_policy"
+          },
+          {
+            "prerequisite_id": "P-REMOTE-RECIPIENT-TERMS",
+            "outcome": "missing",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-REMOTE-RECIPIENT-TERMS",
+            "evidence_refs": [],
+            "reason_code": "recipient_terms_unverified"
+          }
+        ],
+        "reasons": [
+          {
+            "code": "missing_execution_policy",
+            "detail": "prof_web_events_ref@1.0.0",
+            "evidence_refs": [
+              "exec_workspace_demo@1.0.0"
+            ]
+          },
+          {
+            "code": "missing_output_policy",
+            "detail": "prof_web_events_ref@1.0.0",
+            "evidence_refs": []
+          },
+          {
+            "code": "recipient_terms_unverified",
+            "detail": "fact not supplied",
+            "evidence_refs": []
+          }
+        ],
+        "next_actions": [
+          "Obtain an execution policy that addresses this operation and location",
+          "Obtain an output policy that permits this payload to this endpoint, or use an in-boundary model",
+          "Obtain the rights owner's confirmation of the endpoint's recipient terms"
+        ],
+        "decided_at": "2026-10-14T12:00:00Z",
+        "valid_until": "2026-10-21T12:00:00Z",
+        "validity_basis": [
+          "max_decision_ttl",
+          "exec_workspace_demo@1.0.0",
+          "output_workspace_demo@1.0.0"
+        ],
+        "policy_versions": [
+          {
+            "id": "exec_workspace_demo",
+            "version": "1.0.0"
+          },
+          {
+            "id": "output_workspace_demo",
+            "version": "1.0.0"
+          }
+        ],
+        "contract_versions": [
+          {
+            "id": "aip-contracts",
+            "version": "1.0.0"
+          }
+        ],
+        "supersedes": null,
+        "agent_proposal_refs": [],
+        "decided_by": {
+          "service_id": "aip-task-router",
+          "service_version": "0.1.0",
+          "authority": "router"
+        }
+      }
+    },
+    {
+      "task": {
+        "task_id": "task_propensity_train_no_labels",
+        "task_family": "outcome_propensity",
+        "operation": "train",
+        "requested_artifact": "model",
+        "execution_location_ref": "loc_workspace_demo",
+        "destination_ref": null,
+        "objective_ref": {
+          "id": "obj_propensity_web",
+          "version": "1.0.0"
+        },
+        "model_ref": null,
+        "units": {
+          "observation_units": [
+            {
+              "dataset_ref": {
+                "id": "ds_web_demo",
+                "version": "1.0.0"
+              },
+              "unit": {
+                "type_id": "browser_cookie",
+                "type_version": "1.0.0",
+                "namespace": "web_demo_cookie"
+              }
+            }
+          ],
+          "modeling_unit": {
+            "type_id": "browser_cookie",
+            "type_version": "1.0.0",
+            "namespace": "web_demo_cookie"
+          },
+          "output_unit": {
+            "type_id": "browser_cookie",
+            "type_version": "1.0.0",
+            "namespace": "web_demo_cookie"
+          },
+          "activation_unit": null,
+          "measurement_unit": null,
+          "mapping_refs": []
+        }
+      },
+      "objective": {
+        "kind": "objective",
+        "schema_version": "1.0.0",
+        "objective_id": "obj_propensity_web",
+        "objective_version": "1.0.0",
+        "tenant_id": "tenant_demo",
+        "statement": "Estimate 30-day conversion probability",
+        "task_family": "outcome_propensity",
+        "intended_use": "Prioritize browsers for a retargeting test",
+        "requested_by": {
+          "actor_id": "user_analyst_01",
+          "actor_type": "human",
+          "role": "analyst"
+        },
+        "claim_sought": "outcome_probability",
+        "eligible_universe_ref": {
+          "id": "universe_web_eligible",
+          "version": "1.0.0"
+        },
+        "seed_ref": null,
+        "content_brief_ref": null,
+        "target": {
+          "event": "conversion",
+          "horizon_days": 30
+        }
+      },
+      "decision": {
+        "kind": "task_decision",
+        "schema_version": "1.0.0",
+        "decision_id": "dec_task_propensity_train_no_labels_1.0.0_20261014T120000Z",
+        "task_ref": {
+          "id": "task_propensity_train_no_labels",
+          "version": "1.0.0"
+        },
+        "task_checksum": "sha256:6979385bfa8da7c01880a2e65cedabfcd09124907ee1e65643949a7ee593e27b",
+        "verdict": "PROVISIONAL",
+        "prerequisites": [
+          {
+            "prerequisite_id": "P-CONTRACT-VALID",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-CONTRACT-VALID",
+            "evidence_refs": [],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-TENANT-SCOPE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-TENANT-SCOPE",
+            "evidence_refs": [
+              "execution_policy:exec_workspace_demo@1.0.0",
+              "output_policy:output_workspace_demo@1.0.0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-SNAPSHOT-IMMUTABLE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-SNAPSHOT-IMMUTABLE",
+            "evidence_refs": [
+              "sha256:db8048da7df66c1ed8eca41bdf344ace6f73ff50487e4fc27db4326794e64ed7"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-EXEC-OPERATION",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-EXEC-OPERATION",
+            "evidence_refs": [
+              "exec_workspace_demo@1.0.0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-RIGHTS-USE",
+            "outcome": "satisfied",
+            "established_by": "policy_service",
+            "check_ref": "aip-task-router:P-RIGHTS-USE",
+            "evidence_refs": [
+              "evidence_p-rights-use"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-SENSITIVE-EXCLUSION",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-SENSITIVE-EXCLUSION",
+            "evidence_refs": [
+              "evidence_p-sensitive-exclusion"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-PROFILE-CONFIRMED",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-PROFILE-CONFIRMED",
+            "evidence_refs": [
+              "prof_web_events_ref@1.0.0"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-UNITS-DECLARED",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-UNITS-DECLARED",
+            "evidence_refs": [],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-GRAIN-COMPATIBLE",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-GRAIN-COMPATIBLE",
+            "evidence_refs": [],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-UNIVERSE-DEFINED",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-UNIVERSE-DEFINED",
+            "evidence_refs": [
+              "universe_web_eligible"
+            ],
+            "reason_code": null
+          },
+          {
+            "prerequisite_id": "P-LABELS-QUALIFIED",
+            "outcome": "missing",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-LABELS-QUALIFIED",
+            "evidence_refs": [
+              "label_report_demo_001"
+            ],
+            "reason_code": "unsupported_outcome_probability"
+          },
+          {
+            "prerequisite_id": "P-FEATURE-TIMING",
+            "outcome": "satisfied",
+            "established_by": "deterministic_check",
+            "check_ref": "aip-task-router:P-FEATURE-TIMING",
+            "evidence_refs": [
+              "evidence_p-feature-timing"
+            ],
+            "reason_code": null
+          }
+        ],
+        "reasons": [
+          {
+            "code": "unsupported_outcome_probability",
+            "detail": "Mature outcome labels exist for a named event, cutoff and horizon",
+            "evidence_refs": [
+              "label_report_demo_001"
+            ]
+          }
+        ],
+        "next_actions": [
+          "Supply qualified labels: named event, cutoff, horizon, mature windows, coverage"
+        ],
+        "decided_at": "2026-10-14T12:00:00Z",
+        "valid_until": "2026-10-21T12:00:00Z",
+        "validity_basis": [
+          "max_decision_ttl",
+          "exec_workspace_demo@1.0.0"
+        ],
+        "policy_versions": [
+          {
+            "id": "exec_workspace_demo",
+            "version": "1.0.0"
+          }
+        ],
+        "contract_versions": [
+          {
+            "id": "aip-contracts",
+            "version": "1.0.0"
+          }
+        ],
+        "supersedes": null,
+        "agent_proposal_refs": [],
+        "decided_by": {
+          "service_id": "aip-task-router",
+          "service_version": "0.1.0",
+          "authority": "router"
+        }
+      }
+    }
+  ],
+  "recommendation": {
+    "kind": "recommendation",
+    "schema_version": "1.0.0",
+    "recommendation_id": "rec_demo_web_lookalike",
+    "tenant_id": "tenant_demo",
+    "objective_ref": {
+      "id": "obj_seed_affinity_web",
+      "version": "1.0.0"
+    },
+    "requested_task": {
+      "task_ref": {
+        "id": "task_seed_affinity_score",
+        "version": "1.0.0"
+      },
+      "decision_ref": "dec_task_seed_affinity_score_1.0.0_20261014T120000Z",
+      "task_family": "seed_affinity",
+      "verdict": "ELIGIBLE"
+    },
+    "recommended_options": [
+      {
+        "task_ref": {
+          "id": "task_seed_affinity_score",
+          "version": "1.0.0"
+        },
+        "decision_ref": "dec_task_seed_affinity_score_1.0.0_20261014T120000Z",
+        "task_family": "seed_affinity",
+        "position": 1,
+        "claim_type": "seed_affinity",
+        "fit": "requested",
+        "fit_basis": [
+          "requested_task",
+          "accepted_claim"
+        ],
+        "cost": {
+          "status": "unknown"
+        }
+      }
+    ],
+    "unlock_options": [
+      {
+        "task_ref": {
+          "id": "task_score_unregistered_location",
+          "version": "1.0.0"
+        },
+        "decision_ref": "dec_task_score_unregistered_location_1.0.0_20261014T120000Z",
+        "task_family": "seed_affinity",
+        "reason_codes": [
+          "missing_execution_policy"
+        ],
+        "next_actions": [
+          "Obtain an execution policy that addresses this operation and location"
+        ]
+      },
+      {
+        "task_ref": {
+          "id": "task_demo_web_byom_remote",
+          "version": "1.0.0"
+        },
+        "decision_ref": "dec_task_demo_web_byom_remote_1.0.0_20261014T120000Z",
+        "task_family": "seed_affinity",
+        "reason_codes": [
+          "missing_execution_policy",
+          "missing_output_policy",
+          "recipient_terms_unverified"
+        ],
+        "next_actions": [
+          "Obtain an execution policy that addresses this operation and location",
+          "Obtain an output policy that permits this payload to this endpoint, or use an in-boundary model",
+          "Obtain the rights owner's confirmation of the endpoint's recipient terms"
+        ]
+      }
+    ],
+    "blocked_options": [],
+    "ranking_status": "ranked",
+    "ranking_basis": "The requested task is listed first. Eligible options matching the requested task family follow, then alternatives that answer a different question. Within a group, options are ordered by known cost only; options with unknown cost share a position.",
+    "decision_refs": [
+      "dec_task_seed_affinity_score_1.0.0_20261014T120000Z",
+      "dec_task_score_unregistered_location_1.0.0_20261014T120000Z",
+      "dec_task_demo_web_byom_remote_1.0.0_20261014T120000Z"
+    ],
+    "generated_at": "2026-10-14T12:00:00Z",
+    "valid_until": "2026-10-21T12:00:00Z",
+    "generated_by": {
+      "service_id": "aip-recommender",
+      "service_version": "0.1.0",
+      "authority": "deterministic_ranker"
+    }
+  },
+  "lookalike": {
+    "synthetic": true,
+    "parameters": {
+      "rng_seed": 20261014,
+      "n_seed": 120,
+      "n_pool": 2000,
+      "n_lookalikes": 200,
+      "n_features": 8,
+      "missing_rate": 0.12,
+      "min_coverage": 0.6,
+      "prototypes": 3,
+      "heldout_fraction": 0.3,
+      "reach_fraction": 0.1
+    },
+    "score_type": "seed_affinity",
+    "scale": "cosine",
+    "claim": "exploratory",
+    "methods": [
+      {
+        "method": "centroid",
+        "pool": 2000,
+        "scored": 1851,
+        "abstained": {
+          "entity_feature_coverage_insufficient": 149
+        },
+        "reach_fraction": 0.1,
+        "selected": 185,
+        "heldout_seed": {
+          "total": 36,
+          "scored": 35,
+          "found_in_selection": 24,
+          "recall_all": 0.6667,
+          "recall_scored_only": 0.6857,
+          "random_expectation": 0.0999
+        },
+        "histogram": {
+          "edges": [
+            -1.0,
+            -0.9,
+            -0.8,
+            -0.7,
+            -0.6,
+            -0.5,
+            -0.4,
+            -0.3,
+            -0.2,
+            -0.1,
+            0.0,
+            0.1,
+            0.2,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
+            0.8,
+            0.9,
+            1.0
+          ],
+          "counts": [
+            6,
+            21,
+            38,
+            86,
+            109,
+            131,
+            134,
+            161,
+            141,
+            143,
+            149,
+            141,
+            101,
+            107,
+            103,
+            76,
+            86,
+            73,
+            35,
+            10
+          ]
+        }
+      },
+      {
+        "method": "multi_prototype",
+        "pool": 2000,
+        "scored": 1851,
+        "abstained": {
+          "entity_feature_coverage_insufficient": 149
+        },
+        "reach_fraction": 0.1,
+        "selected": 185,
+        "heldout_seed": {
+          "total": 36,
+          "scored": 35,
+          "found_in_selection": 31,
+          "recall_all": 0.8611,
+          "recall_scored_only": 0.8857,
+          "random_expectation": 0.0999
+        },
+        "histogram": {
+          "edges": [
+            -1.0,
+            -0.9,
+            -0.8,
+            -0.7,
+            -0.6,
+            -0.5,
+            -0.4,
+            -0.3,
+            -0.2,
+            -0.1,
+            0.0,
+            0.1,
+            0.2,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
+            0.8,
+            0.9,
+            1.0
+          ],
+          "counts": [
+            0,
+            0,
+            0,
+            3,
+            17,
+            33,
+            81,
+            83,
+            158,
+            157,
+            182,
+            182,
+            166,
+            149,
+            170,
+            103,
+            82,
+            47,
+            93,
+            145
+          ]
+        }
+      }
+    ],
+    "task_id": "task_seed_affinity_score"
+  },
+  "reason_codes": {
+    "missing_execution_policy": "No active execution policy addresses this location and operation for a contributing source.",
+    "missing_output_policy": "No active output policy addresses this artifact for a contributing source.",
+    "recipient_terms_unverified": "The remote endpoint's recipients, retention and reuse terms are not confirmed by the rights owner.",
+    "unsupported_outcome_probability": "Qualified outcome labels are missing or inadequate for a new probability model."
+  },
+  "prerequisites": {
+    "P-CONTRACT-VALID": {
+      "description": "Task document passes schema and semantic validation",
+      "remedy": "Correct the task contract and resubmit"
+    },
+    "P-EXEC-OPERATION": {
+      "description": "Every contributing source permits the operation at the execution location",
+      "remedy": "Obtain an execution policy that addresses this operation and location"
+    },
+    "P-FEATURE-COVERAGE": {
+      "description": "Feature coverage is adequate for the eligible population",
+      "remedy": "Profile feature coverage for the eligible population"
+    },
+    "P-FEATURE-TIMING": {
+      "description": "Features and relationships are available by the prediction cutoff",
+      "remedy": "Run the point-in-time check or rebuild the feature plan"
+    },
+    "P-GRAIN-COMPATIBLE": {
+      "description": "Observation, modeling and output units match or have approved mappings",
+      "remedy": "Supply an approved mapping or choose a compatible modeling unit"
+    },
+    "P-LABELS-QUALIFIED": {
+      "description": "Mature outcome labels exist for a named event, cutoff and horizon",
+      "remedy": "Supply qualified labels: named event, cutoff, horizon, mature windows, coverage"
+    },
+    "P-MODEL-EXECUTION": {
+      "description": "The model's registered execution mode and locations permit this operation here",
+      "remedy": "Run an in-boundary model at a registered location, or request remote_inference for an endpoint model"
+    },
+    "P-MODEL-FEATURES-AVAILABLE": {
+      "description": "The model's required features exist at its declared units for the scored population",
+      "remedy": "Confirm the model's required features are available at its declared units"
+    },
+    "P-MODEL-REGISTERED": {
+      "description": "The cited model is registered, current, and its family, score type and units match the task",
+      "remedy": "Register the model, or cite a current registration whose contract matches the task"
+    },
+    "P-PROFILE-CONFIRMED": {
+      "description": "Every contributing source profile is steward-confirmed",
+      "remedy": "Complete steward confirmation of the source profile"
+    },
+    "P-REMOTE-PAYLOAD": {
+      "description": "Every contributing source permits sending the inference payload to the endpoint",
+      "remedy": "Obtain an output policy that permits this payload to this endpoint, or use an in-boundary model"
+    },
+    "P-REMOTE-RECIPIENT-TERMS": {
+      "description": "The rights owner accepts the endpoint's recipients, retention and reuse terms",
+      "remedy": "Obtain the rights owner's confirmation of the endpoint's recipient terms"
+    },
+    "P-RIGHTS-USE": {
+      "description": "Rights permit this operation and purpose",
+      "remedy": "Obtain rights evidence from the rights owner"
+    },
+    "P-SEED-PRESENT": {
+      "description": "The seed reference resolves",
+      "remedy": "Supply the seed snapshot"
+    },
+    "P-SENSITIVE-EXCLUSION": {
+      "description": "Objective, labels and features avoid excluded sensitive categories",
+      "remedy": "Complete sensitive-category screening"
+    },
+    "P-SNAPSHOT-IMMUTABLE": {
+      "description": "Every input resolves to an immutable, non-withdrawn snapshot",
+      "remedy": "Register the immutable snapshot or replace the withdrawn input"
+    },
+    "P-TENANT-SCOPE": {
+      "description": "Inputs and policies belong to the task's tenant",
+      "remedy": "Use only artifacts from the authenticated tenant"
+    },
+    "P-UNITS-DECLARED": {
+      "description": "Every task unit is registered, confirmed and declared by the source contract",
+      "remedy": "Register and confirm the unit type, or correct the declared unit"
+    },
+    "P-UNIVERSE-DEFINED": {
+      "description": "The eligible universe is defined",
+      "remedy": "Define the eligible universe"
+    }
+  },
+  "trace": [
+    {
+      "step": "route",
+      "task_id": "task_seed_affinity_score",
+      "detail": "13 prerequisites checked",
+      "outcome": "ELIGIBLE"
+    },
+    {
+      "step": "route",
+      "task_id": "task_score_unregistered_location",
+      "detail": "13 prerequisites checked",
+      "outcome": "PROVISIONAL"
+    },
+    {
+      "step": "route",
+      "task_id": "task_demo_web_byom_remote",
+      "detail": "18 prerequisites checked",
+      "outcome": "PROVISIONAL"
+    },
+    {
+      "step": "route",
+      "task_id": "task_propensity_train_no_labels",
+      "detail": "12 prerequisites checked",
+      "outcome": "PROVISIONAL"
+    },
+    {
+      "step": "recommend",
+      "task_id": "task_seed_affinity_score",
+      "detail": "2 alternatives for the same objective",
+      "outcome": "ranked"
+    },
+    {
+      "step": "score",
+      "task_id": "task_seed_affinity_score",
+      "detail": "synthetic seed and pool; centroid and multi-prototype baselines",
+      "outcome": "completed"
+    }
+  ],
+  "manifest": {
+    "evaluated_at": "2026-10-14T12:00:00Z",
+    "max_decision_ttl_hours": 168.0,
+    "engine_version": "0.1.0",
+    "engine_sha256": "sha256:d135fbc7d02199503494b68b6c7a8d6601b6530249105363b806adba7be9c0d0",
+    "inputs": [
+      {
+        "path": "demo/scenarios/web_lookalike/bundle_task_demo_web_byom_remote.json",
+        "sha256": "sha256:c73e92dd83d5b4f152bbf1944a0123269d5019df2010202b1501e56acfe53c11"
+      },
+      {
+        "path": "demo/scenarios/web_lookalike/scenario.json",
+        "sha256": "sha256:cc56ad733fb98f6a41756ea1caca0477653db82a26931b1b40aefc8f99db4514"
+      },
+      {
+        "path": "demo/scenarios/web_lookalike/task_demo_web_byom_remote.json",
+        "sha256": "sha256:c5e25277a5abd1d22879b975ea7fc2cef81e16ea3f9fe65b725f668225c6dfda"
+      },
+      {
+        "path": "examples/valid/dataset_manifest/ds_acr_demo.json",
+        "sha256": "sha256:731db4484d9716ab755b615203e943aa27aa69150da1ba0754f1572566f2075e"
+      },
+      {
+        "path": "examples/valid/dataset_manifest/ds_new_vendor.json",
+        "sha256": "sha256:94d1687ce16fbf8664714a59ce6370d9bc3bad7ce2bee7522f4e95a20189eda0"
+      },
+      {
+        "path": "examples/valid/dataset_manifest/ds_url_demo.json",
+        "sha256": "sha256:8f2e7a97826342257c59e08fe566fedc207d403f109af8927991a78e16cadb0b"
+      },
+      {
+        "path": "examples/valid/dataset_manifest/ds_web_demo.json",
+        "sha256": "sha256:4310f73cc50268d5c943f3449feb5fd27200d560dbb4e4492293b861d90fd974"
+      },
+      {
+        "path": "examples/valid/evidence_bundle/bundle_task_propensity_train_no_labels.json",
+        "sha256": "sha256:e9da39a70cae18f552e287d7c623349bf0feb97361baf387035236547b841d2d"
+      },
+      {
+        "path": "examples/valid/evidence_bundle/bundle_task_score_unregistered_location.json",
+        "sha256": "sha256:a8ebbd064ddce56d5a4f220f751fa0cc773b1786f7f53c0c118cfcfab46e3812"
+      },
+      {
+        "path": "examples/valid/evidence_bundle/bundle_task_seed_affinity_score.json",
+        "sha256": "sha256:15df8d5f0951f37a9586a99bc37eaca8aa2ba88e6bdf76f4879d50d9040a0508"
+      },
+      {
+        "path": "examples/valid/model_registration/model_byom_lookalike_remote.json",
+        "sha256": "sha256:b671e82dc02781a6ca0ae1114b3f45bc5ea77024e5aa7cc4b334b496ff4d28ad"
+      },
+      {
+        "path": "examples/valid/model_registration/model_propensity_logreg_v1.json",
+        "sha256": "sha256:6e6b862bcd8729633347a51993357aceeac2f57d8502b8e34cd7a6be446e7e16"
+      },
+      {
+        "path": "examples/valid/objective/obj_aggregate_acr.json",
+        "sha256": "sha256:d339d922ad9c596eca7bcb5cdc5ca09e057be5ff240364f4dc1971c7a71cf601"
+      },
+      {
+        "path": "examples/valid/objective/obj_behavioral_acr.json",
+        "sha256": "sha256:b3e5381851a615f42cd2a18cf5cfe305e21911e11551368a0bc318c68a80e4cf"
+      },
+      {
+        "path": "examples/valid/objective/obj_propensity_web.json",
+        "sha256": "sha256:9d7d2412990b3f8d30a3c326d5ec41232b87aa6529976bf28b498776f77194e9"
+      },
+      {
+        "path": "examples/valid/objective/obj_seed_affinity_web.json",
+        "sha256": "sha256:2a1c74ef943d882bafe80ec664a32cc1bc5fd7d88456fce2a1bd576ae7c1f0d9"
+      },
+      {
+        "path": "examples/valid/objective/obj_semantic_url.json",
+        "sha256": "sha256:01449ee132f7821df87aecd6cf7ad5106a7e2be0efbb65b5f7ac466c3c0e19fc"
+      },
+      {
+        "path": "examples/valid/relationship_snapshot/relsnap_cookie_household_2026_10.json",
+        "sha256": "sha256:b5d5a1d08f6cbe48fe6eef3cacf919171ac0d13daa69a75dc40a0bf937bbc45e"
+      },
+      {
+        "path": "examples/valid/source_profile/prof_new_vendor_quarantined.json",
+        "sha256": "sha256:2fc0a725fd4ba1719304ff5049d2d8c927b2890a59720ccdbeda1fa8c61f9b5a"
+      },
+      {
+        "path": "examples/valid/task/task_propensity_train_no_labels.json",
+        "sha256": "sha256:6979385bfa8da7c01880a2e65cedabfcd09124907ee1e65643949a7ee593e27b"
+      },
+      {
+        "path": "examples/valid/task/task_score_unregistered_location.json",
+        "sha256": "sha256:538a27c811c82f87f7a8886fbb809610096e720eddd457c33a21c245b8f4dc90"
+      },
+      {
+        "path": "examples/valid/task/task_seed_affinity_score.json",
+        "sha256": "sha256:699fe8d3b169526fa59c4cfd6a259e1fe369c42bcd425b2bda4a079789370e09"
+      },
+      {
+        "path": "examples/valid/unit_mapping/map_cookie_household_activation.json",
+        "sha256": "sha256:0c242916af172515be9472f3714ab219fd56fbb3e7354fd73deeefebdbefa403"
+      },
+      {
+        "path": "examples/valid/unit_mapping/map_cookie_household_features.json",
+        "sha256": "sha256:b452a9d39fb5b77696ace27161e2e382b08a5a9d6d7f95e75234f3fe661f16cd"
+      },
+      {
+        "path": "registry/policies/exec_cleanroom_demo.json",
+        "sha256": "sha256:6fc2d7026b2b20538b233e5818d60c14f3a62c45fcbfa4f3593fc01ed73a77e3"
+      },
+      {
+        "path": "registry/policies/exec_workspace_demo.json",
+        "sha256": "sha256:28f43182f1bbfed43a23aa96e39ef72ec5cb61fa5f22e2876a20795809747203"
+      },
+      {
+        "path": "registry/policies/output_cleanroom_aggregate_only.json",
+        "sha256": "sha256:5af1213a74c0ead763ceb2849427cbbf85e0a1d8b412aec2a18772b50587947a"
+      },
+      {
+        "path": "registry/policies/output_workspace_demo.json",
+        "sha256": "sha256:b4d36a08a0a503388f49e92d2ad662de70c6171b1b1bc1b1b35df94578952a6c"
+      },
+      {
+        "path": "registry/profiles/prof_acr_viewing_ref.json",
+        "sha256": "sha256:1da9467aa5bbf71eb5eb2a41a4d12be7a99e74746d86fccd145cf3f35a4a49ea"
+      },
+      {
+        "path": "registry/profiles/prof_url_content_ref.json",
+        "sha256": "sha256:28f8eb1ee86d3a37c620c9358b3e20ec83053571cb50c340c53eae7d221183a7"
+      },
+      {
+        "path": "registry/profiles/prof_web_events_ref.json",
+        "sha256": "sha256:4acd82e7bd592c9e3df604adcd5776782eab2d017c7b46576d49a1efd57c9c03"
+      },
+      {
+        "path": "registry/types/browser_cookie.json",
+        "sha256": "sha256:0c34ebd85c0e09d11d04df2e6fa54237d3cbe8b6faf93e1f2fab2400c541bb0d"
+      },
+      {
+        "path": "registry/types/content_item_key.json",
+        "sha256": "sha256:50ee216b9e5e12dde0d0dfba2ed3b1276a36a13e5d1dd658ab6d535494c55903"
+      },
+      {
+        "path": "registry/types/ip_observation.json",
+        "sha256": "sha256:ed2aeb2476395d436f134be81c8b0694d22d460911559dfc59ab32347270ae0d"
+      },
+      {
+        "path": "registry/types/mobile_ad_id.json",
+        "sha256": "sha256:1eace837a92ab2be240f79e4e48d280294bfb98270bdf706d38a69cdc94b0397"
+      },
+      {
+        "path": "registry/types/postal_code.json",
+        "sha256": "sha256:e93b009184bd120bc6ff7adf469808b0ca4fe9d612aab6e35ab398ab94e3c0be"
+      },
+      {
+        "path": "registry/types/provider_household_key.json",
+        "sha256": "sha256:3fba5fd987cbffe2aa3d5e6d2d3afb98a0faa577778192586037bff1f9a79726"
+      },
+      {
+        "path": "registry/types/tv_screen_key.json",
+        "sha256": "sha256:8241ef85b1135d0879a4fa93c49dd43384c13d0323aeb8873f2250cc93b37788"
+      },
+      {
+        "path": "registry/reason_codes.json",
+        "sha256": "sha256:67e7ae2898f68b22e0933dd19ffa3230573b24632cf6b975c4f11435aae38e80"
+      }
+    ],
+    "computed": "build_time",
+    "synthetic": true,
+    "disclosure": "Synthetic scenarios. Every decision, ranking and score on this page was computed by the engine when the site was built, at the evaluation time shown; nothing runs while you browse. Synthetic results test software behavior and are not evidence of data quality, model quality or market performance. The release preview is not an approval and nothing is activated.",
+    "bundle_sha256": "sha256:b85f7bf26158275813db9daf81c19f7e091b7697317e2503c5388f07150d9d5d"
+  }
+}
