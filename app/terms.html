@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data terms · Agentic Audience Intelligence</title>
+  <meta name="description" content="How Your data handles an uploaded file: a demonstration, held for an hour at most, never kept, logged or shared.">
+  <link rel="preload" href="fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="https://nofluffadvisory.com/building/">No Fluff Advisory<span class="brand-section"><span class="brand-sep" aria-hidden="true">/</span>Building</span></a>
+    <a class="topbar-link" href="./#upload">Back to Your data</a>
+  </header>
+
+  <main id="main" class="terms">
+    <section class="hero">
+      <p class="eyebrow">Your data · data terms</p>
+      <h1>We don’t keep your data<span class="dot">.</span></h1>
+      <p class="hero-sub">Your data is a demonstration, not a production service. A file you upload is used to decide and build audiences while you work, then deleted. These terms say exactly what happens to it.</p>
+    </section>
+
+    <h2>What you agree to</h2>
+    <ul>
+      <li>You have the right to upload the file and to use it for this purpose.</li>
+      <li>You leave out direct identifiers (names, email addresses, phone numbers, postal addresses) and special-category data (health, religion, ethnicity, sexual orientation, political views). Use a pseudonymous key, such as an internal customer number, or synthetic data.</li>
+      <li>You treat every result as demonstration output: not advice, and not a basis for decisions about individual people.</li>
+      <li>Your invite key is for you. Don’t share it. It can be revoked at any time.</li>
+    </ul>
+
+    <h2>What happens to the file</h2>
+    <ul>
+      <li><strong>Held for an hour at most.</strong> An upload and everything derived from it (the profile, decisions, models and scores) are deleted one hour after upload, when you press <em>Delete this upload now</em>, or when the server has been idle for 30 minutes, whichever comes first. The expiry time is shown on the upload step.</li>
+      <li><strong>No copies.</strong> The file lives only on the disk of one server instance. There are no backups and no other storage, so a deleted file cannot be recovered.</li>
+      <li><strong>Used only for your session.</strong> The file is profiled, routed and modeled for you, and for nothing else. It is not used to train or improve anything, not combined with other uploads, and not shared or sold.</li>
+      <li><strong>Not sent anywhere.</strong> The server has no outbound internet access, and no row is sent to a language model.</li>
+      <li><strong>Not logged.</strong> Row values are never logged. Cloudflare, which hosts the service, records request metadata such as time, path and status, as it does for any web request.</li>
+      <li><strong>Kept apart.</strong> Each key has its own tenant and storage; one key cannot see another key’s uploads.</li>
+    </ul>
+
+    <h2>What stays with you</h2>
+    <p>An audience you export is a file in your browser’s downloads. It is not kept on the server once the upload is deleted.</p>
+
+    <h2>Questions</h2>
+    <p>Ask through <a href="https://nofluffadvisory.com/contact/">No Fluff Advisory</a>. These terms describe how the demonstration works; they are not a data processing agreement. If you need one, ask before uploading.</p>
+  </main>
+
+  <footer class="footer">
+    <p class="footer-rule">Agents propose. The router decides. People approve releases.</p>
+    <p>Engine and contracts: <a href="https://github.com/EvgenyAndroid/agentic-audience-intelligence">agentic-audience-intelligence</a>, MIT-licensed. A <a href="https://nofluffadvisory.com/building/">No Fluff Advisory</a> build.</p>
+  </footer>
+</body>
+</html>

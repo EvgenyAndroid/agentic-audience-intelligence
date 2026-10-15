@@ -356,3 +356,11 @@ input[type="file"] { font: 0.88rem var(--font-sans); color: var(--ink-muted); mi
   .card { animation: fade .25s var(--ease-snap); }
   @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 }
+
+/* Data terms page */
+.terms > h2 { font-size: 1.3rem; margin: 2rem 0 0.6rem; }
+.terms > ul, .terms > p { max-width: 44rem; color: var(--ink-muted); }
+.terms > ul { padding-left: 1.2rem; }
+.terms > ul > li { margin-bottom: 0.55rem; }
+.terms strong { color: var(--ink); }
+.terms-check { margin-top: 0.75rem; max-width: 46rem; }

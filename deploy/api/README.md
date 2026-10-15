@@ -1,6 +1,6 @@
 # Upload API on Cloudflare Containers
 
-A Worker at `api.audiences.nofluffadvisory.com` forwards every request to one container built from the repository's `Dockerfile` (ADR 0005, stage B). The container holds the invite-key check, tenant isolation and 24-hour retention; this Worker only routes.
+A Worker at `api.audiences.nofluffadvisory.com` forwards every request to one container built from the repository's `Dockerfile` (ADR 0005, stage B). The container holds the invite-key check, tenant isolation and retention (one hour for the live demo); this Worker only routes.
 
 ## One-time setup
 
@@ -45,4 +45,4 @@ curl -H "Authorization: Bearer <invite key>" https://api.audiences.nofluffadviso
 | --- | --- | --- |
 | `AIP_API_KEYS` | Worker secret | JSON object: SHA-256 of each invite key to its tenant id |
 | `AIP_ALLOWED_ORIGINS` | `wrangler.jsonc` vars | Origins allowed by CORS (the demonstrator) |
-| `AIP_RETENTION_HOURS` | `wrangler.jsonc` vars | Hours an upload is kept at most (24) |
+| `AIP_RETENTION_HOURS` | `wrangler.jsonc` vars | Hours an upload is kept at most (1 for the live demo; see `app/terms.html`) |
