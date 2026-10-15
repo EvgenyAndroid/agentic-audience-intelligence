@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="app.css">
   <script src="app.js" defer></script>
   <script src="workbench.js" defer></script>
+  <script src="upload.js" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -34,10 +35,13 @@
 
     <nav class="mode-tabs" id="mode-tabs" role="tablist" aria-label="Mode">
       <button type="button" role="tab" data-mode="build" aria-selected="true">Build an audience</button>
+      <button type="button" role="tab" data-mode="upload" aria-selected="false">Your data</button>
       <button type="button" role="tab" data-mode="decide" aria-selected="false">How the router decides</button>
     </nav>
 
     <section id="build" aria-live="polite"></section>
+
+    <section id="upload" hidden aria-live="polite"></section>
 
     <section id="decide" hidden>
       <nav class="scenario-tabs" id="scenario-tabs" role="tablist" aria-label="Scenarios"></nav>
