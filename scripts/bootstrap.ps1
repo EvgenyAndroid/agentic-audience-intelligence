@@ -8,7 +8,8 @@ param(
     [string]$PythonLauncher = 'py',
     [string]$PythonVersion = '3.11',
     [switch]$WithModeling,
-    [switch]$WithLlm
+    [switch]$WithLlm,
+    [switch]$WithApi
 )
 . "$PSScriptRoot\_common.ps1"
 Push-Location $RepoRoot
@@ -24,6 +25,7 @@ try {
     $extras = @('dev')
     if ($WithModeling) { $extras += 'modeling' }
     if ($WithLlm) { $extras += 'llm' }
+    if ($WithApi) { $extras += 'api' }
     & $py -m pip install -c (Join-Path $RepoRoot 'requirements\constraints.txt') -e ".[$($extras -join ',')]"
     Assert-LastExit 'package install'
     Write-Host "Ready. Activate with: .\.venv\Scripts\Activate.ps1"

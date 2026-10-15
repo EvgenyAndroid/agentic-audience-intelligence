@@ -29,3 +29,13 @@ The page switches from reading `data/workbench/*.json` to calling these endpoint
 Stage A is honest and cheap to host: everything is synthetic, disclosed and reproducible, and `aip workbench-build --check` compares committed bundles with a fresh build (floats within 2e-3, since model scores can differ in the last digits across platforms).
 
 Stage B must add what stage A avoids by construction: authenticated tenants, a data-processing agreement and retention limits for uploads, row data that never reaches a language model, the steward and human-review steps that the synthetic documents currently fill with fixed fixtures, and the export and release controls that turn an eligible score file into an approved release. The routing contracts already carry all of these; stage B supplies real evidence for them.
+
+## Stage B, slice 1 (15 October 2026)
+
+Upload, assess and route are live in code (`aip.uploads`, `aip.api`); build and bundle-with-results follow. Decisions taken for this slice:
+
+- **Hosting.** Cloudflare Containers behind a Worker (`deploy/api/`), in the same account as the demonstrator. One container instance holds uploads on its own disk, internet access off; idle containers stop after 30 minutes and take their disk with them.
+- **Access.** Invite keys only. The server stores SHA-256 hashes mapped to tenant ids (`AIP_API_KEYS`); tenants are isolated by folder and by id, and each tenant gets its own copy of the location policies, because the router refuses another tenant's policies.
+- **Retention.** 24 hours at most (`AIP_RETENTION_HOURS`), enforced on every authenticated request; `DELETE` removes an upload at once. Row values are never logged.
+- **Evidence from an upload.** The steward fills by confirmation what stage A filled with fixtures: record type, roles, sensitive and excluded columns, observation period. Rights and feature timing cannot be checked from a CSV, so they are facts only when the uploader attests to them and unknown otherwise, which keeps dependent methods PROVISIONAL rather than ELIGIBLE.
+- **No language model.** The assessment stays rule-based; a reasoning agent over column names and summary statistics remains a later option and would only propose.

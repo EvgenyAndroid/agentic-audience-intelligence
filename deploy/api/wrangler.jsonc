@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // The stage B upload API (ADR 0005): this Worker checks nothing itself and forwards every request to one
+  // Python container (the repository's Dockerfile), which holds the invite-key check, tenancy and retention.
+  "name": "aai-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "routes": [{ "pattern": "api.audiences.nofluffadvisory.com", "custom_domain": true }],
+  "containers": [
+    {
+      "class_name": "ApiContainer",
+      "image": "../../Dockerfile",
+      "image_build_context": "../..",
+      // One instance: uploads live on its disk, so every request must reach the same container.
+      "max_instances": 1,
+      "instance_type": "standard"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [{ "name": "API", "class_name": "ApiContainer" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["ApiContainer"] }],
+  "vars": {
+    "AIP_ALLOWED_ORIGINS": "https://audiences.nofluffadvisory.com",
+    "AIP_RETENTION_HOURS": "24"
+  }
+  // Secret (not in this file): AIP_API_KEYS, set with `npx wrangler secret put AIP_API_KEYS`.
+}

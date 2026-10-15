@@ -1,0 +1,9 @@
+*
+!pyproject.toml
+!README.md
+!LICENSE
+!requirements/constraints.txt
+!src/
+!schemas/
+!registry/
+**/__pycache__

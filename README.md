@@ -11,8 +11,8 @@ This repository holds the specification and a working scaffold: normative JSON S
 | Schema meta-validation (38 files, JSON Schema 2020-12) | Passed (Linux; Windows in CI) | Session 2 record (34 files) in `reports/session2/` |
 | Valid examples and registry documents (85) | Passed (Linux; Windows in CI) | Session 2 record (76) in `reports/session2/conformance.json` |
 | Invalid cases fail for the stated layer, keyword and path (75) | Passed (Linux; Windows in CI) | Session 2 record (54) in `reports/session2/conformance.json` |
-| Unit and contract tests (333) | Passed (Linux and Windows, Python 3.11 and 3.12, locked dependencies) | Session 2 record in `reports/session2/pytest-linux.xml` (195); tests added since in `tests/` |
-| Lint (ruff) and type check (mypy, 57 files) | Passed (Linux) | `reports/session2/README.md` |
+| Unit and contract tests (367) | Passed (Linux and Windows, Python 3.11 and 3.12, locked dependencies) | Session 2 record in `reports/session2/pytest-linux.xml` (195); tests added since in `tests/` |
+| Lint (ruff) and type check (mypy, 61 files) | Passed (Linux) | `reports/session2/README.md` |
 | AdCP adapter output against pinned AdCP 3.1.20 schemas | Passed (Linux) | `tests/test_representation_and_exchange.py` |
 | Rules router on the development routing suite (12 cases) | Passed by construction | Session 2 record (11 cases) in `reports/session2/routing_benchmark_development.json` |
 | Windows and PowerShell execution, CI | Passed (GitHub Actions `windows-latest`, Python 3.11 and 3.12) | `.github/workflows/ci.yml` runs `.\scripts\check-all.ps1` on every push |
@@ -115,6 +115,30 @@ python -m http.server --directory app   # preview at http://localhost:8000
 UI labels name the claim plainly and keep the task family visible: look-alike is seed affinity, act-alike is behavioral affinity, content similarity is semantic similarity, and propensity reads "Estimated chance of [event] within [horizon]".
 
 Hosting on Cloudflare Pages: create a Pages project from this repository with no build command and `app` as the output directory, or deploy directly with `npx wrangler pages deploy app --project-name <name>`. `app/_headers` sets a strict same-origin content security policy and allows embedding only from nofluffadvisory.com.
+
+## Upload API (stage B)
+
+ADR 0005's stage B, first slice: upload a CSV, confirm what it holds, and have the router decide every method. Modeling uploaded data (train and score) is the next slice.
+
+| Endpoint | Does |
+| --- | --- |
+| `POST /v1/datasets` | Takes the CSV (20 MB, 200,000 rows, 200 columns at most). Returns each column's kind, missing share and distinct count, and suggested roles (key, seed flag, behavior flag, outcome label, breakdown). |
+| `POST /v1/datasets/{id}/assess` | Takes the confirmation: record type, roles, behavior signals, sensitive and excluded columns, observation period, and two attestations (rights to use the data, feature timing). Returns the rule-based assessment. |
+| `POST /v1/datasets/{id}/route` | Builds the contract documents and decides every task (each method plus row export, or aggregate export in a clean room); returns the bundle in the workbench's shape. |
+| `GET` / `DELETE /v1/datasets/{id}` | Reads or deletes an upload and everything derived from it. |
+| `GET /v1/record-types` | The record types an upload can declare. |
+
+Evidence is only as strong as what was supplied. Rights and feature timing cannot be checked from a CSV, so they are true only when the uploader attests to them; otherwise the methods stay PROVISIONAL (`unverified_permission`, `missing_availability_evidence`). Sensitive columns stay in the file and never reach a model. Each tenant gets its own copy of the location policies, because the router refuses another tenant's.
+
+Access is by invite key: `aip api-key --tenant tenant_acme` prints a key once and the SHA-256 to add to `AIP_API_KEYS` (a JSON object of hash to tenant id). Tenants are isolated on disk and by id; uploads are deleted after `AIP_RETENTION_HOURS` (default 24); row values are never logged and nothing calls a language model.
+
+```powershell
+.\scripts\bootstrap.ps1 -WithModeling -WithApi
+$env:AIP_API_KEYS = '{"<sha256 of your key>": "tenant_local"}'
+uvicorn --factory aip.api.app:app_from_env --port 8080
+```
+
+The `Dockerfile` packages the API; `deploy/api/` runs it on Cloudflare Containers behind a Worker at `api.audiences.nofluffadvisory.com` (see `deploy/api/README.md`).
 
 ## Suggested review order
 
