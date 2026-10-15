@@ -340,11 +340,19 @@ function setHash(value) {
   try { history.replaceState(null, "", `#${value}`); } catch (_) { /* file:// or sandboxed */ }
 }
 
-const MODE_LOADED = { build: false, decide: false };
+const MODE_LOADED = { build: false, decide: false, upload: false };
 async function setMode(mode, target) {
   for (const button of document.querySelectorAll("#mode-tabs button")) button.setAttribute("aria-selected", String(button.dataset.mode === mode));
   document.getElementById("build").hidden = mode !== "build";
   document.getElementById("decide").hidden = mode !== "decide";
+  document.getElementById("upload").hidden = mode !== "upload";
+  if (mode === "upload") {
+    if (!MODE_LOADED.upload) { MODE_LOADED.upload = true; initUpload(); }
+    setHash("upload");
+    document.getElementById("disclosure-text").textContent = UPLOAD_DISCLOSURE;
+    document.getElementById("disclosure-meta").textContent = `API ${API_BASE}`;
+    return;
+  }
   try {
     if (mode === "build" && !MODE_LOADED.build) { MODE_LOADED.build = true; await initWorkbench(target); }
     if (mode === "decide" && !MODE_LOADED.decide) { MODE_LOADED.decide = true; await initScenarios(target); }
@@ -368,6 +376,7 @@ async function init() {
     const [head, rest] = location.hash.slice(1).split("/");
     if (head === "build") return ["build", rest];
     if (head === "decide") return ["decide", rest];
+    if (head === "upload") return ["upload", null];
     return head ? ["decide", head] : ["build", null]; // earlier links used #<scenario_id>
   };
   window.addEventListener("hashchange", () => {

@@ -93,7 +93,7 @@ Package modules:
 
 ## Demonstrator
 
-`app/` has two modes.
+`app/` has three modes.
 
 **Build an audience** (the workbench, ADR 0005) covers eight generated datasets: B2B accounts, geography, demographic and firmographic, interest and behavioral segments, TV viewing (ACR), web and app events, first-party CRM and page content. For each one you see an assessment of what the data is and what it supports, the router's verdict on every method (look-alike, act-alike, propensity, your registered model, contextual), a recommended method and a recommended model compared on held-out records, and a reach slider that trades audience size against held-out quality, with composition and feature drivers. Export is its own decision: row files download where the policy permits; the clean room only releases an aggregate report with small cells suppressed. Evidence facts (coverage, label counts, sensitive-attribute screening) are computed from the generated data, so the B2B propensity task stays PROVISIONAL with too few labels, and the inferred health attribute never reaches a model.
 
@@ -101,6 +101,8 @@ Package modules:
 aip workbench-build --out app\data\workbench          # rebuild after changing the engine or the dataset specs
 aip workbench-build --out app\data\workbench --check  # floats compared within 2e-3 across platforms
 ```
+
+**Your data** is the stage B upload flow against the API below: enter an invite key, upload a CSV, confirm what it holds (suggested roles pre-filled, role columns kept out of the feature lists), and see the router's decision on every method, with the step that would unlock it. It is the only mode that calls a server (`api.audiences.nofluffadvisory.com`, allowed by the page's `connect-src`); served from localhost it calls `http://localhost:8080` instead.
 
 **How the router decides** shows the engine's decisions on four synthetic scenarios: an ACR clean room, a web look-alike, URL content and a new source in quarantine. It answers what each dataset can be used for, task by task, with the reasons, what would unlock each task, a deterministic recommendation, synthetic look-alike results with their abstention denominators, and a stored trace.
 
