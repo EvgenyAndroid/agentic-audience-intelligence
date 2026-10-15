@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from datetime import timedelta
 from pathlib import Path
@@ -170,6 +171,21 @@ def cmd_workbench_build(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_api_key(args: argparse.Namespace) -> int:
+    """Issue an invite key for the upload API. The key is shown once; only its hash goes into AIP_API_KEYS."""
+    import hashlib
+    import secrets
+
+    if not re.fullmatch(r"tenant_[a-z0-9_]{3,40}", args.tenant):
+        print("tenant must look like tenant_<lowercase letters, digits or underscores>")
+        return 2
+    key = "aai_" + secrets.token_urlsafe(32)
+    digest = hashlib.sha256(key.encode()).hexdigest()
+    print(f"Invite key for {args.tenant} (shown once; send it privately):\n  {key}")
+    print(f'Add to AIP_API_KEYS:\n  "{digest}": "{args.tenant}"')
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="aip")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -203,6 +219,9 @@ def main(argv: list[str] | None = None) -> int:
     w.add_argument("--out", required=True)
     w.add_argument("--check", action="store_true", help="fail if the bundles in --out differ from a fresh build")
     w.set_defaults(func=cmd_workbench_build)
+    k = sub.add_parser("api-key", help="issue an invite key for the upload API (prints the key and its hash)")
+    k.add_argument("--tenant", required=True, help="tenant id, e.g. tenant_acme")
+    k.set_defaults(func=cmd_api_key)
     args = parser.parse_args(argv)
     return int(args.func(args))
 
