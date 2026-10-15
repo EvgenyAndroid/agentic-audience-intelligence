@@ -7,6 +7,9 @@ Endpoints (all under /v1, all requiring ``Authorization: Bearer <invite key>``):
   POST   /v1/datasets/{id}/assess   body: the confirmation (roles, record type, sensitive columns,
                                     attestations). Returns the rule-based assessment.
   POST   /v1/datasets/{id}/route    Decides every task and ranks the methods; returns the bundle.
+  POST   /v1/datasets/{id}/build/{method}
+                                    Trains and scores one ELIGIBLE method; returns its models, held-out
+                                    evaluation and the recommended model.
   GET    /v1/datasets/{id}          The stored profile, confirmation and bundle, if any.
   DELETE /v1/datasets/{id}          Deletes the upload and everything derived from it.
   GET    /v1/record-types           Record types an upload can declare.
@@ -199,6 +202,25 @@ def create_app(
         }
         store.write(tenant_id, dataset_id, "bundle", bundle)
         return bundle
+
+    @app.post("/v1/datasets/{dataset_id}/build/{method}")
+    def build(dataset_id: str, method: str, tenant_id: Tenant) -> dict[str, Any]:
+        bundle = load(tenant_id, dataset_id, "bundle")
+        confirmation = load(tenant_id, dataset_id, "confirmation")
+        if bundle is None or confirmation is None:
+            raise HTTPException(409, "Route the dataset (POST .../route) before building an audience.")
+        entry = bundle["decisions"].get(method)
+        if entry is None or entry["role"] != "method":
+            raise HTTPException(404, f"No method '{method}' for this dataset.")
+        if entry["decision"]["verdict"] != "ELIGIBLE":
+            raise HTTPException(409, f"The router has not made '{method}' ELIGIBLE ({entry['decision']['verdict']}).")
+        prep = uploads.prepare(
+            table(tenant_id, dataset_id), ConfirmationIn(**confirmation).to_confirmation(), dataset_id
+        )
+        result = uploads.build(prep, method)
+        bundle["results"][method] = result
+        store.write(tenant_id, dataset_id, "bundle", bundle)
+        return {"dataset_id": dataset_id, "method": method, "result": result}
 
     @app.delete("/v1/datasets/{dataset_id}", status_code=204)
     def delete(dataset_id: str, tenant_id: Tenant) -> None:

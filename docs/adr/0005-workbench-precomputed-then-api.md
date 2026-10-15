@@ -32,7 +32,7 @@ Stage B must add what stage A avoids by construction: authenticated tenants, a d
 
 ## Stage B, slice 1 (15 October 2026)
 
-Upload, assess and route are live in code (`aip.uploads`, `aip.api`); build and bundle-with-results follow. Decisions taken for this slice:
+Upload, assess and route are live in code (`aip.uploads`, `aip.api`). Slice 2 adds the build step: `POST /v1/datasets/{id}/build/{method}` trains and scores a method the router decided ELIGIBLE, with the same code the workbench uses, and the page shows the reach slider, charts and export on the uploader's own IDs. Decisions taken for this slice:
 
 - **Hosting.** Cloudflare Containers behind a Worker (`deploy/api/`), in the same account as the demonstrator. One container instance holds uploads on its own disk, internet access off; idle containers stop after 30 minutes and take their disk with them.
 - **Access.** Invite keys only. The server stores SHA-256 hashes mapped to tenant ids (`AIP_API_KEYS`); tenants are isolated by folder and by id, and each tenant gets its own copy of the location policies, because the router refuses another tenant's policies.

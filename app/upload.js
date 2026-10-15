@@ -23,6 +23,13 @@ const UPLOAD_REMEDY = {
   missing_availability_evidence: "tick the feature-timing attestation in step 3",
 };
 const ROLE_FIELDS = ["key_column", "seed_column", "behavior_column", "outcome_column", "breakdown_column"];
+// The view the workbench's model picker, build panel and export panel render from (see WB in workbench.js).
+const UV = {
+  method: null, model: null, reach: 0.1, sliderId: "up-reach", steps: { build: "7", export: "8" },
+  rerender: (keepScroll) => renderUpload(keepScroll),
+  pickModel: (id) => { UV.model = id; renderUpload(true); },
+};
+const MODELED = ["lookalike", "actalike", "propensity"];
 const UP = { key: "", types: [], meta: null, confirmation: null, assessment: null, bundle: null, busy: false, error: null };
 
 function readKey() { try { return sessionStorage.getItem("aai-key") || ""; } catch (_) { return ""; } }
@@ -180,6 +187,7 @@ function confirmCard() {
       UP.confirmation = body;
       UP.assessment = (await api(`/v1/datasets/${id}/assess`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).assessment;
       UP.bundle = await api(`/v1/datasets/${id}/route`, { method: "POST" });
+      UV.method = null;
     });
   });
   return card("3 · Confirm what the file holds", "Suggested from column names and kinds; check every choice. You act as the data steward here, and the router treats these answers as the source contract.", form);
@@ -209,6 +217,22 @@ function unlockHint(d) {
   return steps.length ? el("div", { class: "method-unlock", text: `To unlock: ${steps.join("; ")}` }) : null;
 }
 
+function buildMethod(method) {
+  return run(async () => {
+    const id = UP.meta.dataset_id;
+    const { result } = await api(`/v1/datasets/${id}/build/${method}`, { method: "POST" });
+    UP.bundle.results[method] = result;
+    for (const key of [...WB.cache.keys()]) if (key.startsWith(`${id}/${method}/`)) WB.cache.delete(key);
+    UV.method = method; UV.model = result.recommended.model_id; UV.reach = 0.1;
+  });
+}
+
+function modelCard() {
+  const b = UP.bundle;
+  return card("6 · Model", `Trained on your file and compared on held-out records the models never saw. ${b.decisions[UV.method].label}.`,
+    modelPicker(b, UV));
+}
+
 function decisionsCard() {
   const b = UP.bundle;
   const top = b.recommendation.recommended_options[0];
@@ -223,29 +247,47 @@ function decisionsCard() {
         k === topKey ? el("span", { class: "badge requested", text: "Recommended" }) : null),
       el("div", { class: "muted", text: (FAMILY[METHOD_FAMILY[k]] || {}).definition || "Its own decision, separate from modeling." }),
       reasons.length ? el("div", { class: "method-why", text: reasons.join(" ") }) : null,
-      d.verdict !== "ELIGIBLE" ? unlockHint(d) : null);
+      d.verdict !== "ELIGIBLE" ? unlockHint(d) : null,
+      d.verdict === "ELIGIBLE" && MODELED.includes(k)
+        ? el("div", { class: "export-row" }, el("button", {
+          type: "button", class: UV.method === k ? "btn" : "btn btn--ghost", disabled: UP.busy,
+          onclick: () => (b.results && b.results[k] && UV.method !== k
+            ? (UV.method = k, UV.model = b.results[k].recommended.model_id, UV.reach = 0.1, renderUpload(false))
+            : buildMethod(k)),
+          text: b.results && b.results[k] ? (UV.method === k ? "Built · rebuild" : "Show this audience") : "Build this audience",
+        }))
+        : null);
   }));
   const remove = () => run(async () => {
     await api(`/v1/datasets/${UP.meta.dataset_id}`, { method: "DELETE" });
-    UP.meta = null; UP.confirmation = null; UP.assessment = null; UP.bundle = null;
+    UP.meta = null; UP.confirmation = null; UP.assessment = null; UP.bundle = null; UV.method = null;
   });
-  return card("5 · What this data may be used for", "Decided by the same router as the workbench, from the evidence you supplied. Training and scoring on uploaded data come next; for now this is the decision step.",
+  return card("5 · What this data may be used for", "Decided by the same router as the workbench, from the evidence you supplied. Build an eligible method to train and score it on your file.",
     list,
     el("p", { class: "muted", text: `Evaluated ${b.manifest.evaluated_at} · engine ${b.manifest.engine_version} · snapshot ${b.manifest.snapshot_sha256.slice(7, 19)}` }),
     el("div", { class: "export-row" },
       el("button", { type: "button", class: "btn btn--ghost", onclick: remove, disabled: UP.busy, text: "Delete this upload now" })));
 }
 
-function renderUpload() {
+function renderUpload(keepScroll) {
   const root = document.getElementById("upload");
+  const y = window.scrollY;
   const sections = [keyCard()];
   if (UP.error) sections.push(el("p", { class: "upload-error", role: "alert", text: UP.error }));
   if (UP.types.length) sections.push(uploadCard());
   if (UP.meta) sections.push(confirmCard());
   if (UP.assessment) sections.push(assessmentCard());
   if (UP.bundle) sections.push(decisionsCard());
+  if (UP.bundle && UV.method && UP.bundle.results[UV.method]) {
+    sections.push(modelCard(), buildPanel(UP.bundle, UV), exportPanel(UP.bundle, UV));
+  }
   root.setAttribute("aria-busy", String(UP.busy));
   root.replaceChildren(...sections);
+  if (keepScroll) {
+    window.scrollTo(0, y);
+    const slider = document.getElementById(UV.sliderId);
+    if (slider) slider.focus({ preventScroll: true });
+  }
 }
 
 function initUpload() {

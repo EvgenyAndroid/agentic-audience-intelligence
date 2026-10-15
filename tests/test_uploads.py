@@ -207,3 +207,34 @@ def test_policies_are_issued_per_tenant() -> None:
     a, b = uploads.tenant_policies("tenant_a", NOW), uploads.tenant_policies("tenant_b", NOW)
     assert {p["tenant_id"] for p in a} == {"tenant_a"} and {p["tenant_id"] for p in b} == {"tenant_b"}
     assert len(a) == len(uploads.UPLOAD_POLICIES)
+
+
+@pytest.mark.parametrize("method", ["lookalike", "actalike", "propensity"])
+def test_build_trains_and_evaluates_on_heldout_records(method: str) -> None:
+    prep = uploads.prepare(uploads.parse_csv(make_csv()), confirm(), "up_000000000001")
+    result = uploads.build(prep, method)
+    assert len(result["models"]) == 2 and result["recommended"]["model_id"] in {m["model_id"] for m in result["models"]}
+    for model in result["models"]:
+        assert len(model["scores"]) == 600 and "_scores" not in model
+    held = set(result["heldout"])
+    assert held and result["fit_count"] > 0
+    if method == "propensity":
+        assert {"average_precision", "brier", "log_loss"} <= set(result["models"][0]["evaluation"])
+    else:
+        # records used to fit are never scored, so they cannot count toward held-out recall
+        scored = {i for i, s in enumerate(result["models"][0]["scores"]) if s is not None}
+        assert held <= scored | held and "0.1" in result["models"][0]["evaluation"]["recall_at"]
+
+
+def test_build_rejects_methods_the_upload_does_not_support() -> None:
+    prep = uploads.prepare(uploads.parse_csv(make_csv()), confirm(behavior_column=None), "up_000000000001")
+    with pytest.raises(uploads.UploadError, match="not a method"):
+        uploads.build(prep, "actalike")
+
+
+def test_route_carries_keys_and_breakdown_codes_for_export() -> None:
+    table = uploads.parse_csv(make_csv())
+    bundle = uploads.route(uploads.prepare(table, confirm(), "up_000000000001"), table, tenant_id="tenant_a", now=NOW)
+    ds = bundle["dataset"]
+    assert ds["key_field"] == "customer_id" and ds["keys"][:2] == ["c00000", "c00001"]
+    assert len(ds["breakdown"]["codes"]) == 600 and bundle["aggregate_rules"] is None

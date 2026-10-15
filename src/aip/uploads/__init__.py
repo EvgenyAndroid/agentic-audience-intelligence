@@ -36,7 +36,8 @@ from aip.routing import RouterConfig, decide
 from aip.routing.prerequisites import CATALOG
 from aip.timeutil import format_ts
 from aip.workbench import documents as docs
-from aip.workbench.build import METHOD_LABEL, _assessment, _world
+from aip.workbench import methods as wb_methods
+from aip.workbench.build import METHOD_LABEL, _assessment, _pick, _world
 from aip.workbench.generate import Synthetic
 from aip.workbench.specs import DatasetSpec, Feature, Outcome, Unit
 
@@ -459,6 +460,25 @@ def assessment(prep: Prepared) -> dict[str, Any]:
     return _assessment(prep.spec, prep.data)
 
 
+AGGREGATE_MIN_COUNT = 50
+MODELED_METHODS = ("lookalike", "actalike", "propensity")
+
+
+def build(prep: Prepared, method: str) -> dict[str, Any]:
+    """Train and score one method on the uploaded data: the workbench's candidate models, evaluated on held-out
+    records the models never saw, with the recommended model. The caller checks that the router made the method
+    ELIGIBLE first."""
+    if method not in prep.spec.methods or method not in MODELED_METHODS:
+        raise UploadError(f"'{method}' is not a method this upload supports.")
+    if method == "propensity":
+        result = wb_methods.propensity(prep.data)
+    else:
+        result = wb_methods.affinity(prep.data, method)
+    result = wb_methods.strip_private(result)
+    result["recommended"] = _pick(method, result)
+    return result
+
+
 UPLOAD_POLICIES = (
     "exec_workspace_demo",
     "output_workbench_demo",
@@ -535,9 +555,24 @@ def route(prep: Prepared, table: Table, *, tenant_id: str, now: datetime, ttl_ho
             "summary": spec.summary,
             "rows": spec.n,
             "location": spec.location,
-            "breakdown": {"label": spec.breakdown_label, "values": list(spec.breakdown_values)},
+            "breakdown": {
+                "label": spec.breakdown_label,
+                "values": list(spec.breakdown_values),
+                "codes": [int(v) for v in prep.data.breakdown],
+            },
             "feature_labels": {f.name: f.label for f in spec.features},
+            # The uploader's own record keys, so an exported audience carries their ids.
+            "key_field": spec.unit.key_field,
+            "keys": [row[table.columns.index(spec.unit.key_field)] for row in table.rows],
         },
+        "aggregate_rules": {
+            "dimension": spec.breakdown_label,
+            "count_label": f"{spec.unit.label.lower()} records",
+            "min_distinct_count": AGGREGATE_MIN_COUNT,
+            "small_cell_handling": "suppress_cell",
+        }
+        if spec.location == "cleanroom"
+        else None,
         "assessment": _assessment(spec, prep.data),
         "documents": {d["kind"]: d for d in generated},
         "decisions": routed,

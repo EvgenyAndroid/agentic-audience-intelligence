@@ -120,13 +120,14 @@ Hosting on Cloudflare Pages: create a Pages project from this repository with no
 
 ## Upload API (stage B)
 
-ADR 0005's stage B, first slice: upload a CSV, confirm what it holds, and have the router decide every method. Modeling uploaded data (train and score) is the next slice.
+ADR 0005's stage B: upload a CSV, confirm what it holds, have the router decide every method, then train and score each ELIGIBLE method on the file.
 
 | Endpoint | Does |
 | --- | --- |
 | `POST /v1/datasets` | Takes the CSV (20 MB, 200,000 rows, 200 columns at most). Returns each column's kind, missing share and distinct count, and suggested roles (key, seed flag, behavior flag, outcome label, breakdown). |
 | `POST /v1/datasets/{id}/assess` | Takes the confirmation: record type, roles, behavior signals, sensitive and excluded columns, observation period, and two attestations (rights to use the data, feature timing). Returns the rule-based assessment. |
 | `POST /v1/datasets/{id}/route` | Builds the contract documents and decides every task (each method plus row export, or aggregate export in a clean room); returns the bundle in the workbench's shape. |
+| `POST /v1/datasets/{id}/build/{method}` | Trains and scores one ELIGIBLE method (`lookalike`, `actalike` or `propensity`) on the upload, compares candidate models on held-out records and recommends one; returns the result in the workbench's shape (curves, histogram, composition, drivers, scores keyed by your own IDs). Refused with 409 unless the route decided the method ELIGIBLE. |
 | `GET` / `DELETE /v1/datasets/{id}` | Reads or deletes an upload and everything derived from it. |
 | `GET /v1/record-types` | The record types an upload can declare. |
 

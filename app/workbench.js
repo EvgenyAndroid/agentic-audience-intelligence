@@ -4,6 +4,11 @@
 "use strict";
 
 const WB = { index: null, bundles: new Map(), dataset: null, method: null, model: null, reach: 0.1, cache: new Map() };
+// The build and export panels take their state as a "view" (method, model, reach, step numbers, callbacks), so the
+// "Your data" mode (upload.js) renders the same panels for an uploaded dataset. WB is the workbench's own view.
+WB.rerender = (keepScroll) => renderBuild(keepScroll);
+WB.pickModel = (id) => selectModel(id);
+WB.steps = { build: "4", export: "5" };
 const METHOD_ORDER = ["lookalike", "actalike", "propensity", "byom", "semantic"];
 const METHOD_FAMILY = { lookalike: "seed_affinity", actalike: "behavioral_affinity", propensity: "outcome_propensity", byom: "outcome_propensity", semantic: "semantic_similarity" };
 const METHOD_SHORT = { lookalike: "Look-alike", actalike: "Act-alike", propensity: "Propensity", byom: "Your model", semantic: "Contextual" };
@@ -142,20 +147,20 @@ function methodPicker(bundle) {
   return list;
 }
 
-function modelPicker(bundle) {
-  const result = bundle.results[WB.method];
+function modelPicker(bundle, v = WB) {
+  const result = bundle.results[v.method];
   if (!result) return null;
   const affinity = result.models[0].evaluation.recall_at !== undefined;
   const head = affinity ? ["Model", "1%", "5%", "10%", "20%", "50%"] : ["Model", "Avg precision", "Brier", "Log loss", "Base rate"];
   const rows = result.models.map((m) => {
     const e = m.evaluation;
     const cells = affinity ? Object.values(e.recall_at).map((v) => pct(v)) : [e.average_precision.toFixed(3), e.brier.toFixed(4), e.log_loss.toFixed(3), pct(e.base_rate, 1)];
-    return el("tr", { class: m.model_id === WB.model ? "is-current" : null },
+    return el("tr", { class: m.model_id === v.model ? "is-current" : null },
       el("td", {}, m.label, m.model_id === result.recommended.model_id ? el("span", { class: "badge requested", text: "Recommended" }) : null),
       cells.map((c) => el("td", { class: "num", text: c })));
   });
   const buttons = el("div", { class: "seg", role: "radiogroup", "aria-label": "Model" }, result.models.map((m) =>
-    el("button", { type: "button", role: "radio", "aria-checked": String(m.model_id === WB.model), onclick: () => selectModel(m.model_id), text: m.label })));
+    el("button", { type: "button", role: "radio", "aria-checked": String(m.model_id === v.model), onclick: () => v.pickModel(m.model_id), text: m.label })));
   return el("div", { class: "model-pick" },
     el("h3", { text: "Model" }),
     buttons,
@@ -168,7 +173,7 @@ function modelPicker(bundle) {
 }
 
 // ---------- step 4: build ----------
-function curveChart(bundle, d) {
+function curveChart(bundle, d, v = WB) {
   const W = 460, H = 220, m = { t: 12, r: 12, b: 34, l: 44 };
   const x = (v) => m.l + v * (W - m.l - m.r);
   const y = (v) => H - m.b - v * (H - m.t - m.b);
@@ -185,9 +190,9 @@ function curveChart(bundle, d) {
   root.append(svg("line", { class: "ref", x1: x(0), y1: y(0), x2: x(1), y2: y(1) }));
   const refLabel = svg("text", { class: "axis", x: x(0.72), y: y(0.72) + 16 }); refLabel.textContent = "random"; root.append(refLabel);
   root.append(svg("path", { class: "line", d: points.map(([r, v], i) => `${i ? "L" : "M"}${x(r).toFixed(1)},${y(v).toFixed(1)}`).join(" ") }));
-  const cur = at(d, WB.reach);
-  root.append(svg("line", { class: "cursor", x1: x(WB.reach), x2: x(WB.reach), y1: m.t, y2: H - m.b }));
-  root.append(svg("circle", { class: "dot", cx: x(WB.reach), cy: y(cur.recall), r: 5 }));
+  const cur = at(d, v.reach);
+  root.append(svg("line", { class: "cursor", x1: x(v.reach), x2: x(v.reach), y1: m.t, y2: H - m.b }));
+  root.append(svg("circle", { class: "dot", cx: x(v.reach), cy: y(cur.recall), r: 5 }));
   root.append(svg("line", { class: "baseline", x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b }));
   for (const v of [0, 0.25, 0.5, 0.75, 1]) {
     const t = svg("text", { class: "axis", x: x(v), y: H - 16, "text-anchor": "middle" }); t.textContent = pct(v); root.append(t);
@@ -208,11 +213,11 @@ function curveChart(bundle, d) {
   return root;
 }
 
-function histogramChart(model, d) {
+function histogramChart(model, d, v = WB) {
   const probability = model.scale === "probability";
   const lo = probability ? 0 : -1, hi = 1, bins = 24;
   const counts = new Array(bins).fill(0);
-  const cut = d.scored[at(d, WB.reach).k - 1];
+  const cut = d.scored[at(d, v.reach).k - 1];
   const threshold = model.scores[cut];
   for (const i of d.scored) {
     const b = Math.min(bins - 1, Math.max(0, Math.floor(((model.scores[i] - lo) / (hi - lo)) * bins)));
@@ -247,9 +252,9 @@ function histogramChart(model, d) {
   return root;
 }
 
-function composition(bundle, d) {
+function composition(bundle, d, v = WB) {
   const b = bundle.dataset.breakdown;
-  const k = at(d, WB.reach).k;
+  const k = at(d, v.reach).k;
   const pool = new Array(b.values.length).fill(0), aud = new Array(b.values.length).fill(0);
   d.scored.forEach((idx, r) => { pool[b.codes[idx]]++; if (r < k) aud[b.codes[idx]]++; });
   const poolTotal = d.scored.length;
@@ -265,9 +270,9 @@ function composition(bundle, d) {
       el("span", { class: "comp-val num", text: `${pct(r.a)} · pool ${pct(r.p)}` }))));
 }
 
-function driversView(bundle, model) {
+function driversView(bundle, model, v = WB) {
   const grid = ["0.01", "0.05", "0.1", "0.2", "0.5"];
-  const nearest = grid.reduce((a, b) => (Math.abs(Number(b) - WB.reach) < Math.abs(Number(a) - WB.reach) ? b : a));
+  const nearest = grid.reduce((a, b) => (Math.abs(Number(b) - v.reach) < Math.abs(Number(a) - v.reach) ? b : a));
   const drivers = model.drivers[nearest];
   const max = Math.max(...drivers.map((x) => Math.abs(x.smd)), 0.5);
   return el("div", {},
@@ -283,12 +288,12 @@ function stat(label, value, note) {
   return el("div", { class: "stat" }, el("div", { class: "stat-label", text: label }), el("div", { class: "stat-value", text: value }), note ? el("div", { class: "stat-note", text: note }) : null);
 }
 
-function buildPanel(bundle) {
-  const result = bundle.results[WB.method];
+function buildPanel(bundle, v = WB) {
+  const result = bundle.results[v.method];
   if (!result) return null;
-  const model = result.models.find((m) => m.model_id === WB.model);
-  const d = derive(bundle, WB.method, model);
-  const p = at(d, WB.reach);
+  const model = result.models.find((m) => m.model_id === v.model);
+  const d = derive(bundle, v.method, model);
+  const p = at(d, v.reach);
   const abstained = Object.values(model.abstained).reduce((a, b) => a + b, 0);
   const tiles = [stat("Audience size", fmt(p.k), `${pct(p.k / d.poolSize, 1)} of ${fmt(d.poolSize)} in the pool`)];
   if (d.outcome) {
@@ -296,27 +301,28 @@ function buildPanel(bundle) {
     tiles.push(stat("Precision on held-out", p.precision === null ? "n/a" : pct(p.precision, 1), `base rate ${pct(model.evaluation.base_rate, 1)}`));
     tiles.push(stat("Model-estimated events", fmt(Math.round(p.expected)), `sum of estimated chances in the audience`));
   } else {
-    const what = WB.method === "semantic" ? "Relevant pages found" : "Held-out positives found";
+    const what = v.method === "semantic" ? "Relevant pages found" : "Held-out positives found";
     tiles.push(stat(what, `${fmt(p.hits)} of ${fmt(d.totalHits)}`, `${pct(p.recall)} · random ${pct(p.k / d.poolSize)}`));
     tiles.push(stat("Lift over random", p.lift ? `${p.lift.toFixed(1)}×` : "n/a", "recall ÷ reach"));
     tiles.push(stat("Abstained", fmt(abstained), "too little observed data to score"));
   }
-  const slider = el("input", { type: "range", id: "reach", min: "1", max: "50", step: "1", value: String(Math.round(WB.reach * 100)), "aria-describedby": "reach-out" });
-  const out = el("output", { id: "reach-out", for: "reach", text: pct(WB.reach) });
-  slider.addEventListener("input", () => { WB.reach = Number(slider.value) / 100; out.textContent = pct(WB.reach); renderBuild(true); });
+  const sid = v.sliderId || "reach";
+  const slider = el("input", { type: "range", id: sid, min: "1", max: "50", step: "1", value: String(Math.round(v.reach * 100)), "aria-describedby": `${sid}-out` });
+  const out = el("output", { id: `${sid}-out`, for: sid, text: pct(v.reach) });
+  slider.addEventListener("input", () => { v.reach = Number(slider.value) / 100; out.textContent = pct(v.reach); v.rerender(true); });
   const scaleNote = model.scale === "probability"
     ? "Scores are estimated chances from a model validated on held-out records."
     : "Scores are cosine resemblance, not probabilities.";
-  return card("4 · Build the audience", `Move the reach to trade size for quality. ${scaleNote}`,
-    el("div", { class: "reach" }, el("label", { for: "reach", text: "Reach" }), slider, out),
+  return card(`${v.steps.build} · Build the audience`, `Move the reach to trade size for quality. ${scaleNote}`,
+    el("div", { class: "reach" }, el("label", { for: sid, text: "Reach" }), slider, out),
     el("div", { class: "stats" }, tiles),
     el("div", { class: "charts" },
-      el("div", { class: "chart" }, el("h3", { text: WB.method === "semantic" ? "Relevant pages captured by reach" : "Held-out positives captured by reach" }), curveChart(bundle, d)),
-      el("div", { class: "chart" }, el("h3", { text: "Score distribution" }), histogramChart(model, d),
+      el("div", { class: "chart" }, el("h3", { text: v.method === "semantic" ? "Relevant pages captured by reach" : "Held-out positives captured by reach" }), curveChart(bundle, d, v)),
+      el("div", { class: "chart" }, el("h3", { text: "Score distribution" }), histogramChart(model, d, v),
         el("p", { class: "muted", text: "Bars in color are in the audience; the line marks the cut-off score." }))),
     el("div", { class: "charts" },
-      el("div", { class: "chart" }, el("h3", { text: `Composition by ${bundle.dataset.breakdown.label.toLowerCase()}` }), composition(bundle, d)),
-      el("div", { class: "chart" }, el("h3", { text: "What sets the audience apart" }), driversView(bundle, model))));
+      el("div", { class: "chart" }, el("h3", { text: `Composition by ${bundle.dataset.breakdown.label.toLowerCase()}` }), composition(bundle, d, v)),
+      el("div", { class: "chart" }, el("h3", { text: "What sets the audience apart" }), driversView(bundle, model, v))));
 }
 
 // ---------- step 5: export ----------
@@ -327,18 +333,18 @@ function download(name, text) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function exportPanel(bundle) {
-  const result = bundle.results[WB.method];
+function exportPanel(bundle, v = WB) {
+  const result = bundle.results[v.method];
   if (!result) return null;
-  const model = result.models.find((m) => m.model_id === WB.model);
-  const d = derive(bundle, WB.method, model);
-  const p = at(d, WB.reach);
+  const model = result.models.find((m) => m.model_id === v.model);
+  const d = derive(bundle, v.method, model);
+  const p = at(d, v.reach);
   const ds = bundle.dataset;
-  const idOf = (i) => `${ds.id_prefix}${String(i).padStart(ds.id_width, "0")}`;
+  const idOf = ds.keys ? (i) => ds.keys[i] : (i) => `${ds.id_prefix}${String(i).padStart(ds.id_width, "0")}`;
   const rowsDecision = bundle.decisions.export_rows.decision;
   const aggDecision = bundle.decisions.export_aggregate && bundle.decisions.export_aggregate.decision;
   const keyField = bundle.documents.source_profile.observation_units[0].key_field;
-  const file = `${ds.dataset_id}_${WB.method}_${WB.model}_${Math.round(WB.reach * 100)}pct`;
+  const file = `${ds.dataset_id}_${v.method}_${v.model}_${Math.round(v.reach * 100)}pct`;
   const actions = [];
   if (rowsDecision.verdict === "ELIGIBLE") {
     actions.push(el("button", { type: "button", class: "btn", onclick: () => {
@@ -355,14 +361,15 @@ function exportPanel(bundle) {
     actions.push(el("button", { type: "button", class: "btn", onclick: () => {
       const counts = new Array(ds.breakdown.values.length).fill(0);
       for (let r = 0; r < p.k; r++) counts[ds.breakdown.codes[d.scored[r]]]++;
-      const lines = [`${bundle.aggregate_rules.dimension},households`];
+      const lines = [`${bundle.aggregate_rules.dimension},${bundle.aggregate_rules.count_label || "households"}`];
       ds.breakdown.values.forEach((v, i) => lines.push(`${v},${counts[i] >= k ? counts[i] : `suppressed (<${k})`}`));
       download(`${file}_aggregate.csv`, lines.join("\n") + "\n");
     }, text: `Download aggregate report (cells under ${k} suppressed)` }));
   }
-  return card("5 · Export", "Exports are their own decisions. The file is generated in your browser from the precomputed scores; nothing is sent anywhere, and a real release would still need a named person's approval.",
+  const where = ds.keys ? "from the scores the server computed" : "from the precomputed scores";
+  return card(`${v.steps.export} · Export`, `Exports are their own decisions. The file is generated in your browser ${where}; nothing is sent anywhere, and a real release would still need a named person's approval.`,
     el("div", { class: "export-row" }, actions),
-    el("p", { class: "muted", text: `Row export verdict: ${rowsDecision.verdict} (decision ${rowsDecision.decision_id}). IDs are synthetic.` }));
+    el("p", { class: "muted", text: `Row export verdict: ${rowsDecision.verdict} (decision ${rowsDecision.decision_id}).${ds.keys ? "" : " IDs are synthetic."}` }));
 }
 
 // ---------- shell ----------
