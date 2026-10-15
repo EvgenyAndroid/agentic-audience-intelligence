@@ -1,4 +1,4 @@
-// Agentic Audiences demonstrator. Renders precomputed bundles from data/; nothing here decides anything.
+// Agentic Audience Intelligence demonstrator. Renders precomputed bundles from data/; nothing here decides anything.
 // All bundle content is inserted with textContent / DOM APIs, never as HTML.
 "use strict";
 
