@@ -2,7 +2,7 @@
   "bundle_format": "1.0.0",
   "evaluated_at": "2026-10-14T12:00:00Z",
   "engine_version": "0.1.0",
-  "engine_sha256": "sha256:b3634d58fc701c038739e3930a5dee7290f81e0cbd2dd31b06b00ffda7143813",
+  "engine_sha256": "sha256:f9d555e604a0bc0e4f58dfb617bf7c894dd0e4b8e48b95470d56791f4b513ad5",
   "disclosure": "Synthetic datasets. Every verdict, model, score and metric here was computed by the engine when the site was built; the page only filters those results. The data describes no real people, households, companies or places, and the metrics test software behavior, not real-world performance. Nothing is activated.",
   "datasets": [
     {
@@ -24,7 +24,7 @@
         "export_rows": "ELIGIBLE"
       },
       "file": "b2b_accounts.json",
-      "bundle_sha256": "sha256:b7889e8e085dada22e392a08ff5ed031b9688bd2bcde56be835aaa1c6541db62"
+      "bundle_sha256": "sha256:3fcb747e8cdd845fb9f4933b7a14050d17c7720d7ce39e28b9cbf299ea425aaf"
     },
     {
       "dataset_id": "geo_areas",
@@ -77,7 +77,7 @@
         "export_rows": "ELIGIBLE"
       },
       "file": "interest_segments.json",
-      "bundle_sha256": "sha256:2d01489691a23a4802cbb59979c2400b7a9f63bf33a107a7a2f05750ba2c78be"
+      "bundle_sha256": "sha256:c5c5e501ad4a73117ceab81076bc1296c4e88bb6486b931724bd95df876a76b7"
     },
     {
       "dataset_id": "acr_tv",
@@ -97,7 +97,7 @@
         "export_aggregate": "ELIGIBLE"
       },
       "file": "acr_tv.json",
-      "bundle_sha256": "sha256:8e42c9e38c5e48a20682a58af73ab9f7dfeef5dbc005daaa3dcdf506d1688d68"
+      "bundle_sha256": "sha256:a4b8db23a3c7b25888756ee4bd23586455aa90f7c99290b31fad8c8f57442897"
     },
     {
       "dataset_id": "web_app",
@@ -118,7 +118,7 @@
         "export_rows": "ELIGIBLE"
       },
       "file": "web_app.json",
-      "bundle_sha256": "sha256:28b08d508017f8ed75856c7f5c77e1a37d5c71e3bed8f0d75592488a1d894515"
+      "bundle_sha256": "sha256:0e25a755d0dd4fe960281229a67025898ad5ef572e3050e100dd9fb374c1a184"
     },
     {
       "dataset_id": "crm",

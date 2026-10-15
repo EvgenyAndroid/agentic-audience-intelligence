@@ -98,7 +98,9 @@ def generate(spec: DatasetSpec) -> Synthetic:
         index = np.zeros(n)
         for f in spec.behavior_features:
             index = index + _zscore(x[:, names.index(f)])
-        index = (index + _bell(rng, (n,))).round(STABLE_DECIMALS)
+        # The pattern depends mostly on intent the data never shows (noise 3x the signal), so act-alike models
+        # infer it from behavior rather than reading back the columns that define it.
+        index = (index + _bell(rng, (n,)) * 3.0).round(STABLE_DECIMALS)
         behavior = np.sort(np.argsort(-index)[: int(round(spec.behavior_share * n))])
 
     outcome = None
