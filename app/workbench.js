@@ -461,7 +461,7 @@ function expandCard(bundle) {
     return card("6 · Expand into a universe", "Postal areas are a closed set: every area is already in the dataset, so there are no new records to expand into.");
   }
   const shown = XW.method === WB.method && UNIVERSES.has(WB.dataset);
-  return card("6 · Expand into a universe", `Score ${fmt(entry.universe.rows)} new records, generated the same way as this dataset, with the models trained on it. On Your data, the universe is a second file you upload.`,
+  return card("6 · Expand into a universe", `This sample comes with a ready-made universe of ${fmt(entry.universe.rows)} new records, generated the same way as the dataset; nothing to upload. The models trained on the dataset score it. With your own data, you upload the universe yourself.`,
     el("div", { class: "export-row" }, el("button", {
       type: "button", class: shown ? "btn" : "btn btn--ghost", onclick: expandWorkbench,
       text: shown ? `Expanded · ${METHOD_SHORT[WB.method].toLowerCase()}` : `Expand ${METHOD_SHORT[WB.method].toLowerCase()}`,
