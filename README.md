@@ -9,10 +9,10 @@ This repository holds the specification and a working scaffold: normative JSON S
 | Check | Status | Evidence |
 | --- | --- | --- |
 | Schema meta-validation (38 files, JSON Schema 2020-12) | Passed (Linux; Windows in CI) | Session 2 record (34 files) in `reports/session2/` |
-| Valid examples and registry documents (82) | Passed (Linux; Windows in CI) | Session 2 record (76) in `reports/session2/conformance.json` |
+| Valid examples and registry documents (85) | Passed (Linux; Windows in CI) | Session 2 record (76) in `reports/session2/conformance.json` |
 | Invalid cases fail for the stated layer, keyword and path (75) | Passed (Linux; Windows in CI) | Session 2 record (54) in `reports/session2/conformance.json` |
-| Unit and contract tests (284) | Passed (Linux and Windows, Python 3.11 and 3.12, locked dependencies) | Session 2 record in `reports/session2/pytest-linux.xml` (195); tests added since in `tests/` |
-| Lint (ruff) and type check (mypy, 46 files) | Passed (Linux) | `reports/session2/README.md` |
+| Unit and contract tests (333) | Passed (Linux and Windows, Python 3.11 and 3.12, locked dependencies) | Session 2 record in `reports/session2/pytest-linux.xml` (195); tests added since in `tests/` |
+| Lint (ruff) and type check (mypy, 57 files) | Passed (Linux) | `reports/session2/README.md` |
 | AdCP adapter output against pinned AdCP 3.1.20 schemas | Passed (Linux) | `tests/test_representation_and_exchange.py` |
 | Rules router on the development routing suite (12 cases) | Passed by construction | Session 2 record (11 cases) in `reports/session2/routing_benchmark_development.json` |
 | Windows and PowerShell execution, CI | Passed (GitHub Actions `windows-latest`, Python 3.11 and 3.12) | `.github/workflows/ci.yml` runs `.\scripts\check-all.ps1` on every push |
@@ -88,11 +88,21 @@ Package modules:
 | `aip.monitoring` | Population stability index for post-release drift |
 | `aip.recommendation` | Deterministic recommendations over current task decisions, and an admissibility check |
 | `aip.demo` | Build-time demonstrator: routes `demo/scenarios` into static bundles for `app/` |
+| `aip.workbench` | Audience workbench: eight synthetic datasets, routed, modeled and evaluated on held-out data at build time |
 | `aip.evaluation` | Routing benchmark harness and metrics |
 
 ## Demonstrator
 
-`app/` is a static page that shows the engine's decisions on four synthetic scenarios: an ACR clean room, a web look-alike, URL content and a new source in quarantine. It answers what each dataset can be used for, task by task, with the reasons, what would unlock each task, a deterministic recommendation, synthetic look-alike results with their abstention denominators, and a stored trace.
+`app/` has two modes.
+
+**Build an audience** (the workbench, ADR 0005) covers eight generated datasets: B2B accounts, geography, demographic and firmographic, interest and behavioral segments, TV viewing (ACR), web and app events, first-party CRM and page content. For each one you see an assessment of what the data is and what it supports, the router's verdict on every method (look-alike, act-alike, propensity, your registered model, contextual), a recommended method and a recommended model compared on held-out records, and a reach slider that trades audience size against held-out quality, with composition and feature drivers. Export is its own decision: row files download where the policy permits; the clean room only releases an aggregate report with small cells suppressed. Evidence facts (coverage, label counts, sensitive-attribute screening) are computed from the generated data, so the B2B propensity task stays PROVISIONAL with too few labels, and the inferred health attribute never reaches a model.
+
+```powershell
+aip workbench-build --out app\data\workbench          # rebuild after changing the engine or the dataset specs
+aip workbench-build --out app\data\workbench --check  # floats compared within 2e-3 across platforms
+```
+
+**How the router decides** shows the engine's decisions on four synthetic scenarios: an ACR clean room, a web look-alike, URL content and a new source in quarantine. It answers what each dataset can be used for, task by task, with the reasons, what would unlock each task, a deterministic recommendation, synthetic look-alike results with their abstention denominators, and a stored trace.
 
 Nothing runs while a visitor browses. `aip demo-build` routes the scenarios in `demo/scenarios/` through the real router, recommender and baselines, and writes versioned bundles to `app/data/`. Each bundle records its evaluation time (from `demo/build.json`), the engine version and source hash, and the hash of every input. `tests/test_demo.py` fails when the committed bundles differ from a fresh build, so any engine change must ship with rebuilt bundles.
 

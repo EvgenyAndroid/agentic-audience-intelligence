@@ -89,7 +89,7 @@ Work inside this repository. Attach or read the v3.1 prompt, BRD, PRD Revision 3
 
 ## Demonstrator
 
-`app/` is a static demonstrator built from `demo/scenarios` by `aip demo-build`. Bundles are computed at build time with a fixed evaluation time, carry input and engine hashes, and are checked against a fresh build in CI. Synthetic results test software behavior only. Hosting target: Cloudflare Pages (no build command, output directory `app`). The real-data path will add a thin API over the same contracts; the page must then label live results separately from precomputed ones.
+`app/` is a static demonstrator with two modes. "Build an audience" reads the workbench bundles that `aip workbench-build` writes for eight synthetic datasets (`aip.workbench`); "How the router decides" reads the scenario bundles that `aip demo-build` writes from `demo/scenarios`. Bundles are computed at build time with a fixed evaluation time, carry engine and snapshot hashes, and are checked against a fresh build in CI. Synthetic results test software behavior only. Hosting: Cloudflare Pages at audiences.nofluffadvisory.com (no build command, output directory `app`). Uploads, a reasoning-agent assessment and live builds come with the server API described in ADR 0005; the page must then label live results separately from precomputed ones.
 
 ## Decisions still needed for a real pilot
 

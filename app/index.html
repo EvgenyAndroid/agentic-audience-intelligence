@@ -7,6 +7,7 @@
   <meta name="description" content="A demonstrator of the Agentic Audience Intelligence engine: one dataset, many tasks, each with its own verdict.">
   <link rel="stylesheet" href="app.css">
   <script src="app.js" defer></script>
+  <script src="workbench.js" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -24,9 +25,17 @@
       <p class="disclosure-meta" id="disclosure-meta"></p>
     </section>
 
-    <nav class="scenario-tabs" id="scenario-tabs" role="tablist" aria-label="Scenarios"></nav>
+    <nav class="mode-tabs" id="mode-tabs" role="tablist" aria-label="Mode">
+      <button type="button" role="tab" data-mode="build" aria-selected="true">Build an audience</button>
+      <button type="button" role="tab" data-mode="decide" aria-selected="false">How the router decides</button>
+    </nav>
 
-    <article id="scenario" aria-live="polite"></article>
+    <section id="build" aria-live="polite"></section>
+
+    <section id="decide" hidden>
+      <nav class="scenario-tabs" id="scenario-tabs" role="tablist" aria-label="Scenarios"></nav>
+      <article id="scenario" aria-live="polite"></article>
+    </section>
   </main>
 
   <footer class="footer">
