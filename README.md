@@ -120,7 +120,7 @@ Hosting on Cloudflare Pages: create a Pages project from this repository with no
 
 ## Upload API (stage B)
 
-ADR 0005's stage B: upload a CSV, confirm what it holds, have the router decide every method, then train and score each ELIGIBLE method on the file.
+ADR 0005's stage B: upload a CSV, confirm what it holds, have the router decide every method, then train and score each ELIGIBLE method on the file and expand it into a universe of new records.
 
 | Endpoint | Does |
 | --- | --- |
@@ -128,6 +128,8 @@ ADR 0005's stage B: upload a CSV, confirm what it holds, have the router decide 
 | `POST /v1/datasets/{id}/assess` | Takes the confirmation: record type, roles, behavior signals, sensitive and excluded columns, observation period, and two attestations (rights to use the data, feature timing). Returns the rule-based assessment. |
 | `POST /v1/datasets/{id}/route` | Builds the contract documents and decides every task (each method plus row export, or aggregate export in a clean room); returns the bundle in the workbench's shape. |
 | `POST /v1/datasets/{id}/build/{method}` | Trains and scores one ELIGIBLE method (`lookalike`, `actalike` or `propensity`) on the upload, compares candidate models on held-out records and recommends one; returns the result in the workbench's shape (curves, histogram, composition, drivers, scores keyed by your own IDs). Refused with 409 unless the route decided the method ELIGIBLE. |
+| `POST /v1/datasets/{id}/universe?rights_attested=true` | Takes a second CSV of new records (prospects, a partner extract) with the upload's key and model feature columns. Refused without the rights attestation. |
+| `POST /v1/datasets/{id}/expand/{method}` | Scores the universe with an ELIGIBLE method's candidate models, fit on the upload exactly as the build fits them; records already positive in the upload are left out. The universe has no labels, so the upload's held-out evaluation is the expected quality. |
 | `GET` / `DELETE /v1/datasets/{id}` | Reads or deletes an upload and everything derived from it. |
 | `GET /v1/record-types` | The record types an upload can declare. |
 

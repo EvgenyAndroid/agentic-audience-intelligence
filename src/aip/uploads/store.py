@@ -70,8 +70,15 @@ class Store:
         self.write(tenant_id, dataset_id, "meta", {**meta, **stamps}, create=True)
         return dataset_id
 
-    def raw(self, tenant_id: str, dataset_id: str) -> bytes:
-        return (self._dir(tenant_id, dataset_id) / "raw.csv").read_bytes()
+    def raw(self, tenant_id: str, dataset_id: str, name: str = "raw") -> bytes:
+        path = self._dir(tenant_id, dataset_id) / f"{name}.csv"
+        if not path.is_file():
+            raise NotFound(dataset_id)
+        return path.read_bytes()
+
+    def put_raw(self, tenant_id: str, dataset_id: str, name: str, raw: bytes) -> None:
+        """Another file kept with an upload (a universe to expand into); deleted with it."""
+        (self._dir(tenant_id, dataset_id) / f"{name}.csv").write_bytes(raw)
 
     def read(self, tenant_id: str, dataset_id: str, name: str) -> dict[str, Any] | None:
         path = self._dir(tenant_id, dataset_id) / f"{name}.json"

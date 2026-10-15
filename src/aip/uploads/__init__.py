@@ -510,6 +510,83 @@ def tenant_policies(tenant_id: str, now: datetime) -> list[dict[str, Any]]:
     return out
 
 
+@dataclass(frozen=True)
+class Universe:
+    """New records to expand into: the uploaded file's key and model features, read in the upload's order."""
+
+    keys: tuple[str, ...]
+    x: np.ndarray  # one column per feature of the upload; sensitive features are never read (all unknown)
+    breakdown: np.ndarray | None  # codes into the upload's breakdown values, when the universe has that column
+
+
+def read_universe(prep: Prepared, table: Table) -> Universe:
+    """Read a universe file against a confirmed upload. It needs the upload's key column and every feature a
+    model may use, by the same names; any other column is ignored."""
+    spec, conf = prep.spec, prep.confirmation
+    index = {c: j for j, c in enumerate(table.columns)}
+    used = [f for f in spec.features if not f.sensitive]
+    missing = [name for name in (conf.key_column, *(f.name for f in used)) if name not in index]
+    if missing:
+        raise UploadError("The universe file is missing columns the models need: " + ", ".join(missing) + ".")
+    keys = tuple(row[index[conf.key_column]] for row in table.rows)
+    if any(k.lower() in NULLS for k in keys) or len(set(keys)) != len(keys):
+        raise UploadError(f"The key column '{conf.key_column}' must be present and distinct on every universe row.")
+
+    def numeric(name: str, binary: bool) -> np.ndarray:
+        out = np.full(len(table.rows), np.nan)
+        for i, row in enumerate(table.rows):
+            cell = row[index[name]]
+            low = cell.lower()
+            if low in NULLS:
+                continue
+            if binary and low in TRUE | FALSE:
+                out[i] = 1.0 if low in TRUE else 0.0
+                continue
+            value = _number(cell)
+            if value is None:
+                raise UploadError(f"Universe column '{name}' has a value that is not a number: '{cell[:40]}'.")
+            out[i] = value
+        return out
+
+    x = np.column_stack(
+        [
+            np.full(len(table.rows), np.nan) if f.sensitive else numeric(f.name, f.kind == "binary")
+            for f in spec.features
+        ]
+    )
+    breakdown = None
+    if conf.breakdown_column and conf.breakdown_column in index:
+        values = spec.breakdown_values
+        other = values.index("Unknown") if "Unknown" in values else None
+        codes = [
+            values.index(c) if c in values else other for c in (r[index[conf.breakdown_column]] for r in table.rows)
+        ]
+        if all(c is not None for c in codes):
+            breakdown = np.array(codes, dtype=int)
+    return Universe(keys, x, breakdown)
+
+
+def expand(prep: Prepared, table: Table, universe: Universe, method: str) -> dict[str, Any]:
+    """Score a universe with one method's candidate models, fit on the upload exactly as `build` fits them.
+    Universe records already positive in the upload (a seed, the behavior pattern, the outcome) are left out.
+    The caller checks that the router made the method ELIGIBLE and that the universe's rights are attested."""
+    if method not in prep.spec.methods or method not in MODELED_METHODS:
+        raise UploadError(f"'{method}' is not a method this upload supports.")
+    key_index = table.columns.index(prep.confirmation.key_column)
+    upload_keys = [row[key_index] for row in table.rows]
+    data = prep.data
+    if method == "lookalike":
+        positive = {upload_keys[i] for i in data.seed}
+    elif method == "actalike":
+        positive = {upload_keys[i] for i in data.behavior}
+    else:
+        assert data.outcome is not None
+        positive = {k for k, y in zip(upload_keys, data.outcome, strict=True) if y}
+    exclude = np.array([k in positive for k in universe.keys], dtype=bool)
+    result = wb_methods.expand(data, method, universe.x, exclude)
+    return {"rows": len(universe.keys), **result}
+
+
 def route(prep: Prepared, table: Table, *, tenant_id: str, now: datetime, ttl_hours: float = 24.0) -> dict[str, Any]:
     """Decide every task for an uploaded dataset and rank the methods; the same bundle shape as the workbench,
     without modeling results (a later slice trains and scores eligible methods)."""

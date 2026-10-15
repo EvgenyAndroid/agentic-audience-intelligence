@@ -198,3 +198,43 @@ def test_build_scores_an_eligible_method_and_stores_it(client: TestClient) -> No
     stored = client.get(f"/v1/datasets/{dataset_id}", headers=auth()).json()["bundle"]
     assert set(stored["results"]) == {"propensity"}
     assert client.post(f"/v1/datasets/{dataset_id}/build/lookalike", headers=auth(KEY_B)).status_code == 404
+
+
+def put_universe(client: TestClient, dataset_id: str, *, attested: bool = True, key: str = KEY_A) -> Any:
+    flag = "true" if attested else "false"
+    return client.post(
+        f"/v1/datasets/{dataset_id}/universe?rights_attested={flag}",
+        content=make_csv(800, rng_seed=5).replace(b"\nc", b"\nu"),
+        headers={**auth(key), "Content-Type": "text/csv"},
+    )
+
+
+def test_universe_needs_a_confirmation_and_an_attestation(client: TestClient) -> None:
+    dataset_id = upload(client)
+    assert put_universe(client, dataset_id).status_code == 409
+    dataset_id = routed(client)
+    r = put_universe(client, dataset_id, attested=False)
+    assert r.status_code == 422 and "right to use" in r.json()["detail"]
+    r = put_universe(client, dataset_id)
+    assert r.status_code == 201 and r.json()["rows"] == 800 and r.json()["breakdown"] is True
+
+
+def test_expand_needs_a_universe_and_an_eligible_method(client: TestClient) -> None:
+    dataset_id = routed(client)
+    assert client.post(f"/v1/datasets/{dataset_id}/expand/lookalike", headers=auth()).status_code == 409
+    provisional = routed(client, timing_attested=False)
+    assert put_universe(client, provisional).status_code == 201
+    r = client.post(f"/v1/datasets/{provisional}/expand/lookalike", headers=auth())
+    assert r.status_code == 409 and "PROVISIONAL" in r.json()["detail"]
+
+
+def test_expand_scores_the_universe_for_every_modeled_method(client: TestClient) -> None:
+    dataset_id = routed(client)
+    assert put_universe(client, dataset_id).status_code == 201
+    for method in ("lookalike", "actalike", "propensity"):
+        r = client.post(f"/v1/datasets/{dataset_id}/expand/{method}", headers=auth())
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert body["keys"][0] == "u00000" and len(body["breakdown_codes"]) == 800
+        assert len(body["result"]["models"]) == 2 and len(body["result"]["models"][0]["scores"]) == 800
+    assert client.post(f"/v1/datasets/{dataset_id}/expand/lookalike", headers=auth(KEY_B)).status_code == 404

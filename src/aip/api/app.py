@@ -10,6 +10,11 @@ Endpoints (all under /v1, all requiring ``Authorization: Bearer <invite key>``):
   POST   /v1/datasets/{id}/build/{method}
                                     Trains and scores one ELIGIBLE method; returns its models, held-out
                                     evaluation and the recommended model.
+  POST   /v1/datasets/{id}/universe?rights_attested=true
+                                    body: a second CSV of new records with the same key and feature columns.
+                                    Kept with the upload, to expand audiences into.
+  POST   /v1/datasets/{id}/expand/{method}
+                                    Scores the universe with an ELIGIBLE method's models, fit on the upload.
   GET    /v1/datasets/{id}          The stored profile, confirmation and bundle, if any.
   DELETE /v1/datasets/{id}          Deletes the upload and everything derived from it.
   GET    /v1/record-types           Record types an upload can declare.
@@ -224,6 +229,63 @@ def create_app(
         bundle["results"][method] = result
         store.write(tenant_id, dataset_id, "bundle", bundle)
         return {"dataset_id": dataset_id, "method": method, "result": result}
+
+    def prepared(tenant_id: str, dataset_id: str) -> tuple[uploads.Prepared, uploads.Table]:
+        confirmation = load(tenant_id, dataset_id, "confirmation")
+        if confirmation is None:
+            raise HTTPException(409, "Confirm the dataset (POST .../assess) first.")
+        parsed = table(tenant_id, dataset_id)
+        return uploads.prepare(parsed, ConfirmationIn(**confirmation).to_confirmation(), dataset_id), parsed
+
+    @app.post("/v1/datasets/{dataset_id}/universe", status_code=201)
+    async def universe(
+        dataset_id: str, request: Request, tenant_id: Tenant, rights_attested: bool = False
+    ) -> dict[str, Any]:
+        if not rights_attested:
+            raise HTTPException(422, "Attest that you have the right to use the universe for this purpose.")
+        declared = request.headers.get("content-length")
+        if declared and declared.isdigit() and int(declared) > uploads.MAX_BYTES:
+            raise HTTPException(413, f"The file is larger than {uploads.MAX_BYTES // (1024 * 1024)} MB.")
+        prep, _ = prepared(tenant_id, dataset_id)
+        raw = await request.body()
+        parsed = uploads.parse_csv(raw)
+        read = uploads.read_universe(prep, parsed)
+        meta = {
+            "rows": len(read.keys),
+            "byte_count": parsed.byte_count,
+            "sha256": parsed.sha256,
+            "breakdown": read.breakdown is not None,
+            "rights_attested": True,
+            "uploaded_at": format_ts(now()),
+        }
+        store.put_raw(tenant_id, dataset_id, "universe", raw)
+        store.write(tenant_id, dataset_id, "universe", meta)
+        return meta
+
+    @app.post("/v1/datasets/{dataset_id}/expand/{method}")
+    def expand(dataset_id: str, method: str, tenant_id: Tenant) -> dict[str, Any]:
+        bundle = load(tenant_id, dataset_id, "bundle")
+        if bundle is None:
+            raise HTTPException(409, "Route the dataset (POST .../route) before expanding an audience.")
+        entry = bundle["decisions"].get(method)
+        if entry is None or entry["role"] != "method":
+            raise HTTPException(404, f"No method '{method}' for this dataset.")
+        if entry["decision"]["verdict"] != "ELIGIBLE":
+            raise HTTPException(409, f"The router has not made '{method}' ELIGIBLE ({entry['decision']['verdict']}).")
+        meta = load(tenant_id, dataset_id, "universe")
+        if meta is None or not meta.get("rights_attested"):
+            raise HTTPException(409, "Upload a universe (POST .../universe) before expanding into it.")
+        prep, parsed = prepared(tenant_id, dataset_id)
+        read = uploads.read_universe(prep, uploads.parse_csv(store.raw(tenant_id, dataset_id, "universe")))
+        result = uploads.expand(prep, parsed, read, method)
+        return {
+            "dataset_id": dataset_id,
+            "method": method,
+            "universe": meta,
+            "keys": list(read.keys),
+            "breakdown_codes": None if read.breakdown is None else [int(c) for c in read.breakdown],
+            "result": result,
+        }
 
     @app.delete("/v1/datasets/{dataset_id}", status_code=204)
     def delete(dataset_id: str, tenant_id: Tenant) -> None:

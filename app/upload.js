@@ -29,8 +29,17 @@ const UV = {
   rerender: (keepScroll) => renderUpload(keepScroll),
   pickModel: (id) => { UV.model = id; renderUpload(true); },
 };
+// The expansion view: the same models, scoring a second file of new records (the universe).
+const XV = {
+  method: null, model: null, reach: 0.1, sliderId: "up-xreach", steps: { build: "10", export: "11" },
+  rerender: (keepScroll) => renderUpload(keepScroll, XV),
+  pickModel: (id) => { XV.model = id; renderUpload(true, XV); },
+};
 const MODELED = ["lookalike", "actalike", "propensity"];
-const UP = { key: "", types: [], termsAccepted: false, meta: null, confirmation: null, assessment: null, bundle: null, busy: false, error: null };
+const UP = {
+  key: "", types: [], termsAccepted: false, meta: null, confirmation: null, assessment: null, bundle: null,
+  universe: null, universeRights: false, expansions: {}, busy: false, error: null,
+};
 
 function readKey() { try { return sessionStorage.getItem("aai-key") || ""; } catch (_) { return ""; } }
 function saveKey(key) { try { sessionStorage.setItem("aai-key", key); } catch (_) { /* storage unavailable */ } }
@@ -80,7 +89,7 @@ function uploadCard() {
     if (!chosen) throw new Error("Choose a CSV file first.");
     if (!UP.termsAccepted) throw new Error("Accept the data terms first.");
     UP.meta = await api("/v1/datasets", { method: "POST", headers: { "Content-Type": "text/csv" }, body: chosen });
-    UP.confirmation = null; UP.assessment = null; UP.bundle = null;
+    UP.confirmation = null; UP.assessment = null; UP.bundle = null; UP.universe = null; UP.expansions = {}; XV.method = null;
   });
   const upload = el("button", { type: "button", class: "btn", onclick: send, disabled: UP.busy || !UP.termsAccepted, text: "Upload" });
   const children = [
@@ -192,7 +201,7 @@ function confirmCard() {
       UP.confirmation = body;
       UP.assessment = (await api(`/v1/datasets/${id}/assess`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).assessment;
       UP.bundle = await api(`/v1/datasets/${id}/route`, { method: "POST" });
-      UV.method = null;
+      UV.method = null; UP.expansions = {}; XV.method = null;
     });
   });
   return card("3 · Confirm what the file holds", "Suggested from column names and kinds; check every choice. You act as the data steward here, and the router treats these answers as the source contract.", form);
@@ -266,6 +275,7 @@ function decisionsCard() {
   const remove = () => run(async () => {
     await api(`/v1/datasets/${UP.meta.dataset_id}`, { method: "DELETE" });
     UP.meta = null; UP.confirmation = null; UP.assessment = null; UP.bundle = null; UV.method = null;
+    UP.universe = null; UP.expansions = {}; XV.method = null;
   });
   return card("5 · What this data may be used for", "Decided by the same router as the workbench, from the evidence you supplied. Build an eligible method to train and score it on your file.",
     list,
@@ -274,7 +284,117 @@ function decisionsCard() {
       el("button", { type: "button", class: "btn btn--ghost", onclick: remove, disabled: UP.busy, text: "Delete this upload now" })));
 }
 
-function renderUpload(keepScroll) {
+// ---------- 9-11 · expand into a universe ----------
+function eligibleModeled() {
+  return MODELED.filter((m) => UP.bundle.decisions[m] && UP.bundle.decisions[m].decision.verdict === "ELIGIBLE");
+}
+
+function expandMethod(method) {
+  return run(async () => {
+    const id = UP.meta.dataset_id;
+    if (!UP.bundle.results[method]) {
+      const { result } = await api(`/v1/datasets/${id}/build/${method}`, { method: "POST" });
+      UP.bundle.results[method] = result;
+    }
+    if (!UV.method) { UV.method = method; UV.model = UP.bundle.results[method].recommended.model_id; UV.reach = 0.1; }
+    const body = await api(`/v1/datasets/${id}/expand/${method}`, { method: "POST" });
+    UP.expansions[method] = body;
+    for (const key of [...WB.cache.keys()]) if (key.startsWith(`${id}/universe/${method}/`)) WB.cache.delete(key);
+    XV.method = method; XV.model = UP.bundle.results[method].recommended.model_id; XV.reach = 0.1;
+  });
+}
+
+function universeCard() {
+  const b = UP.bundle;
+  const features = Object.keys(b.dataset.feature_labels).filter((f) => !(UP.confirmation.sensitive_columns || []).includes(f));
+  const file = el("input", { type: "file", id: "up-universe", accept: ".csv,text/csv" });
+  const send = el("button", { type: "button", class: "btn", disabled: UP.busy || !UP.universeRights, text: "Upload universe", onclick: () => run(async () => {
+    const chosen = file.files && file.files[0];
+    if (!chosen) throw new Error("Choose the universe CSV first.");
+    UP.universe = await api(`/v1/datasets/${UP.meta.dataset_id}/universe?rights_attested=true`,
+      { method: "POST", headers: { "Content-Type": "text/csv" }, body: chosen });
+    UP.expansions = {}; XV.method = null;
+  }) });
+  const children = [
+    el("p", { class: "muted", text: `A second CSV of new records to expand into: prospects, a data partner's extract, a wider customer base. It needs the key column (${UP.confirmation.key_column}) and these columns, by the same names: ${features.join(", ")}. The models trained on your file score every record; records already positive in your file are left out.` }),
+    el("div", { class: "form-row" }, el("label", { for: "up-universe", text: "Universe CSV" }), file, send),
+    el("label", { class: "check terms-check" },
+      el("input", { type: "checkbox", id: "up-universe-rights", checked: UP.universeRights, onchange: (e) => { UP.universeRights = e.target.checked; send.disabled = UP.busy || !UP.universeRights; } }),
+      el("span", {}, "I have the right to use these records for this audience, under the same ", el("a", { href: "terms.html", target: "_blank", rel: "noopener", text: "data terms" }), ".")),
+  ];
+  if (UP.universe) {
+    const u = UP.universe;
+    children.push(
+      el("p", { class: "upload-meta" }, el("strong", { text: `Universe: ${fmt(u.rows)} records` }),
+        ` · ${u.breakdown ? `with ${b.dataset.breakdown.label.toLowerCase()}` : `no ${b.dataset.breakdown.label.toLowerCase()} column`} · ${u.sha256.slice(7, 19)}`),
+      el("div", { class: "export-row" }, eligibleModeled().map((m) => el("button", {
+        type: "button", class: XV.method === m ? "btn" : "btn btn--ghost", disabled: UP.busy,
+        onclick: () => (UP.expansions[m] && XV.method !== m
+          ? (XV.method = m, XV.model = b.results[m].recommended.model_id, XV.reach = 0.1, renderUpload(false))
+          : expandMethod(m)),
+        text: `${UP.expansions[m] ? (XV.method === m ? "Expanded · rerun" : "Show") : "Expand"} ${METHOD_SHORT[m].toLowerCase()}`,
+      }))));
+  }
+  return card("9 · Expand into a universe", "Score new records with the models trained on your file, for any eligible method.", ...children);
+}
+
+// The universe as a bundle the workbench panels can read: its keys and scores, the upload's decisions.
+function universeBundle(method) {
+  const x = UP.expansions[method];
+  const ds = UP.bundle.dataset;
+  const codes = x.breakdown_codes || new Array(x.keys.length).fill(0);
+  const breakdown = x.breakdown_codes ? { ...ds.breakdown, codes } : { label: "Records", values: ["All records"], codes };
+  return {
+    ...UP.bundle,
+    dataset: { ...ds, dataset_id: `${ds.dataset_id}/universe`, keys: x.keys, breakdown },
+    results: { [method]: { heldout: [], models: x.result.models } },
+  };
+}
+
+function expansionPanel() {
+  const m = XV.method;
+  const built = UP.bundle.results[m];
+  const ub = universeBundle(m);
+  const model = ub.results[m].models.find((x) => x.model_id === XV.model);
+  const d = derive(ub, m, model);
+  const p = at(d, XV.reach);
+  const onFile = derive(UP.bundle, m, built.models.find((x) => x.model_id === XV.model));
+  const expected = at(onFile, XV.reach);
+  const x = UP.expansions[m];
+  const abstained = Object.values(model.abstained).reduce((a, b) => a + b, 0);
+  const tiles = [stat("Audience size", fmt(p.k), `${pct(p.k / d.poolSize, 1)} of ${fmt(d.poolSize)} scored in the universe`)];
+  if (m === "propensity") {
+    let events = 0;
+    for (let r = 0; r < p.k; r++) events += model.scores[d.scored[r]];
+    tiles.push(stat("Model-estimated events", fmt(Math.round(events)), "sum of estimated chances in the audience"));
+    tiles.push(stat("Expected precision", expected.precision === null ? "n/a" : pct(expected.precision, 1), `on your held-out records at this reach; base rate ${pct(built.models[0].evaluation.base_rate, 1)}`));
+  } else {
+    const positives = built.fit_count + built.heldout.length;
+    tiles.push(stat("Versus your list", `${(p.k / positives).toFixed(1)}×`, `the ${fmt(positives)} records it was modeled on`));
+    tiles.push(stat("Expected lift", expected.lift ? `${expected.lift.toFixed(1)}×` : "n/a", `on your held-out records at this reach (${pct(expected.recall)} found)`));
+  }
+  tiles.push(stat("Left out", fmt(x.result.excluded + abstained), `${fmt(x.result.excluded)} already positive in your file, ${fmt(abstained)} too little data`));
+  const sid = XV.sliderId;
+  const slider = el("input", { type: "range", id: sid, min: "1", max: "50", step: "1", value: String(Math.round(XV.reach * 100)), "aria-describedby": `${sid}-out` });
+  const out = el("output", { id: `${sid}-out`, for: sid, text: pct(XV.reach) });
+  slider.addEventListener("input", () => { XV.reach = Number(slider.value) / 100; out.textContent = pct(XV.reach); XV.rerender(true); });
+  const charts = [
+    el("div", { class: "chart" }, el("h3", { text: "Expected quality: held-out positives captured on your file" }), curveChart(UP.bundle, onFile, XV),
+      el("p", { class: "muted", text: "The universe has no labels, so its quality cannot be measured directly; this is how the same model did on records it never saw." })),
+    el("div", { class: "chart" }, el("h3", { text: "Universe score distribution" }), histogramChart(model, d, XV),
+      el("p", { class: "muted", text: "Bars in color are in the audience; the line marks the cut-off score." })),
+  ];
+  const lower = [el("div", { class: "chart" }, el("h3", { text: "What sets the audience apart" }), driversView(ub, model, XV))];
+  if (x.breakdown_codes) lower.unshift(el("div", { class: "chart" }, el("h3", { text: `Composition by ${ub.dataset.breakdown.label.toLowerCase()}` }), composition(ub, d, XV)));
+  return card(`${XV.steps.build} · The expanded audience`, `${UP.bundle.decisions[m].label}, scored on ${fmt(x.universe.rows)} new records. Move the reach to trade size for quality.`,
+    modelPicker(UP.bundle, XV),
+    el("div", { class: "reach" }, el("label", { for: sid, text: "Reach" }), slider, out),
+    el("div", { class: "stats" }, tiles),
+    el("div", { class: "charts" }, charts),
+    el("div", { class: "charts" }, lower));
+}
+
+function renderUpload(keepScroll, view = UV) {
   const root = document.getElementById("upload");
   const y = window.scrollY;
   const sections = [keyCard()];
@@ -286,11 +406,15 @@ function renderUpload(keepScroll) {
   if (UP.bundle && UV.method && UP.bundle.results[UV.method]) {
     sections.push(modelCard(), buildPanel(UP.bundle, UV), exportPanel(UP.bundle, UV));
   }
+  if (UP.bundle && eligibleModeled().length) sections.push(universeCard());
+  if (UP.bundle && XV.method && UP.expansions[XV.method]) {
+    sections.push(expansionPanel(), exportPanel(universeBundle(XV.method), XV));
+  }
   root.setAttribute("aria-busy", String(UP.busy));
   root.replaceChildren(...sections);
   if (keepScroll) {
     window.scrollTo(0, y);
-    const slider = document.getElementById(UV.sliderId);
+    const slider = document.getElementById(view.sliderId);
     if (slider) slider.focus({ preventScroll: true });
   }
 }
