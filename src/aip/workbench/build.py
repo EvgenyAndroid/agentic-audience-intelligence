@@ -8,6 +8,7 @@ engine. A future server API (ADR 0005) returns the same bundle shape on request 
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -233,6 +234,31 @@ def build_dataset(spec: DatasetSpec, world: DocumentIndex, now: datetime, ttl_ho
     }
 
 
+UNIVERSE_SEED_OFFSET = 7919
+# Postal areas are a closed set: there are no new ones to expand into.
+CLOSED_UNITS = frozenset({"postal_code"})
+
+
+def build_universe(spec: DatasetSpec, results: dict[str, Any]) -> dict[str, Any] | None:
+    """A universe of new records generated like the dataset (another seed, the same size), scored by every
+    method's models as fit on the dataset. Like an uploaded universe it has no labels on the page: the dataset's
+    held-out evaluation is shown as the expected quality."""
+    if spec.unit.type_id in CLOSED_UNITS or not results:
+        return None
+    data = generate(spec)
+    universe = generate(replace(spec, rng_seed=spec.rng_seed + UNIVERSE_SEED_OFFSET))
+    none = np.zeros(spec.n, dtype=bool)
+    return {
+        "bundle_format": BUNDLE_FORMAT,
+        "dataset_id": spec.dataset_id,
+        "rows": spec.n,
+        "id_prefix": f"{spec.unit.id_prefix}u",
+        "id_width": 6,
+        "breakdown_codes": [int(v) for v in universe.breakdown],
+        "expansions": {m: methods.expand(data, m, universe.x, none) for m in results},
+    }
+
+
 def build_workbench(out_dir: Path, *, now: datetime, ttl_hours: float) -> list[Path]:
     root = paths.repo_root()
     world = _world()
@@ -259,6 +285,14 @@ def build_workbench(out_dir: Path, *, now: datetime, ttl_hours: float) -> list[P
             json.dumps(bundle, ensure_ascii=False, allow_nan=False, separators=(",", ":")) + "\n", encoding="utf-8"
         )
         written.append(path)
+        universe = build_universe(spec, bundle["results"])
+        if universe is not None:
+            universe_path = out_dir / f"{spec.dataset_id}.universe.json"
+            universe_path.write_text(
+                json.dumps(universe, ensure_ascii=False, allow_nan=False, separators=(",", ":")) + "\n",
+                encoding="utf-8",
+            )
+            written.append(universe_path)
         verdicts = {k: v["decision"]["verdict"] for k, v in bundle["decisions"].items()}
         entries.append(
             {
@@ -271,6 +305,7 @@ def build_workbench(out_dir: Path, *, now: datetime, ttl_hours: float) -> list[P
                 "methods": list(spec.methods),
                 "verdicts": verdicts,
                 "file": f"{spec.dataset_id}.json",
+                "universe": {"file": f"{spec.dataset_id}.universe.json", "rows": spec.n} if universe else None,
                 "bundle_sha256": bundle["manifest"]["bundle_sha256"],
             }
         )

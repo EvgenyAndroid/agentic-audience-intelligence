@@ -341,60 +341,10 @@ function universeCard() {
   return card("9 · Expand into a universe", "Score new records with the models trained on your file, for any eligible method.", ...children);
 }
 
-// The universe as a bundle the workbench panels can read: its keys and scores, the upload's decisions.
-function universeBundle(method) {
+// An expansion in the shape the shared expansion panel reads (see expansionPanel in workbench.js).
+function uploadExpansion(method) {
   const x = UP.expansions[method];
-  const ds = UP.bundle.dataset;
-  const codes = x.breakdown_codes || new Array(x.keys.length).fill(0);
-  const breakdown = x.breakdown_codes ? { ...ds.breakdown, codes } : { label: "Records", values: ["All records"], codes };
-  return {
-    ...UP.bundle,
-    dataset: { ...ds, dataset_id: `${ds.dataset_id}/universe`, keys: x.keys, breakdown },
-    results: { [method]: { heldout: [], models: x.result.models } },
-  };
-}
-
-function expansionPanel() {
-  const m = XV.method;
-  const built = UP.bundle.results[m];
-  const ub = universeBundle(m);
-  const model = ub.results[m].models.find((x) => x.model_id === XV.model);
-  const d = derive(ub, m, model);
-  const p = at(d, XV.reach);
-  const onFile = derive(UP.bundle, m, built.models.find((x) => x.model_id === XV.model));
-  const expected = at(onFile, XV.reach);
-  const x = UP.expansions[m];
-  const abstained = Object.values(model.abstained).reduce((a, b) => a + b, 0);
-  const tiles = [stat("Audience size", fmt(p.k), `${pct(p.k / d.poolSize, 1)} of ${fmt(d.poolSize)} scored in the universe`)];
-  if (m === "propensity") {
-    let events = 0;
-    for (let r = 0; r < p.k; r++) events += model.scores[d.scored[r]];
-    tiles.push(stat("Model-estimated events", fmt(Math.round(events)), "sum of estimated chances in the audience"));
-    tiles.push(stat("Expected precision", expected.precision === null ? "n/a" : pct(expected.precision, 1), `on your held-out records at this reach; base rate ${pct(built.models[0].evaluation.base_rate, 1)}`));
-  } else {
-    const positives = built.fit_count + built.heldout.length;
-    tiles.push(stat("Versus your list", `${(p.k / positives).toFixed(1)}×`, `the ${fmt(positives)} records it was modeled on`));
-    tiles.push(stat("Expected lift", expected.lift ? `${expected.lift.toFixed(1)}×` : "n/a", `on your held-out records at this reach (${pct(expected.recall)} found)`));
-  }
-  tiles.push(stat("Left out", fmt(x.result.excluded + abstained), `${fmt(x.result.excluded)} already positive in your file, ${fmt(abstained)} too little data`));
-  const sid = XV.sliderId;
-  const slider = el("input", { type: "range", id: sid, min: "1", max: "50", step: "1", value: String(Math.round(XV.reach * 100)), "aria-describedby": `${sid}-out` });
-  const out = el("output", { id: `${sid}-out`, for: sid, text: pct(XV.reach) });
-  slider.addEventListener("input", () => { XV.reach = Number(slider.value) / 100; out.textContent = pct(XV.reach); XV.rerender(true); });
-  const charts = [
-    el("div", { class: "chart" }, el("h3", { text: "Expected quality: held-out positives captured on your file" }), curveChart(UP.bundle, onFile, XV),
-      el("p", { class: "muted", text: "The universe has no labels, so its quality cannot be measured directly; this is how the same model did on records it never saw." })),
-    el("div", { class: "chart" }, el("h3", { text: "Universe score distribution" }), histogramChart(model, d, XV),
-      el("p", { class: "muted", text: "Bars in color are in the audience; the line marks the cut-off score." })),
-  ];
-  const lower = [el("div", { class: "chart" }, el("h3", { text: "What sets the audience apart" }), driversView(ub, model, XV))];
-  if (x.breakdown_codes) lower.unshift(el("div", { class: "chart" }, el("h3", { text: `Composition by ${ub.dataset.breakdown.label.toLowerCase()}` }), composition(ub, d, XV)));
-  return card(`${XV.steps.build} · The expanded audience`, `${UP.bundle.decisions[m].label}, scored on ${fmt(x.universe.rows)} new records. Move the reach to trade size for quality.`,
-    modelPicker(UP.bundle, XV),
-    el("div", { class: "reach" }, el("label", { for: sid, text: "Reach" }), slider, out),
-    el("div", { class: "stats" }, tiles),
-    el("div", { class: "charts" }, charts),
-    el("div", { class: "charts" }, lower));
+  return { rows: x.universe.rows, keys: x.keys, breakdown_codes: x.breakdown_codes, excluded: x.result.excluded, models: x.result.models, own: "your file" };
 }
 
 function renderUpload(keepScroll, view = UV) {
@@ -411,7 +361,8 @@ function renderUpload(keepScroll, view = UV) {
   }
   if (UP.bundle && eligibleModeled().length) sections.push(universeCard(), error("universe"));
   if (UP.bundle && XV.method && UP.expansions[XV.method]) {
-    sections.push(expansionPanel(), exportPanel(universeBundle(XV.method), XV));
+    const exp = uploadExpansion(XV.method);
+    sections.push(expansionPanel(UP.bundle, exp, XV), exportPanel(universeBundle(UP.bundle, exp, XV.method), XV));
   }
   root.setAttribute("aria-busy", String(UP.busy));
   root.replaceChildren(...sections.filter(Boolean));

@@ -372,8 +372,104 @@ function exportPanel(bundle, v = WB) {
     el("p", { class: "muted", text: `Row export verdict: ${rowsDecision.verdict} (decision ${rowsDecision.decision_id}).${ds.keys ? "" : " IDs are synthetic."}` }));
 }
 
+// ---------- expansion into a universe (shared by the workbench and Your data) ----------
+// exp: { rows, keys? | id_prefix + id_width, breakdown_codes (or null), excluded, models, own: "your file" | ... }
+function universeBundle(bundle, exp, method) {
+  const ds = bundle.dataset;
+  const codes = exp.breakdown_codes || new Array(exp.rows).fill(0);
+  const breakdown = exp.breakdown_codes ? { ...ds.breakdown, codes } : { label: "Records", values: ["All records"], codes };
+  return {
+    ...bundle,
+    dataset: { ...ds, dataset_id: `${ds.dataset_id}/universe`, keys: exp.keys, id_prefix: exp.id_prefix, id_width: exp.id_width, breakdown },
+    results: { [method]: { heldout: [], models: exp.models } },
+  };
+}
+
+function expansionPanel(bundle, exp, v) {
+  const m = v.method;
+  const built = bundle.results[m];
+  const ub = universeBundle(bundle, exp, m);
+  const model = ub.results[m].models.find((x) => x.model_id === v.model);
+  const d = derive(ub, m, model);
+  const p = at(d, v.reach);
+  const onOwn = derive(bundle, m, built.models.find((x) => x.model_id === v.model));
+  const expected = at(onOwn, v.reach);
+  const abstained = Object.values(model.abstained).reduce((a, b) => a + b, 0);
+  const positivesName = m === "semantic" ? "relevant pages" : "held-out positives";
+  const tiles = [stat("Audience size", fmt(p.k), `${pct(p.k / d.poolSize, 1)} of ${fmt(d.poolSize)} scored in the universe`)];
+  if (model.scale === "probability") {
+    let events = 0;
+    for (let r = 0; r < p.k; r++) events += model.scores[d.scored[r]];
+    tiles.push(stat("Model-estimated events", fmt(Math.round(events)), "sum of estimated chances in the audience"));
+    tiles.push(stat("Expected precision", expected.precision === null ? "n/a" : pct(expected.precision, 1), `on held-out records at this reach; base rate ${pct(built.models[0].evaluation.base_rate, 1)}`));
+  } else {
+    if (built.fit_count > 0) {
+      const positives = built.fit_count + built.heldout.length;
+      tiles.push(stat("Versus the list", `${(p.k / positives).toFixed(1)}×`, `the ${fmt(positives)} records it was modeled on`));
+    }
+    tiles.push(stat("Expected lift", expected.lift ? `${expected.lift.toFixed(1)}×` : "n/a", `on ${exp.own} at this reach (${pct(expected.recall)} of ${positivesName} found)`));
+  }
+  tiles.push(stat("Left out", fmt(exp.excluded + abstained), exp.excluded ? `${fmt(exp.excluded)} already positive in ${exp.own}, ${fmt(abstained)} too little data` : "too little observed data to score"));
+  const sid = v.sliderId;
+  const slider = el("input", { type: "range", id: sid, min: "1", max: "50", step: "1", value: String(Math.round(v.reach * 100)), "aria-describedby": `${sid}-out` });
+  const out = el("output", { id: `${sid}-out`, for: sid, text: pct(v.reach) });
+  slider.addEventListener("input", () => { v.reach = Number(slider.value) / 100; out.textContent = pct(v.reach); v.rerender(true); });
+  const charts = [
+    el("div", { class: "chart" }, el("h3", { text: `Expected quality: ${positivesName} captured on ${exp.own}` }), curveChart(bundle, onOwn, v),
+      el("p", { class: "muted", text: "The universe has no labels, so its quality cannot be measured directly; this is how the same model did on records it never saw." })),
+    el("div", { class: "chart" }, el("h3", { text: "Universe score distribution" }), histogramChart(model, d, v),
+      el("p", { class: "muted", text: "Bars in color are in the audience; the line marks the cut-off score." })),
+  ];
+  const lower = [el("div", { class: "chart" }, el("h3", { text: "What sets the audience apart" }), driversView(ub, model, v))];
+  if (exp.breakdown_codes) lower.unshift(el("div", { class: "chart" }, el("h3", { text: `Composition by ${ub.dataset.breakdown.label.toLowerCase()}` }), composition(ub, d, v)));
+  return card(`${v.steps.build} · The expanded audience`, `${bundle.decisions[m].label}, scored on ${fmt(exp.rows)} new records. Move the reach to trade size for quality.`,
+    modelPicker(bundle, v),
+    el("div", { class: "reach" }, el("label", { for: sid, text: "Reach" }), slider, out),
+    el("div", { class: "stats" }, tiles),
+    el("div", { class: "charts" }, charts),
+    el("div", { class: "charts" }, lower));
+}
+
+// The workbench's own universe: precomputed, fetched only when asked for.
+const XW = {
+  method: null, model: null, reach: 0.1, sliderId: "wb-xreach", steps: { build: "7", export: "8" },
+  rerender: (keepScroll) => renderBuild(keepScroll, XW),
+  pickModel: (id) => { XW.model = id; renderBuild(true, XW); },
+};
+const UNIVERSES = new Map();
+
+async function expandWorkbench() {
+  const entry = WB.index.datasets.find((d) => d.dataset_id === WB.dataset);
+  if (!UNIVERSES.has(WB.dataset)) {
+    document.getElementById("build").setAttribute("aria-busy", "true");
+    UNIVERSES.set(WB.dataset, await (await fetch(`data/workbench/${entry.universe.file}`)).json());
+    document.getElementById("build").removeAttribute("aria-busy");
+  }
+  XW.method = WB.method; XW.model = WB.model; XW.reach = WB.reach;
+  renderBuild(false);
+}
+
+function workbenchExpansion() {
+  const u = UNIVERSES.get(WB.dataset);
+  const x = u.expansions[XW.method];
+  return { rows: u.rows, id_prefix: u.id_prefix, id_width: u.id_width, breakdown_codes: u.breakdown_codes, excluded: x.excluded, models: x.models, own: "the dataset" };
+}
+
+function expandCard(bundle) {
+  const entry = WB.index.datasets.find((d) => d.dataset_id === WB.dataset);
+  if (!entry.universe) {
+    return card("6 · Expand into a universe", "Postal areas are a closed set: every area is already in the dataset, so there are no new records to expand into.");
+  }
+  const shown = XW.method === WB.method && UNIVERSES.has(WB.dataset);
+  return card("6 · Expand into a universe", `Score ${fmt(entry.universe.rows)} new records, generated the same way as this dataset, with the models trained on it. On Your data, the universe is a second file you upload.`,
+    el("div", { class: "export-row" }, el("button", {
+      type: "button", class: shown ? "btn" : "btn btn--ghost", onclick: expandWorkbench,
+      text: shown ? `Expanded · ${METHOD_SHORT[WB.method].toLowerCase()}` : `Expand ${METHOD_SHORT[WB.method].toLowerCase()}`,
+    })));
+}
+
 // ---------- shell ----------
-function renderBuild(keepScroll) {
+function renderBuild(keepScroll, view = WB) {
   const root = document.getElementById("build");
   const bundle = WB.bundles.get(WB.dataset);
   const y = window.scrollY;
@@ -386,11 +482,16 @@ function renderBuild(keepScroll) {
       card("3 · Choose a method and model", "The router decided each method from the evidence. The recommendation ranks only eligible methods and never replaces the one you pick; models within a method are compared on held-out data.",
         methodPicker(bundle), modelPicker(bundle)),
       buildPanel(bundle), exportPanel(bundle));
+    if (bundle.results[WB.method]) sections.push(expandCard(bundle));
+    if (XW.method && XW.method === WB.method && UNIVERSES.has(WB.dataset)) {
+      const exp = workbenchExpansion();
+      sections.push(expansionPanel(bundle, exp, XW), exportPanel(universeBundle(bundle, exp, XW.method), XW));
+    }
   }
   root.replaceChildren(...sections.filter(Boolean));
   if (keepScroll) {
     window.scrollTo(0, y);
-    const slider = document.getElementById("reach");
+    const slider = document.getElementById(view.sliderId || "reach");
     if (slider) slider.focus({ preventScroll: true });
   }
   if (bundle) setHash(`build/${WB.dataset}`);
@@ -410,6 +511,7 @@ async function selectDataset(id) {
     document.getElementById("build").removeAttribute("aria-busy");
   }
   WB.dataset = id;
+  XW.method = null;
   const bundle = WB.bundles.get(id);
   WB.method = defaultMethod(bundle);
   WB.model = WB.method ? bundle.results[WB.method].recommended.model_id : null;
