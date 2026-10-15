@@ -7,6 +7,7 @@ levels. Entities used to fit a model never count toward its evaluation.
 
 from __future__ import annotations
 
+import warnings
 from typing import Any
 
 import numpy as np
@@ -57,8 +58,12 @@ def _drivers(data: Synthetic, cols: list[int], scores: np.ndarray) -> dict[str, 
     out: dict[str, list[dict[str, Any]]] = {}
     for reach in REACH_GRID:
         top = order[: max(1, int(round(reach * len(order))))]
-        smd = (np.nanmean(data.x[top][:, cols], axis=0) - mean) / sd
-        ranked = np.argsort(-np.abs(np.nan_to_num(smd)), kind="stable")[:DRIVER_COUNT]
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)  # a column with no values in a small audience
+            smd = (np.nanmean(data.x[top][:, cols], axis=0) - mean) / sd
+        # A column the audience has no values for has no difference to report (and NaN is not valid JSON).
+        ranked = [j for j in np.argsort(-np.abs(np.nan_to_num(smd)), kind="stable") if np.isfinite(smd[j])]
+        ranked = ranked[:DRIVER_COUNT]
         out[str(reach)] = [
             {"feature": data.spec.features[cols[j]].name, "smd": round(float(smd[j]), 3)} for j in ranked
         ]

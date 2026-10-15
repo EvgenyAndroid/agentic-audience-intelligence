@@ -166,3 +166,35 @@ def test_record_types_and_cors(client: TestClient) -> None:
         "/v1/datasets", headers={"Origin": "https://evil.example", "Access-Control-Request-Method": "POST"}
     )
     assert "access-control-allow-origin" not in r.headers
+
+
+def routed(client: TestClient, **overrides: Any) -> str:
+    dataset_id = upload(client)
+    assert (
+        client.post(f"/v1/datasets/{dataset_id}/assess", json={**CONFIRMATION, **overrides}, headers=auth()).status_code
+        == 200
+    )
+    assert client.post(f"/v1/datasets/{dataset_id}/route", headers=auth()).status_code == 200
+    return dataset_id
+
+
+def test_build_needs_a_route_first(client: TestClient) -> None:
+    dataset_id = upload(client)
+    assert client.post(f"/v1/datasets/{dataset_id}/build/lookalike", headers=auth()).status_code == 409
+
+
+def test_build_refuses_a_method_the_router_did_not_make_eligible(client: TestClient) -> None:
+    dataset_id = routed(client, timing_attested=False)
+    r = client.post(f"/v1/datasets/{dataset_id}/build/lookalike", headers=auth())
+    assert r.status_code == 409 and "PROVISIONAL" in r.json()["detail"]
+    assert client.post(f"/v1/datasets/{dataset_id}/build/export_rows", headers=auth()).status_code == 404
+
+
+def test_build_scores_an_eligible_method_and_stores_it(client: TestClient) -> None:
+    dataset_id = routed(client)
+    r = client.post(f"/v1/datasets/{dataset_id}/build/propensity", headers=auth())
+    assert r.status_code == 200, r.text
+    assert r.json()["result"]["recommended"]["model_id"] in {"logistic", "boosted"}
+    stored = client.get(f"/v1/datasets/{dataset_id}", headers=auth()).json()["bundle"]
+    assert set(stored["results"]) == {"propensity"}
+    assert client.post(f"/v1/datasets/{dataset_id}/build/lookalike", headers=auth(KEY_B)).status_code == 404
