@@ -157,7 +157,7 @@ details.table-view summary { cursor: pointer; color: var(--text-dim); }
   .matrix tr.task-row td.col-where { display: none; }
   .where-inline { display: inline; }
   .tag { display: none; }
-  .brand-name { white-space: nowrap; }
+  .brand-name { line-height: 1.2; }
   .matrix tr.task-row td.col-why { grid-column: 1 / -1; padding-top: 0; }
   .matrix tr.detail td { display: block; }
   .kv { grid-template-columns: 1fr; }
