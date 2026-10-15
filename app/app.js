@@ -1,4 +1,5 @@
 // Agentic Audience Intelligence demonstrator. Renders precomputed bundles from data/; nothing here decides anything.
+// Two modes: Build an audience (workbench.js) and How the router decides (the scenarios below).
 // All bundle content is inserted with textContent / DOM APIs, never as HTML.
 "use strict";
 
@@ -43,6 +44,7 @@ function el(tag, attrs = {}, ...children) {
   for (const [key, value] of Object.entries(attrs)) {
     if (value === null || value === undefined || value === false) continue;
     if (key === "class") node.className = value;
+    else if (key === "style") Object.assign(node.style, value); // CSSOM, not an inline style attribute (CSP)
     else if (key === "text") node.textContent = value;
     else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
     else node.setAttribute(key, value === true ? "" : value);
@@ -326,7 +328,31 @@ function renderScenario(id) {
     trace(bundle),
   ];
   article.replaceChildren(...sections.filter(Boolean));
-  try { history.replaceState(null, "", `#${id}`); } catch (_) { /* file:// or sandboxed */ }
+  setHash(`decide/${id}`);
+}
+
+function setHash(value) {
+  try { history.replaceState(null, "", `#${value}`); } catch (_) { /* file:// or sandboxed */ }
+}
+
+const MODE_LOADED = { build: false, decide: false };
+async function setMode(mode, target) {
+  for (const button of document.querySelectorAll("#mode-tabs button")) button.setAttribute("aria-selected", String(button.dataset.mode === mode));
+  document.getElementById("build").hidden = mode !== "build";
+  document.getElementById("decide").hidden = mode !== "decide";
+  try {
+    if (mode === "build" && !MODE_LOADED.build) { MODE_LOADED.build = true; await initWorkbench(target); }
+    if (mode === "decide" && !MODE_LOADED.decide) { MODE_LOADED.decide = true; await initScenarios(target); }
+    else if (mode === "decide") renderScenario(state.current);
+    else if (WB.dataset) setHash(`build/${WB.dataset}`);
+  } catch (error) {
+    document.getElementById("disclosure-text").textContent = "The precomputed bundles could not be loaded. Serve this folder over HTTP (for example: python -m http.server --directory app).";
+    return;
+  }
+  const idx = mode === "build" ? WB.index : state.index;
+  document.getElementById("disclosure-text").textContent = idx.disclosure;
+  document.getElementById("disclosure-meta").textContent =
+    `Evaluated at ${idx.evaluated_at} · engine ${idx.engine_version} · source ${idx.engine_sha256.slice(7, 19)} · bundle format ${idx.bundle_format}`;
 }
 
 function setTheme(theme) {
@@ -342,24 +368,34 @@ async function init() {
   document.getElementById("theme-toggle").addEventListener("click", () =>
     setTheme(document.documentElement.dataset.theme === "midnight" ? "daylight" : "midnight"));
 
-  try {
-    state.index = await (await fetch("data/index.json")).json();
-    for (const s of state.index.scenarios) state.bundles.set(s.scenario_id, await (await fetch(`data/${s.file}`)).json());
-  } catch (error) {
-    document.getElementById("disclosure-text").textContent = "The precomputed bundles could not be loaded. Serve this folder over HTTP (for example: python -m http.server --directory app).";
-    return;
+  for (const button of document.querySelectorAll("#mode-tabs button")) {
+    button.addEventListener("click", () => setMode(button.dataset.mode));
   }
-  const idx = state.index;
-  document.getElementById("disclosure-text").textContent = idx.disclosure;
-  document.getElementById("disclosure-meta").textContent =
-    `Evaluated at ${idx.evaluated_at} · engine ${idx.engine_version} · source ${idx.engine_sha256.slice(7, 19)} · bundle format ${idx.bundle_format}`;
+  const route = () => {
+    const [head, rest] = location.hash.slice(1).split("/");
+    if (head === "build") return ["build", rest];
+    if (head === "decide") return ["decide", rest];
+    return head ? ["decide", head] : ["build", null]; // earlier links used #<scenario_id>
+  };
+  window.addEventListener("hashchange", () => {
+    const [mode, target] = route();
+    if (mode === "decide" && MODE_LOADED.decide && state.bundles.has(target) && target !== state.current) renderScenario(target);
+    else if (mode === "build" && MODE_LOADED.build && target && target !== WB.dataset) selectDataset(target);
+    else if (!document.getElementById(mode).hidden) return;
+    else setMode(mode, target);
+  });
+  const [mode, target] = route();
+  await setMode(mode, target);
+}
+
+async function initScenarios(target) {
+  state.index = await (await fetch("data/index.json")).json();
+  for (const s of state.index.scenarios) state.bundles.set(s.scenario_id, await (await fetch(`data/${s.file}`)).json());
   const tabs = document.getElementById("scenario-tabs");
-  for (const s of idx.scenarios) {
+  for (const s of state.index.scenarios) {
     tabs.append(el("button", { type: "button", role: "tab", "data-id": s.scenario_id, "aria-selected": "false", onclick: () => renderScenario(s.scenario_id), text: s.title }));
   }
-  const fromHash = () => location.hash.slice(1);
-  window.addEventListener("hashchange", () => { if (state.bundles.has(fromHash()) && fromHash() !== state.current) renderScenario(fromHash()); });
-  renderScenario(state.bundles.has(fromHash()) ? fromHash() : idx.scenarios[0].scenario_id);
+  renderScenario(state.bundles.has(target) ? target : state.index.scenarios[0].scenario_id);
 }
 
 document.addEventListener("DOMContentLoaded", init);

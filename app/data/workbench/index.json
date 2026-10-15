@@ -1,0 +1,164 @@
+{
+  "bundle_format": "1.0.0",
+  "evaluated_at": "2026-10-14T12:00:00Z",
+  "engine_version": "0.1.0",
+  "engine_sha256": "sha256:b3634d58fc701c038739e3930a5dee7290f81e0cbd2dd31b06b00ffda7143813",
+  "disclosure": "Synthetic datasets. Every verdict, model, score and metric here was computed by the engine when the site was built; the page only filters those results. The data describes no real people, households, companies or places, and the metrics test software behavior, not real-world performance. Nothing is activated.",
+  "datasets": [
+    {
+      "dataset_id": "b2b_accounts",
+      "title": "B2B accounts",
+      "type_label": "B2B",
+      "summary": "Companies with firmographics, technology signals and research intent. Find accounts like your best customers.",
+      "rows": 8000,
+      "unit_label": "Business account",
+      "methods": [
+        "lookalike",
+        "actalike",
+        "propensity"
+      ],
+      "verdicts": {
+        "lookalike": "ELIGIBLE",
+        "actalike": "ELIGIBLE",
+        "propensity": "PROVISIONAL",
+        "export_rows": "ELIGIBLE"
+      },
+      "file": "b2b_accounts.json",
+      "bundle_sha256": "sha256:b7889e8e085dada22e392a08ff5ed031b9688bd2bcde56be835aaa1c6541db62"
+    },
+    {
+      "dataset_id": "geo_areas",
+      "title": "Geography",
+      "type_label": "GEO",
+      "summary": "Postal areas with population, income and category-spend indices. Find areas like your best-performing ones.",
+      "rows": 6000,
+      "unit_label": "Postal area",
+      "methods": [
+        "lookalike"
+      ],
+      "verdicts": {
+        "lookalike": "ELIGIBLE",
+        "export_rows": "ELIGIBLE"
+      },
+      "file": "geo_areas.json",
+      "bundle_sha256": "sha256:ed9056b1c85ce368e487de6fd2cfa71015243888aeeeab96f513251763179d16"
+    },
+    {
+      "dataset_id": "demo_firmo",
+      "title": "Demographic and firmographic",
+      "type_label": "Demographic and firmographic",
+      "summary": "People with declared demographics and their employer's firmographics. One column is sensitive and is excluded before any modeling.",
+      "rows": 20000,
+      "unit_label": "Person",
+      "methods": [
+        "lookalike"
+      ],
+      "verdicts": {
+        "lookalike": "ELIGIBLE",
+        "export_rows": "ELIGIBLE"
+      },
+      "file": "demo_firmo.json",
+      "bundle_sha256": "sha256:cc7ac03167742a1483141ecc85f41d918e81d08251de6e57a00c54c1e6ee739f"
+    },
+    {
+      "dataset_id": "interest_segments",
+      "title": "Interest and behavioral segments",
+      "type_label": "Interest and behavioral segments",
+      "summary": "Mobile devices with provider interest segments and app behavior. Model on seeds, or on behavior.",
+      "rows": 20000,
+      "unit_label": "Mobile device",
+      "methods": [
+        "lookalike",
+        "actalike"
+      ],
+      "verdicts": {
+        "lookalike": "ELIGIBLE",
+        "actalike": "ELIGIBLE",
+        "export_rows": "ELIGIBLE"
+      },
+      "file": "interest_segments.json",
+      "bundle_sha256": "sha256:2d01489691a23a4802cbb59979c2400b7a9f63bf33a107a7a2f05750ba2c78be"
+    },
+    {
+      "dataset_id": "acr_tv",
+      "title": "TV viewing (ACR)",
+      "type_label": "TV viewing (ACR)",
+      "summary": "Households with viewing minutes by genre and daypart, held in a clean room. Models run inside; only aggregates leave.",
+      "rows": 15000,
+      "unit_label": "Household",
+      "methods": [
+        "lookalike",
+        "actalike"
+      ],
+      "verdicts": {
+        "lookalike": "ELIGIBLE",
+        "actalike": "ELIGIBLE",
+        "export_rows": "BLOCKED",
+        "export_aggregate": "ELIGIBLE"
+      },
+      "file": "acr_tv.json",
+      "bundle_sha256": "sha256:8e42c9e38c5e48a20682a58af73ab9f7dfeef5dbc005daaa3dcdf506d1688d68"
+    },
+    {
+      "dataset_id": "web_app",
+      "title": "Web and app events",
+      "type_label": "Web and app events",
+      "summary": "Browsers with sessions, category views, cart adds and conversions. All three model types apply.",
+      "rows": 20000,
+      "unit_label": "Browser",
+      "methods": [
+        "lookalike",
+        "actalike",
+        "propensity"
+      ],
+      "verdicts": {
+        "lookalike": "ELIGIBLE",
+        "actalike": "ELIGIBLE",
+        "propensity": "ELIGIBLE",
+        "export_rows": "ELIGIBLE"
+      },
+      "file": "web_app.json",
+      "bundle_sha256": "sha256:28b08d508017f8ed75856c7f5c77e1a37d5c71e3bed8f0d75592488a1d894515"
+    },
+    {
+      "dataset_id": "crm",
+      "title": "First-party CRM",
+      "type_label": "First-party CRM",
+      "summary": "Your customers with tenure, orders, value and email engagement. Look-alikes, a purchase propensity model, and your own registered model.",
+      "rows": 15000,
+      "unit_label": "Customer",
+      "methods": [
+        "lookalike",
+        "propensity",
+        "byom"
+      ],
+      "verdicts": {
+        "lookalike": "ELIGIBLE",
+        "propensity": "ELIGIBLE",
+        "byom": "ELIGIBLE",
+        "export_rows": "ELIGIBLE"
+      },
+      "file": "crm.json",
+      "bundle_sha256": "sha256:dd84f4d7bfae06833c230d75573903b986f468878ebd27cc05c4f456b3de0efe"
+    },
+    {
+      "dataset_id": "url_content",
+      "title": "Page content (URL)",
+      "type_label": "Page content (URL)",
+      "summary": "Pages with topic signals, tone and brand-safety scores. Find pages that match a content brief, or pages like your best performers.",
+      "rows": 6000,
+      "unit_label": "Page",
+      "methods": [
+        "semantic",
+        "lookalike"
+      ],
+      "verdicts": {
+        "semantic": "ELIGIBLE",
+        "lookalike": "ELIGIBLE",
+        "export_rows": "ELIGIBLE"
+      },
+      "file": "url_content.json",
+      "bundle_sha256": "sha256:c9646a39aea1963aa9b58fec974b5ba9318319d7513e0a918d9d654030712ff3"
+    }
+  ]
+}
