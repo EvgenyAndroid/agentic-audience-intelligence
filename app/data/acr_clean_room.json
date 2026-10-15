@@ -706,7 +706,7 @@
     "evaluated_at": "2026-10-14T12:00:00Z",
     "max_decision_ttl_hours": 168.0,
     "engine_version": "0.1.0",
-    "engine_sha256": "sha256:6a5426506a00c93e14953f8a16486e413a94e72d62ee96e80b4a98b3d378e1b5",
+    "engine_sha256": "sha256:b3634d58fc701c038739e3930a5dee7290f81e0cbd2dd31b06b00ffda7143813",
     "inputs": [
       {
         "path": "demo/scenarios/acr_clean_room/bundle_task_demo_acr_aggregate_alt.json",

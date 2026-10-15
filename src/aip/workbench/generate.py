@@ -34,15 +34,28 @@ class Synthetic:
 STABLE_DECIMALS = 9  # values compared against random draws are rounded so ulp-level platform noise cannot flip them
 
 
+def _bell(rng: np.random.Generator, shape: tuple[int, ...]) -> np.ndarray:
+    """Approximately standard normal (Irwin-Hall, 12 uniforms). Uniform draws plus additions are bit-identical on
+    every platform; numpy's normal, gamma, Poisson and beta samplers call the C maths library, whose last-bit
+    differences can flip a rejection step and shift every later draw."""
+    total = np.zeros(shape)
+    for _ in range(12):
+        total = total + rng.random(shape)
+    return total - 6.0
+
+
 def _column(kind: str, means: np.ndarray, rng: np.random.Generator) -> np.ndarray:
     if kind == "count":
-        return rng.poisson(means * rng.gamma(2.0, 0.5, size=means.shape)).astype(float)
+        spread = np.zeros(means.shape)
+        for _ in range(4):
+            spread = spread + rng.random(means.shape)
+        # Overdispersed count: mean times a factor centred on 1, stochastically rounded to an integer.
+        return np.floor(means * (spread / 2.0) + rng.random(means.shape))
     if kind == "share":
-        conc = 14.0
-        return rng.beta(means * conc, (1 - means) * conc)
+        return np.clip(means + _bell(rng, means.shape) * np.sqrt(means * (1 - means) / 15.0), 0.001, 0.999)
     if kind == "binary":
         return (rng.random(means.shape) < means).astype(float)
-    return means + rng.normal(0.0, 1.2, size=means.shape)
+    return means + _bell(rng, means.shape) * 1.2
 
 
 def _zscore(col: np.ndarray) -> np.ndarray:
@@ -85,7 +98,7 @@ def generate(spec: DatasetSpec) -> Synthetic:
         index = np.zeros(n)
         for f in spec.behavior_features:
             index = index + _zscore(x[:, names.index(f)])
-        index = (index + rng.normal(0, 1.0, n)).round(STABLE_DECIMALS)
+        index = (index + _bell(rng, (n,))).round(STABLE_DECIMALS)
         behavior = np.sort(np.argsort(-index)[: int(round(spec.behavior_share * n))])
 
     outcome = None
