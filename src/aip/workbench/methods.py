@@ -48,11 +48,15 @@ def _round(scores: np.ndarray) -> list[float | None]:
     return [None if not np.isfinite(s) else round(float(s), 4) for s in scores]
 
 
-def _drivers(data: Synthetic, cols: list[int], scores: np.ndarray) -> dict[str, list[dict[str, Any]]]:
-    """Standardized mean difference between the audience at each reach level and the scored pool."""
+def _drivers(
+    data: Synthetic, cols: list[int], scores: np.ndarray, x: np.ndarray | None = None
+) -> dict[str, list[dict[str, Any]]]:
+    """Standardized mean difference between the audience at each reach level and the scored pool (the rows of
+    `x`, the dataset's own records unless given)."""
+    x = data.x if x is None else x
     scored = np.flatnonzero(np.isfinite(scores))
     order = scored[np.argsort(-scores[scored], kind="stable")]
-    pool = data.x[scored][:, cols]
+    pool = x[scored][:, cols]
     mean, sd = np.nanmean(pool, axis=0), np.nanstd(pool, axis=0)
     sd[~np.isfinite(sd) | (sd == 0)] = 1.0
     out: dict[str, list[dict[str, Any]]] = {}
@@ -60,7 +64,7 @@ def _drivers(data: Synthetic, cols: list[int], scores: np.ndarray) -> dict[str, 
         top = order[: max(1, int(round(reach * len(order))))]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)  # a column with no values in a small audience
-            smd = (np.nanmean(data.x[top][:, cols], axis=0) - mean) / sd
+            smd = (np.nanmean(x[top][:, cols], axis=0) - mean) / sd
         # A column the audience has no values for has no difference to report (and NaN is not valid JSON).
         ranked = [j for j in np.argsort(-np.abs(np.nan_to_num(smd)), kind="stable") if np.isfinite(smd[j])]
         ranked = ranked[:DRIVER_COUNT]
@@ -114,16 +118,17 @@ def _recall_at(scores: np.ndarray, held: np.ndarray, reach: float) -> float:
     return float(np.isin(held, top).mean()) if len(held) else 0.0
 
 
+def _affinity_setup(data: Synthetic, kind: str) -> tuple[np.ndarray, list[int], int]:
+    if kind == "lookalike":
+        return data.seed, used_features(data), data.spec.rng_seed + 1
+    return data.behavior, used_features(data, ("behavioral",)), data.spec.rng_seed + 2
+
+
 def affinity(data: Synthetic, kind: str) -> dict[str, Any]:
     """kind 'lookalike' models the seed list on all permitted features; 'actalike' models the behavior
     pattern on behavioral features only."""
-    if kind == "lookalike":
-        positives, cols = data.seed, used_features(data)
-    else:
-        positives, cols = data.behavior, used_features(data, ("behavioral",))
-    models, train, held = _affinity_candidates(
-        data, positives, cols, data.spec.rng_seed + (1 if kind == "lookalike" else 2)
-    )
+    positives, cols, rng_seed = _affinity_setup(data, kind)
+    models, train, held = _affinity_candidates(data, positives, cols, rng_seed)
     for m in models:
         m["evaluation"] = {
             "kind": "heldout_recall",
@@ -183,6 +188,65 @@ def propensity(data: Synthetic) -> dict[str, Any]:
         "heldout_labels": [int(v) for v in y[test]],
         "models": models,
     }
+
+
+def expand(data: Synthetic, kind: str, universe: np.ndarray, exclude: np.ndarray) -> dict[str, Any]:
+    """Score a universe of new records with the same candidate models `affinity` or `propensity` fit on `data`.
+
+    The fit is repeated with the same split and seeds, so the models are the ones evaluated on held-out
+    records. `universe` has one column per feature of `data` (sensitive ones are never read); rows flagged in
+    `exclude` (already positive in the uploaded file) get no score. The universe has no labels, so there is
+    no evaluation here: the held-out evaluation on `data` is the expected quality."""
+    models: list[dict[str, Any]] = []
+    if kind == "propensity":
+        assert data.outcome is not None
+        train, _ = _split(np.arange(data.spec.n), np.random.default_rng(data.spec.rng_seed + 3))
+        cols = used_features(data)
+        x, y = data.x[:, cols], data.outcome.astype(int)
+        fitted = [
+            ("logistic", "Logistic regression", fit_logistic_baseline(x[train], y[train], data.spec.rng_seed)),
+            ("boosted", "Gradient-boosted trees", fit_boosted_candidate(x[train], y[train], data.spec.rng_seed, 150)),
+        ]
+        for model_id, label, model in fitted:
+            p = np.where(exclude, np.nan, model.predict_proba(universe[:, cols])[:, 1])
+            models.append(
+                {
+                    "model_id": model_id,
+                    "label": label,
+                    "scale": "probability",
+                    "scores": _round(p),
+                    "abstained": {},
+                    "drivers": _drivers(data, cols, p, universe),
+                }
+            )
+    else:
+        positives, cols, rng_seed = _affinity_setup(data, kind)
+        train, _ = _split(positives, np.random.default_rng(rng_seed))
+        mean, std = standardize_fit(data.x[:, cols])
+        seed_z = standardize_apply(data.x[train][:, cols], mean, std)
+        z = standardize_apply(universe[:, cols], mean, std)
+        results = [
+            ("centroid", "Centroid similarity", centroid_affinity(seed_z, z, MIN_COVERAGE)),
+            (
+                "multi_prototype",
+                f"Multi-prototype similarity (k-means, {PROTOTYPES} prototypes)",
+                multi_prototype_affinity(seed_z, z, PROTOTYPES, MIN_COVERAGE, rng_seed),
+            ),
+        ]
+        for model_id, label, result in results:
+            scores = np.where(exclude, np.nan, result.scores)
+            reasons = [r for r, e in zip(result.abstain_reasons, exclude, strict=True) if r and not e]
+            models.append(
+                {
+                    "model_id": model_id,
+                    "label": label,
+                    "scale": "cosine",
+                    "scores": _round(scores),
+                    "abstained": {r: reasons.count(r) for r in sorted(set(reasons))},
+                    "drivers": _drivers(data, cols, scores, universe),
+                }
+            )
+    return {"features": [data.spec.features[i].name for i in cols], "excluded": int(exclude.sum()), "models": models}
 
 
 def labels_qualified(data: Synthetic) -> tuple[bool, int]:

@@ -238,3 +238,66 @@ def test_route_carries_keys_and_breakdown_codes_for_export() -> None:
     ds = bundle["dataset"]
     assert ds["key_field"] == "customer_id" and ds["keys"][:2] == ["c00000", "c00001"]
     assert len(ds["breakdown"]["codes"]) == 600 and bundle["aggregate_rules"] is None
+
+
+def universe_csv(raw: bytes, *, prefix: str = "u", drop: tuple[str, ...] = ()) -> bytes:
+    """The same columns with new keys (and optionally some columns removed)."""
+    rows = list(csv.reader(io.StringIO(raw.decode())))
+    keep = [j for j, c in enumerate(rows[0]) if c not in drop]
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    for i, row in enumerate(rows):
+        cells = [f"{prefix}{c[1:]}" if j == 0 and i else c for j, c in enumerate(row)]
+        writer.writerow([cells[j] for j in keep])
+    return buf.getvalue().encode()
+
+
+@pytest.mark.parametrize("method", ["lookalike", "actalike", "propensity"])
+def test_expand_scores_a_universe_with_the_models_build_evaluated(method: str) -> None:
+    table = uploads.parse_csv(make_csv())
+    prep = uploads.prepare(table, confirm(), "up_000000000001")
+    built = uploads.build(prep, method)
+    # The upload itself as the universe: records already positive are left out, every other record gets the
+    # score build gave it, so the expansion uses the very models the held-out evaluation describes.
+    same = uploads.expand(prep, table, uploads.read_universe(prep, table), method)
+    positive = {"lookalike": prep.data.seed, "actalike": prep.data.behavior}.get(method)
+    if positive is None:
+        assert prep.data.outcome is not None
+        positive = np.flatnonzero(prep.data.outcome)
+    assert same["rows"] == 600 and same["excluded"] == len(positive)
+    for b, e in zip(built["models"], same["models"], strict=True):
+        assert b["model_id"] == e["model_id"] and set(e["drivers"]) == {"0.01", "0.05", "0.1", "0.2", "0.5"}
+        for i, (bs, es) in enumerate(zip(b["scores"], e["scores"], strict=True)):
+            assert es is None if i in set(positive) else es == bs
+
+
+def test_universe_with_new_keys_and_no_sensitive_column() -> None:
+    raw = make_csv()
+    table = uploads.parse_csv(raw)
+    prep = uploads.prepare(table, confirm(), "up_000000000001")
+    universe = uploads.read_universe(
+        prep, uploads.parse_csv(universe_csv(make_csv(900, rng_seed=11), drop=("age_band_sensitive", "is_seed")))
+    )
+    assert universe.keys[0] == "u00000" and universe.breakdown is not None and len(universe.breakdown) == 900
+    out = uploads.expand(prep, table, universe, "lookalike")
+    assert out["excluded"] == 0 and out["rows"] == 900
+    assert sum(s is not None for s in out["models"][0]["scores"]) > 800
+
+
+@pytest.mark.parametrize(
+    ("drop", "message"),
+    [(("aov",), "missing columns the models need: aov"), (("customer_id",), "missing columns")],
+)
+def test_universe_needs_the_key_and_every_model_feature(drop: tuple[str, ...], message: str) -> None:
+    table = uploads.parse_csv(make_csv())
+    prep = uploads.prepare(table, confirm(), "up_000000000001")
+    with pytest.raises(uploads.UploadError, match=message):
+        uploads.read_universe(prep, uploads.parse_csv(universe_csv(make_csv(), drop=drop)))
+
+
+def test_universe_rejects_non_numeric_features() -> None:
+    table = uploads.parse_csv(make_csv())
+    prep = uploads.prepare(table, confirm(), "up_000000000001")
+    bad = universe_csv(make_csv()).replace(b"\nu00003,", b"\nu00003,lots", 1)
+    with pytest.raises(uploads.UploadError, match="not a number"):
+        uploads.read_universe(prep, uploads.parse_csv(bad))
