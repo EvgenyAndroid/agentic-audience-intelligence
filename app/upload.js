@@ -59,12 +59,15 @@ async function api(path, options = {}) {
   return body;
 }
 
-async function run(task) {
-  UP.busy = true; UP.error = null; renderUpload();
+// `at` names the step whose action this is, so a failure is shown next to that step, not at the top of the page.
+async function run(task, at = "key") {
+  UP.busy = true; UP.error = null; UP.errorAt = at; renderUpload();
   try { await task(); } catch (error) {
     UP.error = error instanceof TypeError ? `Could not reach the API at ${API_BASE}.` : error.message;
   }
   UP.busy = false; renderUpload();
+  const shown = UP.error && document.querySelector("#upload .upload-error");
+  if (shown) shown.scrollIntoView({ block: "nearest" });
 }
 
 // ---------- 1 · invite key ----------
@@ -90,7 +93,7 @@ function uploadCard() {
     if (!UP.termsAccepted) throw new Error("Accept the data terms first.");
     UP.meta = await api("/v1/datasets", { method: "POST", headers: { "Content-Type": "text/csv" }, body: chosen });
     UP.confirmation = null; UP.assessment = null; UP.bundle = null; UP.universe = null; UP.expansions = {}; XV.method = null;
-  });
+  }, "upload");
   const upload = el("button", { type: "button", class: "btn", onclick: send, disabled: UP.busy || !UP.termsAccepted, text: "Upload" });
   const children = [
     el("div", { class: "form-row" }, el("label", { for: "up-file", text: "CSV file" }), file, upload),
@@ -202,7 +205,7 @@ function confirmCard() {
       UP.assessment = (await api(`/v1/datasets/${id}/assess`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).assessment;
       UP.bundle = await api(`/v1/datasets/${id}/route`, { method: "POST" });
       UV.method = null; UP.expansions = {}; XV.method = null;
-    });
+    }, "confirm");
   });
   return card("3 · Confirm what the file holds", "Suggested from column names and kinds; check every choice. You act as the data steward here, and the router treats these answers as the source contract.", form);
 }
@@ -238,7 +241,7 @@ function buildMethod(method) {
     UP.bundle.results[method] = result;
     for (const key of [...WB.cache.keys()]) if (key.startsWith(`${id}/${method}/`)) WB.cache.delete(key);
     UV.method = method; UV.model = result.recommended.model_id; UV.reach = 0.1;
-  });
+  }, "decisions");
 }
 
 function modelCard() {
@@ -276,7 +279,7 @@ function decisionsCard() {
     await api(`/v1/datasets/${UP.meta.dataset_id}`, { method: "DELETE" });
     UP.meta = null; UP.confirmation = null; UP.assessment = null; UP.bundle = null; UV.method = null;
     UP.universe = null; UP.expansions = {}; XV.method = null;
-  });
+  }, "decisions");
   return card("5 · What this data may be used for", "Decided by the same router as the workbench, from the evidence you supplied. Build an eligible method to train and score it on your file.",
     list,
     el("p", { class: "muted", text: `Evaluated ${b.manifest.evaluated_at} · engine ${b.manifest.engine_version} · snapshot ${b.manifest.snapshot_sha256.slice(7, 19)}` }),
@@ -301,7 +304,7 @@ function expandMethod(method) {
     UP.expansions[method] = body;
     for (const key of [...WB.cache.keys()]) if (key.startsWith(`${id}/universe/${method}/`)) WB.cache.delete(key);
     XV.method = method; XV.model = UP.bundle.results[method].recommended.model_id; XV.reach = 0.1;
-  });
+  }, "universe");
 }
 
 function universeCard() {
@@ -314,9 +317,9 @@ function universeCard() {
     UP.universe = await api(`/v1/datasets/${UP.meta.dataset_id}/universe?rights_attested=true`,
       { method: "POST", headers: { "Content-Type": "text/csv" }, body: chosen });
     UP.expansions = {}; XV.method = null;
-  }) });
+  }, "universe") });
   const children = [
-    el("p", { class: "muted", text: `A second CSV of new records to expand into: prospects, a data partner's extract, a wider customer base. It needs the key column (${UP.confirmation.key_column}) and these columns, by the same names: ${features.join(", ")}. The models trained on your file score every record; records already positive in your file are left out.` }),
+    el("p", { class: "muted", text: `A second CSV of new records to expand into: prospects, a data partner's extract, a wider customer base. It needs the key column (${UP.confirmation.key_column}) and these columns, by the same names: ${features.join(", ")}. The models trained on your file score every record; records already positive in your file are left out. A column you would rather not need here, mark as sensitive or excluded in step 3.` }),
     el("div", { class: "form-row" }, el("label", { for: "up-universe", text: "Universe CSV" }), file, send),
     el("label", { class: "check terms-check" },
       el("input", { type: "checkbox", id: "up-universe-rights", checked: UP.universeRights, onchange: (e) => { UP.universeRights = e.target.checked; send.disabled = UP.busy || !UP.universeRights; } }),
@@ -397,21 +400,21 @@ function expansionPanel() {
 function renderUpload(keepScroll, view = UV) {
   const root = document.getElementById("upload");
   const y = window.scrollY;
-  const sections = [keyCard()];
-  if (UP.error) sections.push(el("p", { class: "upload-error", role: "alert", text: UP.error }));
-  if (UP.types.length) sections.push(uploadCard());
-  if (UP.meta) sections.push(confirmCard());
+  const error = (at) => (UP.error && UP.errorAt === at ? el("p", { class: "upload-error", role: "alert", text: UP.error }) : null);
+  const sections = [keyCard(), error("key")];
+  if (UP.types.length) sections.push(uploadCard(), error("upload"));
+  if (UP.meta) sections.push(confirmCard(), error("confirm"));
   if (UP.assessment) sections.push(assessmentCard());
-  if (UP.bundle) sections.push(decisionsCard());
+  if (UP.bundle) sections.push(decisionsCard(), error("decisions"));
   if (UP.bundle && UV.method && UP.bundle.results[UV.method]) {
     sections.push(modelCard(), buildPanel(UP.bundle, UV), exportPanel(UP.bundle, UV));
   }
-  if (UP.bundle && eligibleModeled().length) sections.push(universeCard());
+  if (UP.bundle && eligibleModeled().length) sections.push(universeCard(), error("universe"));
   if (UP.bundle && XV.method && UP.expansions[XV.method]) {
     sections.push(expansionPanel(), exportPanel(universeBundle(XV.method), XV));
   }
   root.setAttribute("aria-busy", String(UP.busy));
-  root.replaceChildren(...sections);
+  root.replaceChildren(...sections.filter(Boolean));
   if (keepScroll) {
     window.scrollTo(0, y);
     const slider = document.getElementById(view.sliderId);
