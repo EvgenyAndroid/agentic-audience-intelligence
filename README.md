@@ -137,4 +137,4 @@ Values in `examples/`, `registry/` and `fixtures/` are synthetic fixtures. Synth
 
 ## License
 
-MIT, see [LICENSE](LICENSE). The pinned AdCP schemas in `third_party/adcp/` keep their own Apache-2.0 license.
+MIT, see [LICENSE](LICENSE). The pinned AdCP schemas in `third_party/adcp/` keep their own Apache-2.0 license. The demonstrator self-hosts the Fraunces and Inter typefaces in `app/fonts/` under the SIL Open Font License 1.1.
