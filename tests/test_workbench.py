@@ -13,7 +13,12 @@ from aip.workbench.methods import REACH_GRID
 from aip.workbench.specs import DATASETS
 
 DATA = ROOT / "app" / "data" / "workbench"
-BUNDLES = {p.stem: load_path(p) for p in sorted(DATA.glob("*.json")) if p.name != "index.json"}
+BUNDLES = {
+    p.stem: load_path(p)
+    for p in sorted(DATA.glob("*.json"))
+    if p.name != "index.json" and not p.name.endswith(".universe.json")
+}
+UNIVERSES = {p.name.split(".")[0]: load_path(p) for p in sorted(DATA.glob("*.universe.json"))}
 
 
 def test_committed_bundles_match_a_fresh_build():
@@ -138,3 +143,38 @@ def test_recommended_model_is_the_best_held_out(dataset_id):
 def test_generation_is_deterministic():
     spec = DATASETS[0]
     assert generate(spec).sha256 == generate(spec).sha256
+
+
+def test_every_open_dataset_has_a_universe_scored_by_every_built_method():
+    index = load_path(DATA / "index.json")
+    for entry in index["datasets"]:
+        bundle, universe = BUNDLES[entry["dataset_id"]], UNIVERSES.get(entry["dataset_id"])
+        if entry["dataset_id"] == "geo_areas":
+            # postal areas are a closed set: nothing new to expand into
+            assert entry["universe"] is None and universe is None
+            continue
+        assert universe is not None and entry["universe"]["rows"] == universe["rows"]
+        assert set(universe["expansions"]) == set(bundle["results"])
+        assert len(universe["breakdown_codes"]) == universe["rows"]
+        for method, expansion in universe["expansions"].items():
+            built = [m["model_id"] for m in bundle["results"][method]["models"]]
+            assert [m["model_id"] for m in expansion["models"]] == built
+            for model in expansion["models"]:
+                assert len(model["scores"]) == universe["rows"]
+                assert sum(s is not None for s in model["scores"]) > 0.5 * universe["rows"]
+
+
+@pytest.mark.parametrize("dataset_id", ["crm", "url_content"])
+def test_expand_reproduces_the_built_scores_on_the_dataset_itself(dataset_id):
+    import numpy as np
+
+    from aip.workbench import methods
+
+    spec = next(s for s in DATASETS if s.dataset_id == dataset_id)
+    data = generate(spec)
+    for method in ("byom", "semantic"):
+        if method not in spec.methods:
+            continue
+        built = methods.byom(data) if method == "byom" else methods.semantic(data)
+        again = methods.expand(data, method, data.x, np.zeros(spec.n, dtype=bool))
+        assert again["models"][0]["scores"] == built["models"][0]["scores"]

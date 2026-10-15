@@ -198,7 +198,34 @@ def expand(data: Synthetic, kind: str, universe: np.ndarray, exclude: np.ndarray
     `exclude` (already positive in the uploaded file) get no score. The universe has no labels, so there is
     no evaluation here: the held-out evaluation on `data` is the expected quality."""
     models: list[dict[str, Any]] = []
-    if kind == "propensity":
+    if kind == "byom":
+        cols, known, p = _byom_scores(data, universe)
+        p = np.where(exclude, np.nan, p)
+        missing = int((~known & ~exclude).sum())
+        models.append(
+            {
+                "model_id": "registered",
+                "label": "Your registered model (supplied weights)",
+                "scale": "probability",
+                "scores": _round(p),
+                "abstained": {"required_feature_missing": missing} if missing else {},
+                "drivers": _drivers(data, cols, p, universe),
+            }
+        )
+    elif kind == "semantic":
+        cols, _, scores = _brief_scores(data, universe)
+        scores = np.where(exclude, np.nan, scores)
+        models.append(
+            {
+                "model_id": "brief_similarity",
+                "label": "Similarity to the content brief",
+                "scale": "cosine",
+                "scores": _round(scores),
+                "abstained": {},
+                "drivers": _drivers(data, cols, scores, universe),
+            }
+        )
+    elif kind == "propensity":
         assert data.outcome is not None
         train, _ = _split(np.arange(data.spec.n), np.random.default_rng(data.spec.rng_seed + 3))
         cols = used_features(data)
@@ -259,15 +286,21 @@ BYOM_WEIGHTS = {"crm": {"orders_12m": 0.9, "aov_index": 0.5, "loyalty_member": 0
 BYOM_INTERCEPT = {"crm": -2.6}
 
 
-def byom(data: Synthetic) -> dict[str, Any]:
-    assert data.outcome is not None
+def _byom_scores(data: Synthetic, x_all: np.ndarray) -> tuple[list[int], np.ndarray, np.ndarray]:
+    """The registered model's probabilities for the rows of `x_all`, standardized on `data`'s own records."""
     weights, names = BYOM_WEIGHTS[data.spec.dataset_id], [f.name for f in data.spec.features]
     cols = [names.index(f) for f in weights]
-    x = data.x[:, cols]
+    x = x_all[:, cols]
     known = ~np.isnan(x).any(axis=1)
-    mean, sd = np.nanmean(x, axis=0), np.nanstd(x, axis=0)
+    mean, sd = np.nanmean(data.x[:, cols], axis=0), np.nanstd(data.x[:, cols], axis=0)
     linear = BYOM_INTERCEPT[data.spec.dataset_id] + ((x - mean) / sd) @ np.array(list(weights.values()))
-    p = np.where(known, 1 / (1 + np.exp(-linear)), np.nan)
+    return cols, known, np.where(known, 1 / (1 + np.exp(-linear)), np.nan)
+
+
+def byom(data: Synthetic) -> dict[str, Any]:
+    assert data.outcome is not None
+    weights = BYOM_WEIGHTS[data.spec.dataset_id]
+    cols, known, p = _byom_scores(data, data.x)
     rng = np.random.default_rng(data.spec.rng_seed + 3)
     _, test = _split(np.arange(data.spec.n), rng)
     test_known = test[known[test]]
@@ -295,20 +328,24 @@ def byom(data: Synthetic) -> dict[str, Any]:
     }
 
 
-def semantic(data: Synthetic) -> dict[str, Any]:
-    """Cosine similarity of each page to a content-brief vector over contextual features. The brief is the
-    mean profile of the brief's topic, a stand-in for an embedded brief; relevance uses the hidden topic."""
-    assert data.spec.brief_segment is not None
+def _brief_scores(data: Synthetic, x_all: np.ndarray) -> tuple[list[int], list[str], np.ndarray]:
+    """Similarity of the rows of `x_all` to the content brief, standardized on `data`'s own pages."""
     cols = used_features(data, ("contextual",))
-    x = data.x[:, cols]
-    mean, std = standardize_fit(x)
-    z = standardize_apply(x, mean, std)
+    mean, std = standardize_fit(data.x[:, cols])
+    z = standardize_apply(x_all[:, cols], mean, std)
     names = [data.spec.features[i].name for i in cols]
     brief = np.zeros(len(cols))
     for name, weight in {"topic_food": 2.0, "tone_positive": 0.6, "brand_safety": 0.8}.items():
         if name in names:
             brief[names.index(name)] = weight
-    scores = centroid_affinity(brief[None, :], z, MIN_COVERAGE).scores
+    return cols, names, centroid_affinity(brief[None, :], z, MIN_COVERAGE).scores
+
+
+def semantic(data: Synthetic) -> dict[str, Any]:
+    """Cosine similarity of each page to a content-brief vector over contextual features. The brief is the
+    mean profile of the brief's topic, a stand-in for an embedded brief; relevance uses the hidden topic."""
+    assert data.spec.brief_segment is not None
+    cols, names, scores = _brief_scores(data, data.x)
     relevant = np.flatnonzero(data.segment == data.spec.brief_segment)
     return {
         "features": names,

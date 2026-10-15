@@ -2,7 +2,7 @@
   "bundle_format": "1.0.0",
   "evaluated_at": "2026-10-14T12:00:00Z",
   "engine_version": "0.1.0",
-  "engine_sha256": "sha256:5e63e314eea26b91bbbb6a4243b5d6a3ab5e0003c14cf166f590770139efe5ff",
+  "engine_sha256": "sha256:85cd0bd10271967fb5f66ecfbac14bb034854ba19c496dbbc5fa3359ffe89bbd",
   "disclosure": "Synthetic datasets. Every verdict, model, score and metric here was computed by the engine when the site was built; the page only filters those results. The data describes no real people, households, companies or places, and the metrics test software behavior, not real-world performance. Nothing is activated.",
   "datasets": [
     {
@@ -24,6 +24,10 @@
         "export_rows": "ELIGIBLE"
       },
       "file": "b2b_accounts.json",
+      "universe": {
+        "file": "b2b_accounts.universe.json",
+        "rows": 8000
+      },
       "bundle_sha256": "sha256:3fcb747e8cdd845fb9f4933b7a14050d17c7720d7ce39e28b9cbf299ea425aaf"
     },
     {
@@ -41,6 +45,7 @@
         "export_rows": "ELIGIBLE"
       },
       "file": "geo_areas.json",
+      "universe": null,
       "bundle_sha256": "sha256:ed9056b1c85ce368e487de6fd2cfa71015243888aeeeab96f513251763179d16"
     },
     {
@@ -58,6 +63,10 @@
         "export_rows": "ELIGIBLE"
       },
       "file": "demo_firmo.json",
+      "universe": {
+        "file": "demo_firmo.universe.json",
+        "rows": 20000
+      },
       "bundle_sha256": "sha256:cc7ac03167742a1483141ecc85f41d918e81d08251de6e57a00c54c1e6ee739f"
     },
     {
@@ -77,6 +86,10 @@
         "export_rows": "ELIGIBLE"
       },
       "file": "interest_segments.json",
+      "universe": {
+        "file": "interest_segments.universe.json",
+        "rows": 20000
+      },
       "bundle_sha256": "sha256:c5c5e501ad4a73117ceab81076bc1296c4e88bb6486b931724bd95df876a76b7"
     },
     {
@@ -97,6 +110,10 @@
         "export_aggregate": "ELIGIBLE"
       },
       "file": "acr_tv.json",
+      "universe": {
+        "file": "acr_tv.universe.json",
+        "rows": 15000
+      },
       "bundle_sha256": "sha256:a4b8db23a3c7b25888756ee4bd23586455aa90f7c99290b31fad8c8f57442897"
     },
     {
@@ -118,6 +135,10 @@
         "export_rows": "ELIGIBLE"
       },
       "file": "web_app.json",
+      "universe": {
+        "file": "web_app.universe.json",
+        "rows": 20000
+      },
       "bundle_sha256": "sha256:0e25a755d0dd4fe960281229a67025898ad5ef572e3050e100dd9fb374c1a184"
     },
     {
@@ -139,6 +160,10 @@
         "export_rows": "ELIGIBLE"
       },
       "file": "crm.json",
+      "universe": {
+        "file": "crm.universe.json",
+        "rows": 15000
+      },
       "bundle_sha256": "sha256:dd84f4d7bfae06833c230d75573903b986f468878ebd27cc05c4f456b3de0efe"
     },
     {
@@ -158,6 +183,10 @@
         "export_rows": "ELIGIBLE"
       },
       "file": "url_content.json",
+      "universe": {
+        "file": "url_content.universe.json",
+        "rows": 6000
+      },
       "bundle_sha256": "sha256:c9646a39aea1963aa9b58fec974b5ba9318319d7513e0a918d9d654030712ff3"
     }
   ]

@@ -623,7 +623,7 @@
     "evaluated_at": "2026-10-14T12:00:00Z",
     "max_decision_ttl_hours": 168.0,
     "engine_version": "0.1.0",
-    "engine_sha256": "sha256:5e63e314eea26b91bbbb6a4243b5d6a3ab5e0003c14cf166f590770139efe5ff",
+    "engine_sha256": "sha256:85cd0bd10271967fb5f66ecfbac14bb034854ba19c496dbbc5fa3359ffe89bbd",
     "inputs": [
       {
         "path": "demo/scenarios/new_source/scenario.json",

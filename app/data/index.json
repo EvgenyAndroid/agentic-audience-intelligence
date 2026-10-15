@@ -2,7 +2,7 @@
   "bundle_format": "1.0.0",
   "evaluated_at": "2026-10-14T12:00:00Z",
   "engine_version": "0.1.0",
-  "engine_sha256": "sha256:5e63e314eea26b91bbbb6a4243b5d6a3ab5e0003c14cf166f590770139efe5ff",
+  "engine_sha256": "sha256:85cd0bd10271967fb5f66ecfbac14bb034854ba19c496dbbc5fa3359ffe89bbd",
   "disclosure": "Synthetic scenarios. Every decision, ranking and score on this page was computed by the engine when the site was built, at the evaluation time shown; nothing runs while you browse. Synthetic results test software behavior and are not evidence of data quality, model quality or market performance. The release preview is not an approval and nothing is activated.",
   "scenarios": [
     {
