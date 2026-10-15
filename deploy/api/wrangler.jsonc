@@ -22,7 +22,7 @@
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["ApiContainer"] }],
   "vars": {
     "AIP_ALLOWED_ORIGINS": "https://audiences.nofluffadvisory.com",
-    "AIP_RETENTION_HOURS": "24"
+    "AIP_RETENTION_HOURS": "1"
   }
   // Secret (not in this file): AIP_API_KEYS, set with `npx wrangler secret put AIP_API_KEYS`.
 }

@@ -15,7 +15,8 @@ Endpoints (all under /v1, all requiring ``Authorization: Bearer <invite key>``):
   GET    /v1/record-types           Record types an upload can declare.
 
 Invite keys are never stored: ``AIP_API_KEYS`` maps the SHA-256 of each key to its tenant id (``aip api-key``
-issues one). Uploads are kept for ``AIP_RETENTION_HOURS`` (default 24) at most, row values are never logged,
+issues one). Uploads are kept for ``AIP_RETENTION_HOURS`` (default 24; the live demo sets 1) at most, swept every
+minute, row values are never logged,
 and nothing here calls a language model.
 """
 
@@ -24,6 +25,8 @@ import hashlib
 import hmac
 import json
 import os
+import threading
+import time
 from collections.abc import Callable
 from datetime import timedelta
 from pathlib import Path
@@ -232,14 +235,30 @@ def create_app(
     return app
 
 
+def _sweep_every(store: Store, seconds: float) -> None:
+    """Delete expired uploads on a timer too, so retention holds even when no request arrives."""
+
+    def loop() -> None:
+        while True:
+            time.sleep(seconds)
+            try:
+                store.sweep(utcnow())
+            except OSError:
+                pass
+
+    threading.Thread(target=loop, name="aip-sweep", daemon=True).start()
+
+
 def app_from_env() -> FastAPI:
     """The production app, configured from the environment (``uvicorn --factory aip.api.app:app_from_env``)."""
     origins = os.environ.get("AIP_ALLOWED_ORIGINS", "https://audiences.nofluffadvisory.com")
+    store = Store(
+        Path(os.environ.get("AIP_DATA_DIR", "/tmp/aip-uploads")),
+        timedelta(hours=float(os.environ.get("AIP_RETENTION_HOURS", "24"))),
+    )
+    _sweep_every(store, 60)
     return create_app(
-        store=Store(
-            Path(os.environ.get("AIP_DATA_DIR", "/tmp/aip-uploads")),
-            timedelta(hours=float(os.environ.get("AIP_RETENTION_HOURS", "24"))),
-        ),
+        store=store,
         keys=_keys_from_env(),
         allowed_origins=[o.strip() for o in origins.split(",") if o.strip()],
     )

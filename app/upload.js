@@ -8,9 +8,9 @@ const API_BASE = ["localhost", "127.0.0.1"].includes(location.hostname)
   ? "http://localhost:8080"
   : "https://api.audiences.nofluffadvisory.com";
 const UPLOAD_DISCLOSURE =
-  "Your own data. Files go to the upload API, need an invite key, and are deleted within 24 hours or when you delete " +
-  "them. Only column names and summary statistics are shown back; no row is sent to a language model. Nothing is " +
-  "activated.";
+  "Your own data. Files go to the upload API, need an invite key, and are deleted within an hour, sooner if you delete " +
+  "them or the server goes idle. Only column names and summary statistics are shown back; no row is sent to a language " +
+  "model. Nothing is activated.";
 const KIND_LABEL = { identifier: "Identifier", binary: "Yes/no", count: "Count", share: "Share (0 to 1)", score: "Number", category: "Category", text: "Text", empty: "Empty" };
 const COLLECTION = [
   ["transaction_record", "Transaction records"], ["server_log", "Server logs"], ["tag_or_pixel", "Tag or pixel"],
@@ -30,7 +30,7 @@ const UV = {
   pickModel: (id) => { UV.model = id; renderUpload(true); },
 };
 const MODELED = ["lookalike", "actalike", "propensity"];
-const UP = { key: "", types: [], meta: null, confirmation: null, assessment: null, bundle: null, busy: false, error: null };
+const UP = { key: "", types: [], termsAccepted: false, meta: null, confirmation: null, assessment: null, bundle: null, busy: false, error: null };
 
 function readKey() { try { return sessionStorage.getItem("aai-key") || ""; } catch (_) { return ""; } }
 function saveKey(key) { try { sessionStorage.setItem("aai-key", key); } catch (_) { /* storage unavailable */ } }
@@ -78,13 +78,18 @@ function uploadCard() {
   const send = () => run(async () => {
     const chosen = file.files && file.files[0];
     if (!chosen) throw new Error("Choose a CSV file first.");
+    if (!UP.termsAccepted) throw new Error("Accept the data terms first.");
     UP.meta = await api("/v1/datasets", { method: "POST", headers: { "Content-Type": "text/csv" }, body: chosen });
     UP.confirmation = null; UP.assessment = null; UP.bundle = null;
   });
+  const upload = el("button", { type: "button", class: "btn", onclick: send, disabled: UP.busy || !UP.termsAccepted, text: "Upload" });
   const children = [
-    el("div", { class: "form-row" }, el("label", { for: "up-file", text: "CSV file" }), file,
-      el("button", { type: "button", class: "btn", onclick: send, disabled: UP.busy, text: "Upload" })),
+    el("div", { class: "form-row" }, el("label", { for: "up-file", text: "CSV file" }), file, upload),
     el("p", { class: "muted", text: "One row per record, a header row, UTF-8. Up to 20 MB, 200,000 rows and 200 columns. Mark seed records, a behavior pattern or an outcome with yes/no columns (1/0)." }),
+    el("label", { class: "check terms-check" },
+      el("input", { type: "checkbox", id: "up-terms", checked: UP.termsAccepted, onchange: (e) => { UP.termsAccepted = e.target.checked; upload.disabled = UP.busy || !UP.termsAccepted; } }),
+      el("span", {}, "I accept the ", el("a", { href: "terms.html", target: "_blank", rel: "noopener", text: "data terms" }),
+        ": the file is mine to use, holds no names, emails or special-category data, and is deleted within an hour.")),
   ];
   if (UP.meta) {
     const m = UP.meta;

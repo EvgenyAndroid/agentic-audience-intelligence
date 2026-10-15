@@ -133,7 +133,7 @@ ADR 0005's stage B: upload a CSV, confirm what it holds, have the router decide 
 
 Evidence is only as strong as what was supplied. Rights and feature timing cannot be checked from a CSV, so they are true only when the uploader attests to them; otherwise the methods stay PROVISIONAL (`unverified_permission`, `missing_availability_evidence`). Sensitive columns stay in the file and never reach a model. Each tenant gets its own copy of the location policies, because the router refuses another tenant's.
 
-Access is by invite key: `aip api-key --tenant tenant_acme` prints a key once and the SHA-256 to add to `AIP_API_KEYS` (a JSON object of hash to tenant id). Tenants are isolated on disk and by id; uploads are deleted after `AIP_RETENTION_HOURS` (default 24); row values are never logged and nothing calls a language model.
+Access is by invite key: `aip api-key --tenant tenant_acme` prints a key once and the SHA-256 to add to `AIP_API_KEYS` (a JSON object of hash to tenant id). Tenants are isolated on disk and by id; uploads are deleted after `AIP_RETENTION_HOURS` (default 24; the live demo sets 1), checked every minute; the demonstrator's [data terms](app/terms.html) say what an uploader agrees to; row values are never logged and nothing calls a language model.
 
 ```powershell
 .\scripts\bootstrap.ps1 -WithModeling -WithApi
