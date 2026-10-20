@@ -23,7 +23,9 @@ A Worker at `api.audiences.nofluffadvisory.com` forwards every request to one co
 
 ## Deploy
 
-From `deploy/api/` on a machine with Docker running and `wrangler login` done:
+Automatic: `.github/workflows/deploy-api.yml` deploys after CI passes on every push to `main` (or on demand from the Actions tab). It needs the repository secrets `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit, Containers: Edit) and `CLOUDFLARE_ACCOUNT_ID`; without them it skips with a warning.
+
+By hand, from `deploy/api/` on a machine with Docker running and `wrangler login` done:
 
 ```powershell
 npm ci
