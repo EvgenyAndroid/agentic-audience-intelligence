@@ -5,31 +5,53 @@ from __future__ import annotations
 import numpy as np
 
 
+def _top_with_ties(scores: np.ndarray, k: int) -> np.ndarray:
+    """Indices of the top k scores, where a cut-off that falls inside a group of tied scores takes the whole
+    group: everything scoring at least the k-th highest score is selected. The selection therefore depends only
+    on the scores, never on the order of the rows, and can hold more than k entries when scores tie."""
+    if len(scores) == 0:
+        return np.array([], dtype=int)
+    threshold = np.sort(scores)[::-1][min(k, len(scores)) - 1]
+    return np.flatnonzero(scores >= threshold)
+
+
 def heldout_seed_recall_at(scores: np.ndarray, is_heldout_seed: np.ndarray, reach_fraction: float) -> float:
-    """Share of held-out seed members ranked within the top reach_fraction of the scored pool (NaN scores excluded)."""
+    """Share of held-out seed members ranked within the top reach_fraction of the scored pool (NaN scores excluded).
+    Ties at the cut-off are selected together (see _top_with_ties)."""
     valid = ~np.isnan(scores)
     s, y = scores[valid], is_heldout_seed[valid].astype(bool)
     if y.sum() == 0:
         raise ValueError("no held-out seed members among scored entities")
     k = max(1, int(np.floor(reach_fraction * len(s))))
-    top = np.argsort(-s, kind="stable")[:k]
+    top = _top_with_ties(s, k)
     return float(y[top].sum()) / float(y.sum())
 
 
 def precision_at_reach(y: np.ndarray, p: np.ndarray, reach_fraction: float) -> float:
+    """Positive rate among the top reach_fraction by score. Ties at the cut-off are selected together (see
+    _top_with_ties)."""
+    p = np.asarray(p, dtype=float)
     k = max(1, int(np.floor(reach_fraction * len(p))))
-    top = np.argsort(-p, kind="stable")[:k]
+    top = _top_with_ties(p, k)
     return float(np.asarray(y)[top].mean())
 
 
 def average_precision(y: np.ndarray, p: np.ndarray) -> float:
+    """Step-function average precision, sum over distinct thresholds of (recall gained) x (precision there), as
+    sklearn.metrics.average_precision_score computes it. Tied scores form one threshold: they are selected
+    together, so the value does not depend on the order of the rows."""
     y = np.asarray(y).astype(bool)
     if y.sum() == 0:
         raise ValueError("average precision is undefined without positives")
-    order = np.argsort(-np.asarray(p), kind="stable")
-    hits = y[order]
-    precision = np.cumsum(hits) / np.arange(1, len(hits) + 1)
-    return float((precision * hits).sum() / hits.sum())
+    p = np.asarray(p, dtype=float)
+    order = np.argsort(-p, kind="stable")
+    ranked, hits = p[order], y[order]
+    # The last position of each run of equal scores: one threshold per distinct score.
+    ends = np.r_[np.flatnonzero(np.diff(ranked)), len(ranked) - 1]
+    true_positives = np.cumsum(hits)[ends]
+    precision = true_positives / (ends + 1)
+    recall = true_positives / hits.sum()
+    return float(np.sum(np.diff(np.r_[0.0, recall]) * precision))
 
 
 def brier_score(y: np.ndarray, p: np.ndarray) -> float:

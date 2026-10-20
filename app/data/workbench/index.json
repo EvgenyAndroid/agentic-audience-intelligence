@@ -2,7 +2,7 @@
   "bundle_format": "1.0.0",
   "evaluated_at": "2026-10-14T12:00:00Z",
   "engine_version": "0.1.0",
-  "engine_sha256": "sha256:85cd0bd10271967fb5f66ecfbac14bb034854ba19c496dbbc5fa3359ffe89bbd",
+  "engine_sha256": "sha256:136c3fd1c94b22dcf22580e06dc0eaf48be3ca5641df6a2acee662aecb3d8d3e",
   "disclosure": "Synthetic datasets. Every verdict, model, score and metric here was computed by the engine when the site was built; the page only filters those results. The data describes no real people, households, companies or places, and the metrics test software behavior, not real-world performance. Nothing is activated.",
   "datasets": [
     {

@@ -256,6 +256,15 @@ def _flag(cells: list[str], column: str) -> np.ndarray:
     return np.array([c in TRUE for c in lowered], dtype=bool)
 
 
+def _label(cells: list[str], column: str) -> np.ndarray:
+    """An outcome label: 1.0 or 0.0, and NaN where the cell is empty. A missing outcome is unknown, not a
+    negative, unlike a missing seed or behavior flag, which means the record is not in that list."""
+    lowered = [c.lower() for c in cells]
+    if any(c not in TRUE | FALSE and c not in NULLS for c in lowered):
+        raise UploadError(f"Column '{column}' must hold yes/no values (1/0, true/false) or be empty where unknown.")
+    return np.array([np.nan if c in NULLS else (1.0 if c in TRUE else 0.0) for c in lowered], dtype=float)
+
+
 def prepare(table: Table, conf: Confirmation, dataset_id: str) -> Prepared:
     """Validate the confirmation against the table and build the workbench spec and data container."""
     types = TypeRegistry.load()
@@ -338,7 +347,9 @@ def prepare(table: Table, conf: Confirmation, dataset_id: str) -> Prepared:
         if conf.behavior_column
         else np.array([], int)
     )
-    outcome = _flag(column(conf.outcome_column), conf.outcome_column).astype(np.int8) if conf.outcome_column else None
+    outcome = _label(column(conf.outcome_column), conf.outcome_column) if conf.outcome_column else None
+    if outcome is not None and not np.isfinite(outcome).any():
+        raise UploadError(f"The outcome column '{conf.outcome_column}' has no known values.")
     if conf.seed_column and len(seed) < 20:
         raise UploadError(f"The seed column '{conf.seed_column}' marks fewer than 20 records.")
     if conf.behavior_column and (len(behavior) < 20 or not behavioral):
@@ -389,7 +400,7 @@ def prepare(table: Table, conf: Confirmation, dataset_id: str) -> Prepared:
             label=conf.outcome_label or conf.outcome_column,
             horizon_days=conf.outcome_horizon_days,
             weights={},
-            base_rate=float(outcome.mean()) if outcome is not None else 0.0,
+            base_rate=float(np.nanmean(outcome)) if outcome is not None else 0.0,
         )
         if conf.outcome_column and outcome is not None
         else None,
@@ -455,9 +466,20 @@ def _evidence(prep: Prepared, task: dict[str, Any], method: str | None, now: dat
     return bundle
 
 
+def unknown_outcomes(prep: Prepared) -> int:
+    """Records whose outcome cell is empty: left out of propensity fitting and evaluation."""
+    outcome = prep.data.outcome
+    return int(np.isnan(outcome).sum()) if outcome is not None else 0
+
+
 def assessment(prep: Prepared) -> dict[str, Any]:
-    """The workbench's rule-based assessment, computed from the confirmed upload."""
-    return _assessment(prep.spec, prep.data)
+    """The workbench's rule-based assessment, computed from the confirmed upload, with the count of records whose
+    outcome is unknown (the outcome's base rate is over known outcomes only)."""
+    result = _assessment(prep.spec, prep.data)
+    if result["outcome"] is not None:
+        unknown = unknown_outcomes(prep)
+        result["outcome"].update(known_outcomes=prep.spec.n - unknown, unknown_outcomes=unknown)
+    return result
 
 
 AGGREGATE_MIN_COUNT = 50
@@ -471,7 +493,15 @@ def build(prep: Prepared, method: str) -> dict[str, Any]:
     if method not in prep.spec.methods or method not in MODELED_METHODS:
         raise UploadError(f"'{method}' is not a method this upload supports.")
     if method == "propensity":
+        qualified, positives = wb_methods.labels_qualified(prep.data)
+        if not qualified:
+            raise UploadError(
+                f"Propensity needs both outcomes in the fit and held-out records and at least "
+                f"{wb_methods.MIN_POSITIVES} positives to train on, once the {unknown_outcomes(prep):,} records with "
+                f"an unknown outcome are left out; this file has {positives:,} known positives."
+            )
         result = wb_methods.propensity(prep.data)
+        result["unknown_outcomes"] = unknown_outcomes(prep)
     else:
         result = wb_methods.affinity(prep.data, method)
     result = wb_methods.strip_private(result)
@@ -581,7 +611,7 @@ def expand(prep: Prepared, table: Table, universe: Universe, method: str) -> dic
         positive = {upload_keys[i] for i in data.behavior}
     else:
         assert data.outcome is not None
-        positive = {k for k, y in zip(upload_keys, data.outcome, strict=True) if y}
+        positive = {k for k, y in zip(upload_keys, data.outcome, strict=True) if y == 1}
     exclude = np.array([k in positive for k in universe.keys], dtype=bool)
     result = wb_methods.expand(data, method, universe.x, exclude)
     return {"rows": len(universe.keys), **result}
@@ -650,7 +680,7 @@ def route(prep: Prepared, table: Table, *, tenant_id: str, now: datetime, ttl_ho
         }
         if spec.location == "cleanroom"
         else None,
-        "assessment": _assessment(spec, prep.data),
+        "assessment": assessment(prep),
         "documents": {d["kind"]: d for d in generated},
         "decisions": routed,
         "recommendation": recommendation,

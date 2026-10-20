@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import io
+from collections.abc import Callable
 from datetime import UTC, datetime
 
 import numpy as np
@@ -301,3 +302,53 @@ def test_universe_rejects_non_numeric_features() -> None:
     bad = universe_csv(make_csv()).replace(b"\nu00003,", b"\nu00003,lots", 1)
     with pytest.raises(uploads.UploadError, match="not a number"):
         uploads.read_universe(prep, uploads.parse_csv(bad))
+
+
+# Finding C: an empty outcome cell is an unknown label, not a negative.
+
+
+def with_outcomes(raw: bytes, cell: Callable[[int, str], str]) -> bytes:
+    """The same file with each outcome cell (purchased) replaced by cell(row index, original value)."""
+    rows = list(csv.reader(io.StringIO(raw.decode())))
+    j = rows[0].index("purchased")
+    for i, row in enumerate(rows[1:]):
+        row[j] = cell(i, row[j])
+    buf = io.StringIO()
+    csv.writer(buf).writerows(rows)
+    return buf.getvalue().encode()
+
+
+def test_missing_outcome_is_unknown_not_negative() -> None:
+    raw = with_outcomes(make_csv(), lambda i, v: "" if i % 5 == 0 else v)
+    prep = uploads.prepare(uploads.parse_csv(raw), confirm(), "up_000000000001")
+    labels = prep.data.outcome
+    assert labels is not None
+    blank = np.arange(600) % 5 == 0
+    assert np.isnan(labels[blank]).all() and np.isin(labels[~blank], (0.0, 1.0)).all()
+    outcome = uploads.assessment(prep)["outcome"]
+    positives = int(labels[~blank].sum())
+    assert outcome["known_outcomes"] == 480 and outcome["unknown_outcomes"] == 120
+    assert outcome["positives"] == positives and outcome["base_rate"] == round(positives / 480, 4)
+
+
+def test_propensity_training_excludes_unknown_outcomes() -> None:
+    raw = with_outcomes(make_csv(1000), lambda i, v: "" if i % 10 == 0 else v)
+    prep = uploads.prepare(uploads.parse_csv(raw), confirm(), "up_000000000001")
+    result = uploads.build(prep, "propensity")
+    unknown = set(range(0, 1000, 10))
+    assert result["unknown_outcomes"] == 100
+    assert result["fit_count"] + len(result["heldout"]) == 900
+    assert not unknown & set(result["heldout"]) and len(result["heldout_labels"]) == len(result["heldout"])
+    for model in result["models"]:
+        assert model["evaluation"]["test_count"] == len(result["heldout"])
+
+
+def test_propensity_refuses_single_class_after_exclusion() -> None:
+    # Every negative is left empty, so the known outcomes are all positive.
+    raw = with_outcomes(make_csv(), lambda i, v: v if v == "1" else "")
+    table = uploads.parse_csv(raw)
+    prep = uploads.prepare(table, confirm(), "up_000000000001")
+    with pytest.raises(uploads.UploadError, match="both outcomes"):
+        uploads.build(prep, "propensity")
+    bundle = uploads.route(prep, table, tenant_id="tenant_a", now=NOW)
+    assert bundle["decisions"]["propensity"]["decision"]["verdict"] != "ELIGIBLE"

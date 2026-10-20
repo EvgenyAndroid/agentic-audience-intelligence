@@ -238,3 +238,61 @@ def test_expand_scores_the_universe_for_every_modeled_method(client: TestClient)
         assert body["keys"][0] == "u00000" and len(body["breakdown_codes"]) == 800
         assert len(body["result"]["models"]) == 2 and len(body["result"]["models"][0]["scores"]) == 800
     assert client.post(f"/v1/datasets/{dataset_id}/expand/lookalike", headers=auth(KEY_B)).status_code == 404
+
+
+# Finding A: a decision is only ever used with the confirmation and upload it was made from.
+
+
+def test_assess_after_route_invalidates_the_bundle(client: TestClient) -> None:
+    dataset_id = routed(client)
+    changed = {**CONFIRMATION, "behavior_column": None, "behavior_features": []}
+    assert client.post(f"/v1/datasets/{dataset_id}/assess", json=changed, headers=auth()).status_code == 200
+    r = client.post(f"/v1/datasets/{dataset_id}/build/lookalike", headers=auth())
+    assert r.status_code == 409 and "Route the dataset" in r.json()["detail"]
+    assert client.get(f"/v1/datasets/{dataset_id}", headers=auth()).json()["bundle"] is None
+
+
+@pytest.mark.parametrize(
+    ("field", "message"), [("confirmation_sha256", "confirmation changed"), ("upload_sha256", "upload changed")]
+)
+def test_build_refuses_a_bundle_whose_confirmation_hash_differs(
+    client: TestClient, tmp_path: Path, field: str, message: str
+) -> None:
+    dataset_id = routed(client)
+    # Simulate the race the lock closes: a bundle decided from something other than what is stored now.
+    store = Store(tmp_path / "store", timedelta(hours=24))
+    bundle = store.read("tenant_a", dataset_id, "bundle")
+    assert bundle is not None
+    bundle["manifest"][field] = "sha256:" + "0" * 64
+    store.write("tenant_a", dataset_id, "bundle", bundle)
+    for action in ("build", "expand"):
+        r = client.post(f"/v1/datasets/{dataset_id}/{action}/lookalike", headers=auth())
+        assert r.status_code == 409 and message in r.json()["detail"]
+
+
+def test_universe_upload_invalidates_prior_expansion(client: TestClient, tmp_path: Path) -> None:
+    dataset_id = routed(client)
+    assert put_universe(client, dataset_id).status_code == 201
+    first = client.post(f"/v1/datasets/{dataset_id}/expand/lookalike", headers=auth()).json()
+    assert len(first["keys"]) == 800
+    replacement = make_csv(300, rng_seed=9).replace(b"\nc", b"\nv")
+    r = client.post(
+        f"/v1/datasets/{dataset_id}/universe?rights_attested=true",
+        content=replacement,
+        headers={**auth(), "Content-Type": "text/csv"},
+    )
+    assert r.status_code == 201 and r.json()["sha256"] != first["universe"]["sha256"]
+    # Expansions are never kept on the server, so nothing of the old one survives the new universe ...
+    folder = next((tmp_path / "store").glob(f"*/{dataset_id}"))
+    assert sorted(p.name for p in folder.iterdir()) == [
+        "bundle.json",
+        "confirmation.json",
+        "meta.json",
+        "raw.csv",
+        "universe.csv",
+        "universe.json",
+    ]
+    # ... and an expansion has to be run again, against the new universe only.
+    second = client.post(f"/v1/datasets/{dataset_id}/expand/lookalike", headers=auth()).json()
+    assert second["universe"]["sha256"] == r.json()["sha256"] and second["keys"][0] == "v00000"
+    assert len(second["result"]["models"][0]["scores"]) == 300

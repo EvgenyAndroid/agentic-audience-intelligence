@@ -13,6 +13,7 @@ import json
 import re
 import secrets
 import shutil
+import threading
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -32,6 +33,15 @@ class Store:
         self.root = root
         self.retention = retention
         root.mkdir(parents=True, exist_ok=True)
+        self._locks: dict[tuple[str, str], threading.Lock] = {}
+        self._locks_guard = threading.Lock()
+
+    def lock(self, tenant_id: str, dataset_id: str) -> threading.Lock:
+        """One lock per dataset. Every read-check-write of a dataset's confirmation, bundle or universe holds it,
+        so a confirmation cannot change between a decision being checked and the work it permits. The API runs
+        as one process, so an in-process lock covers every request."""
+        with self._locks_guard:
+            return self._locks.setdefault((tenant_id, dataset_id), threading.Lock())
 
     def _tenant_dir(self, tenant_id: str) -> Path:
         return self.root / hashlib.sha256(tenant_id.encode()).hexdigest()[:24]
@@ -87,6 +97,10 @@ class Store:
     def write(self, tenant_id: str, dataset_id: str, name: str, value: dict[str, Any], *, create: bool = False) -> None:
         folder = self._tenant_dir(tenant_id) / dataset_id if create else self._dir(tenant_id, dataset_id)
         (folder / f"{name}.json").write_text(json.dumps(value, ensure_ascii=False), encoding="utf-8")
+
+    def remove(self, tenant_id: str, dataset_id: str, name: str) -> None:
+        """Delete one stored document (a no-op when it does not exist)."""
+        (self._dir(tenant_id, dataset_id) / f"{name}.json").unlink(missing_ok=True)
 
     def delete(self, tenant_id: str, dataset_id: str) -> None:
         shutil.rmtree(self._dir(tenant_id, dataset_id))

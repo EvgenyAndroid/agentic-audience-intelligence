@@ -153,12 +153,31 @@ def _propensity_metrics(y: np.ndarray, p: np.ndarray) -> dict[str, Any]:
     }
 
 
-def propensity(data: Synthetic) -> dict[str, Any]:
+def _known(data: Synthetic) -> np.ndarray:
+    """Records whose outcome is known. An uploaded outcome can be missing (NaN), which is an unknown label, not a
+    negative; generated outcomes are always known."""
     assert data.outcome is not None
-    rng = np.random.default_rng(data.spec.rng_seed + 3)
-    train, test = _split(np.arange(data.spec.n), rng)
+    return np.isfinite(data.outcome.astype(float))
+
+
+def _labels(data: Synthetic) -> np.ndarray:
+    """Outcome labels as 0/1 integers; meaningful only where `_known` is true."""
+    assert data.outcome is not None
+    return np.where(_known(data), data.outcome, 0).astype(int)
+
+
+def _outcome_split(data: Synthetic) -> tuple[np.ndarray, np.ndarray]:
+    """The propensity fit and held-out split over records with a known outcome. The split is drawn over every
+    record first and unknown ones are then dropped, so a file without unknown outcomes splits exactly as before."""
+    train, test = _split(np.arange(data.spec.n), np.random.default_rng(data.spec.rng_seed + 3))
+    known = _known(data)
+    return train[known[train]], test[known[test]]
+
+
+def propensity(data: Synthetic) -> dict[str, Any]:
+    train, test = _outcome_split(data)
     cols = used_features(data)
-    x, y = data.x[:, cols], data.outcome.astype(int)
+    x, y = data.x[:, cols], _labels(data)
     fitted = [
         ("logistic", "Logistic regression", fit_logistic_baseline(x[train], y[train], data.spec.rng_seed)),
         ("boosted", "Gradient-boosted trees", fit_boosted_candidate(x[train], y[train], data.spec.rng_seed, 150)),
@@ -226,10 +245,9 @@ def expand(data: Synthetic, kind: str, universe: np.ndarray, exclude: np.ndarray
             }
         )
     elif kind == "propensity":
-        assert data.outcome is not None
-        train, _ = _split(np.arange(data.spec.n), np.random.default_rng(data.spec.rng_seed + 3))
+        train, _ = _outcome_split(data)
         cols = used_features(data)
-        x, y = data.x[:, cols], data.outcome.astype(int)
+        x, y = data.x[:, cols], _labels(data)
         fitted = [
             ("logistic", "Logistic regression", fit_logistic_baseline(x[train], y[train], data.spec.rng_seed)),
             ("boosted", "Gradient-boosted trees", fit_boosted_candidate(x[train], y[train], data.spec.rng_seed, 150)),
@@ -277,8 +295,15 @@ def expand(data: Synthetic, kind: str, universe: np.ndarray, exclude: np.ndarray
 
 
 def labels_qualified(data: Synthetic) -> tuple[bool, int]:
-    positives = int(data.outcome.sum()) if data.outcome is not None else 0
-    return positives * (1 - HOLDOUT_FRACTION) >= MIN_POSITIVES, positives
+    """Enough known positives to train on, and both classes in the fit split and in the held-out split once
+    records with an unknown outcome are left out."""
+    if data.outcome is None:
+        return False, 0
+    y, known = _labels(data), _known(data)
+    positives = int(y[known].sum())
+    train, test = _outcome_split(data)
+    both_classes = all(len(np.unique(y[part])) == 2 for part in (train, test))
+    return positives * (1 - HOLDOUT_FRACTION) >= MIN_POSITIVES and both_classes, positives
 
 
 # The registered bring-your-own model: weights the owner supplied, over standardized features.

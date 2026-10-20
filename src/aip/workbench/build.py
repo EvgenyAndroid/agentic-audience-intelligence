@@ -78,7 +78,7 @@ def _assessment(spec: DatasetSpec, data: Synthetic) -> dict[str, Any]:
                 f"({spec.behavior_label}) are present."
             )
         elif method == "propensity":
-            positives = int(data.outcome.sum()) if data.outcome is not None else 0
+            positives = int(np.nansum(data.outcome)) if data.outcome is not None else 0
             why = (
                 f"An outcome label ({spec.outcome.label} within {spec.outcome.horizon_days} days) "
                 f"has {positives:,} positives."
@@ -91,6 +91,7 @@ def _assessment(spec: DatasetSpec, data: Synthetic) -> dict[str, Any]:
             why = f"A content brief ({spec.brief_label}) and contextual signals are present."
         proposals.append({"method": method, "label": METHOD_LABEL[method], "rationale": why})
     labels_ok, positives = methods.labels_qualified(data) if spec.outcome else (False, 0)
+    known = int(np.isfinite(data.outcome.astype(float)).sum()) if data.outcome is not None else 0
     return {
         "assessor": "rule_based",
         "unit": {**docs.unit_ref(spec), "label": spec.unit.label},
@@ -103,7 +104,8 @@ def _assessment(spec: DatasetSpec, data: Synthetic) -> dict[str, Any]:
             "label": spec.outcome.label,
             "horizon_days": spec.outcome.horizon_days,
             "positives": positives,
-            "base_rate": round(positives / spec.n, 4),
+            # Over records with a known outcome (every record, for generated data).
+            "base_rate": round(positives / known, 4) if known else 0.0,
             "qualified": labels_ok,
             "min_positives_for_training": methods.MIN_POSITIVES,
         }

@@ -218,7 +218,7 @@ function assessmentCard() {
     ["Records", fmt(a.rows)],
     a.seed ? ["Seed list", `${a.seed.label}: ${fmt(a.seed.size)}`] : null,
     a.behavior ? ["Behavior pattern", `${a.behavior.label}: ${fmt(a.behavior.size)}`] : null,
-    a.outcome ? ["Outcome label", `${fmt(a.outcome.positives)} positives (${pct(a.outcome.base_rate, 1)})${a.outcome.qualified ? "" : `, fewer than the ${a.outcome.min_positives_for_training} needed to train`}`] : null,
+    a.outcome ? ["Outcome label", `${fmt(a.outcome.positives)} positives (${pct(a.outcome.base_rate, 1)} of ${fmt(a.outcome.known_outcomes)} known outcomes${a.outcome.unknown_outcomes ? `; ${fmt(a.outcome.unknown_outcomes)} unknown, left out` : ""})${a.outcome.qualified ? "" : `, fewer than the ${a.outcome.min_positives_for_training} needed to train`}`] : null,
     a.sensitive_excluded.length ? ["Sensitive, excluded", a.sensitive_excluded.join(", ")] : null,
     ...Object.entries(a.coverage).map(([m, v]) => [`Coverage, ${METHOD_SHORT[m].toLowerCase()}`, `${pct(v)} of records have enough signals (needs 90%)`]),
   ].filter(Boolean);

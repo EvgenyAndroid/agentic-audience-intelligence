@@ -38,11 +38,13 @@ from pathlib import Path
 from typing import Annotated, Any, Literal
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from aip import __version__, paths, uploads
+from aip.canonical import sha256_of
 from aip.registry import TypeRegistry
 from aip.timeutil import format_ts, utcnow
 from aip.uploads.store import MAX_DATASETS_PER_TENANT, NotFound, Store
@@ -186,56 +188,82 @@ def create_app(
             "bundle": load(tenant_id, dataset_id, "bundle"),
         }
 
+    def confirmation_sha256(confirmation: dict[str, Any]) -> str:
+        return sha256_of(ConfirmationIn(**confirmation).model_dump())
+
     @app.post("/v1/datasets/{dataset_id}/assess")
     def assess(dataset_id: str, body: ConfirmationIn, tenant_id: Tenant) -> dict[str, Any]:
-        prep = uploads.prepare(table(tenant_id, dataset_id), body.to_confirmation(), dataset_id)
-        store.write(tenant_id, dataset_id, "confirmation", body.model_dump())
+        with store.lock(tenant_id, dataset_id):
+            prep = uploads.prepare(table(tenant_id, dataset_id), body.to_confirmation(), dataset_id)
+            store.write(tenant_id, dataset_id, "confirmation", body.model_dump())
+            # The routed decisions (and the results built under them) belong to the previous confirmation.
+            store.remove(tenant_id, dataset_id, "bundle")
         return {"dataset_id": dataset_id, "assessment": uploads.assessment(prep)}
 
     @app.post("/v1/datasets/{dataset_id}/route")
     def route(dataset_id: str, tenant_id: Tenant) -> dict[str, Any]:
-        confirmation = load(tenant_id, dataset_id, "confirmation")
-        if confirmation is None:
-            raise HTTPException(409, "Confirm the dataset (POST .../assess) before routing it.")
-        parsed = table(tenant_id, dataset_id)
-        prep = uploads.prepare(parsed, ConfirmationIn(**confirmation).to_confirmation(), dataset_id)
-        moment = now()
-        bundle = uploads.route(prep, parsed, tenant_id=tenant_id, now=moment)
-        bundle["manifest"] = {
-            "evaluated_at": format_ts(moment),
-            "engine_version": __version__,
-            "snapshot_sha256": parsed.sha256,
-            "computed": "on_request",
-            "synthetic": False,
-        }
-        store.write(tenant_id, dataset_id, "bundle", bundle)
+        with store.lock(tenant_id, dataset_id):
+            confirmation = load(tenant_id, dataset_id, "confirmation")
+            if confirmation is None:
+                raise HTTPException(409, "Confirm the dataset (POST .../assess) before routing it.")
+            parsed = table(tenant_id, dataset_id)
+            prep = uploads.prepare(parsed, ConfirmationIn(**confirmation).to_confirmation(), dataset_id)
+            moment = now()
+            bundle = uploads.route(prep, parsed, tenant_id=tenant_id, now=moment)
+            bundle["manifest"] = {
+                "evaluated_at": format_ts(moment),
+                "engine_version": __version__,
+                "snapshot_sha256": parsed.sha256,
+                # What the decisions were made from; anything that consumes them checks both first.
+                "upload_sha256": parsed.sha256,
+                "confirmation_sha256": confirmation_sha256(confirmation),
+                "computed": "on_request",
+                "synthetic": False,
+            }
+            store.write(tenant_id, dataset_id, "bundle", bundle)
         return bundle
 
-    @app.post("/v1/datasets/{dataset_id}/build/{method}")
-    def build(dataset_id: str, method: str, tenant_id: Tenant) -> dict[str, Any]:
+    def decided(
+        tenant_id: str, dataset_id: str, method: str, action: str
+    ) -> tuple[dict[str, Any], uploads.Prepared, uploads.Table]:
+        """The routed bundle, checked against the confirmation and upload it was decided from, and the method's
+        verdict. The caller holds the dataset lock."""
         bundle = load(tenant_id, dataset_id, "bundle")
         confirmation = load(tenant_id, dataset_id, "confirmation")
         if bundle is None or confirmation is None:
-            raise HTTPException(409, "Route the dataset (POST .../route) before building an audience.")
+            raise HTTPException(409, f"Route the dataset (POST .../route) before {action}.")
+        manifest = bundle.get("manifest", {})
+        if manifest.get("confirmation_sha256") != confirmation_sha256(confirmation):
+            raise HTTPException(
+                409, "The confirmation changed after routing; route the dataset again (POST .../route)."
+            )
+        parsed = table(tenant_id, dataset_id)
+        if manifest.get("upload_sha256") != parsed.sha256:
+            raise HTTPException(409, "The upload changed after routing; route the dataset again (POST .../route).")
         entry = bundle["decisions"].get(method)
         if entry is None or entry["role"] != "method":
             raise HTTPException(404, f"No method '{method}' for this dataset.")
         if entry["decision"]["verdict"] != "ELIGIBLE":
             raise HTTPException(409, f"The router has not made '{method}' ELIGIBLE ({entry['decision']['verdict']}).")
-        prep = uploads.prepare(
-            table(tenant_id, dataset_id), ConfirmationIn(**confirmation).to_confirmation(), dataset_id
-        )
-        result = uploads.build(prep, method)
-        bundle["results"][method] = result
-        store.write(tenant_id, dataset_id, "bundle", bundle)
+        prep = uploads.prepare(parsed, ConfirmationIn(**confirmation).to_confirmation(), dataset_id)
+        return bundle, prep, parsed
+
+    @app.post("/v1/datasets/{dataset_id}/build/{method}")
+    def build(dataset_id: str, method: str, tenant_id: Tenant) -> dict[str, Any]:
+        with store.lock(tenant_id, dataset_id):
+            bundle, prep, _ = decided(tenant_id, dataset_id, method, "building an audience")
+            result = uploads.build(prep, method)
+            bundle["results"][method] = result
+            store.write(tenant_id, dataset_id, "bundle", bundle)
         return {"dataset_id": dataset_id, "method": method, "result": result}
 
-    def prepared(tenant_id: str, dataset_id: str) -> tuple[uploads.Prepared, uploads.Table]:
+    def prepared(tenant_id: str, dataset_id: str) -> uploads.Prepared:
         confirmation = load(tenant_id, dataset_id, "confirmation")
         if confirmation is None:
             raise HTTPException(409, "Confirm the dataset (POST .../assess) first.")
-        parsed = table(tenant_id, dataset_id)
-        return uploads.prepare(parsed, ConfirmationIn(**confirmation).to_confirmation(), dataset_id), parsed
+        return uploads.prepare(
+            table(tenant_id, dataset_id), ConfirmationIn(**confirmation).to_confirmation(), dataset_id
+        )
 
     @app.post("/v1/datasets/{dataset_id}/universe", status_code=201)
     async def universe(
@@ -246,38 +274,40 @@ def create_app(
         declared = request.headers.get("content-length")
         if declared and declared.isdigit() and int(declared) > uploads.MAX_BYTES:
             raise HTTPException(413, f"The file is larger than {uploads.MAX_BYTES // (1024 * 1024)} MB.")
-        prep, _ = prepared(tenant_id, dataset_id)
         raw = await request.body()
-        parsed = uploads.parse_csv(raw)
-        read = uploads.read_universe(prep, parsed)
-        meta = {
-            "rows": len(read.keys),
-            "byte_count": parsed.byte_count,
-            "sha256": parsed.sha256,
-            "breakdown": read.breakdown is not None,
-            "rights_attested": True,
-            "uploaded_at": format_ts(now()),
-        }
-        store.put_raw(tenant_id, dataset_id, "universe", raw)
-        store.write(tenant_id, dataset_id, "universe", meta)
-        return meta
+
+        def replace() -> dict[str, Any]:
+            # Expansions are never stored: each one is scored and returned. Replacing the universe under the
+            # dataset lock means no expansion can read one universe's metadata and another's records.
+            with store.lock(tenant_id, dataset_id):
+                parsed = uploads.parse_csv(raw)
+                read = uploads.read_universe(prepared(tenant_id, dataset_id), parsed)
+                meta = {
+                    "rows": len(read.keys),
+                    "byte_count": parsed.byte_count,
+                    "sha256": parsed.sha256,
+                    "breakdown": read.breakdown is not None,
+                    "rights_attested": True,
+                    "uploaded_at": format_ts(now()),
+                }
+                store.put_raw(tenant_id, dataset_id, "universe", raw)
+                store.write(tenant_id, dataset_id, "universe", meta)
+                return meta
+
+        return await run_in_threadpool(replace)
 
     @app.post("/v1/datasets/{dataset_id}/expand/{method}")
     def expand(dataset_id: str, method: str, tenant_id: Tenant) -> dict[str, Any]:
-        bundle = load(tenant_id, dataset_id, "bundle")
-        if bundle is None:
-            raise HTTPException(409, "Route the dataset (POST .../route) before expanding an audience.")
-        entry = bundle["decisions"].get(method)
-        if entry is None or entry["role"] != "method":
-            raise HTTPException(404, f"No method '{method}' for this dataset.")
-        if entry["decision"]["verdict"] != "ELIGIBLE":
-            raise HTTPException(409, f"The router has not made '{method}' ELIGIBLE ({entry['decision']['verdict']}).")
-        meta = load(tenant_id, dataset_id, "universe")
-        if meta is None or not meta.get("rights_attested"):
-            raise HTTPException(409, "Upload a universe (POST .../universe) before expanding into it.")
-        prep, parsed = prepared(tenant_id, dataset_id)
-        read = uploads.read_universe(prep, uploads.parse_csv(store.raw(tenant_id, dataset_id, "universe")))
-        result = uploads.expand(prep, parsed, read, method)
+        with store.lock(tenant_id, dataset_id):
+            _, prep, parsed = decided(tenant_id, dataset_id, method, "expanding an audience")
+            meta = load(tenant_id, dataset_id, "universe")
+            if meta is None or not meta.get("rights_attested"):
+                raise HTTPException(409, "Upload a universe (POST .../universe) before expanding into it.")
+            universe_table = uploads.parse_csv(store.raw(tenant_id, dataset_id, "universe"))
+            if universe_table.sha256 != meta["sha256"]:
+                raise HTTPException(409, "The universe changed while it was being read; upload it again.")
+            read = uploads.read_universe(prep, universe_table)
+            result = uploads.expand(prep, parsed, read, method)
         return {
             "dataset_id": dataset_id,
             "method": method,
@@ -290,7 +320,8 @@ def create_app(
     @app.delete("/v1/datasets/{dataset_id}", status_code=204)
     def delete(dataset_id: str, tenant_id: Tenant) -> None:
         try:
-            store.delete(tenant_id, dataset_id)
+            with store.lock(tenant_id, dataset_id):
+                store.delete(tenant_id, dataset_id)
         except NotFound as exc:
             raise HTTPException(404, "No such dataset (it may have expired).") from exc
 
