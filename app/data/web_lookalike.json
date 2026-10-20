@@ -276,7 +276,7 @@
         "reasons": [],
         "next_actions": [],
         "decided_at": "2026-10-14T12:00:00Z",
-        "valid_until": "2026-10-21T12:00:00Z",
+        "valid_until": "2027-01-01T00:00:00Z",
         "validity_basis": [
           "max_decision_ttl",
           "exec_workspace_demo@1.0.0"
@@ -516,7 +516,7 @@
           "Obtain an execution policy that addresses this operation and location"
         ],
         "decided_at": "2026-10-14T12:00:00Z",
-        "valid_until": "2026-10-21T12:00:00Z",
+        "valid_until": "2027-01-01T00:00:00Z",
         "validity_basis": [
           "max_decision_ttl",
           "exec_workspace_demo@1.0.0"
@@ -821,7 +821,7 @@
           "Obtain the rights owner's confirmation of the endpoint's recipient terms"
         ],
         "decided_at": "2026-10-14T12:00:00Z",
-        "valid_until": "2026-10-21T12:00:00Z",
+        "valid_until": "2027-01-01T00:00:00Z",
         "validity_basis": [
           "max_decision_ttl",
           "exec_workspace_demo@1.0.0",
@@ -1060,7 +1060,7 @@
           "Supply qualified labels: named event, cutoff, horizon, mature windows, coverage"
         ],
         "decided_at": "2026-10-14T12:00:00Z",
-        "valid_until": "2026-10-21T12:00:00Z",
+        "valid_until": "2027-01-01T00:00:00Z",
         "validity_basis": [
           "max_decision_ttl",
           "exec_workspace_demo@1.0.0"
@@ -1168,7 +1168,7 @@
       "dec_task_demo_web_byom_remote_1.0.0_20261014T120000Z"
     ],
     "generated_at": "2026-10-14T12:00:00Z",
-    "valid_until": "2026-10-21T12:00:00Z",
+    "valid_until": "2027-01-01T00:00:00Z",
     "generated_by": {
       "service_id": "aip-recommender",
       "service_version": "0.1.0",
@@ -1450,7 +1450,7 @@
   ],
   "manifest": {
     "evaluated_at": "2026-10-14T12:00:00Z",
-    "max_decision_ttl_hours": 168.0,
+    "max_decision_ttl_hours": 1884.0,
     "engine_version": "0.1.0",
     "engine_sha256": "sha256:136c3fd1c94b22dcf22580e06dc0eaf48be3ca5641df6a2acee662aecb3d8d3e",
     "inputs": [
@@ -1626,6 +1626,6 @@
     "computed": "build_time",
     "synthetic": true,
     "disclosure": "Synthetic scenarios. Every decision, ranking and score on this page was computed by the engine when the site was built, at the evaluation time shown; nothing runs while you browse. Synthetic results test software behavior and are not evidence of data quality, model quality or market performance. The release preview is not an approval and nothing is activated.",
-    "bundle_sha256": "sha256:b85f7bf26158275813db9daf81c19f7e091b7697317e2503c5388f07150d9d5d"
+    "bundle_sha256": "sha256:1c97133cec9de2205836783fe6c61ea0e2f7abfc0c1e71cc58b0ca26fdf31483"
   }
 }

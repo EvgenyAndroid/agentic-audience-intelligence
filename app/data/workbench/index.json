@@ -28,7 +28,7 @@
         "file": "b2b_accounts.universe.json",
         "rows": 8000
       },
-      "bundle_sha256": "sha256:3fcb747e8cdd845fb9f4933b7a14050d17c7720d7ce39e28b9cbf299ea425aaf"
+      "bundle_sha256": "sha256:b765ebae132f89088d42579d2f162ca04de7039a8d0d4eba86df2e5d6fd04942"
     },
     {
       "dataset_id": "geo_areas",
@@ -46,7 +46,7 @@
       },
       "file": "geo_areas.json",
       "universe": null,
-      "bundle_sha256": "sha256:ed9056b1c85ce368e487de6fd2cfa71015243888aeeeab96f513251763179d16"
+      "bundle_sha256": "sha256:f6e270dcf2027f4b4990e198977f75022dcacfc1624b9d56a10ebcf52070e17b"
     },
     {
       "dataset_id": "demo_firmo",
@@ -67,7 +67,7 @@
         "file": "demo_firmo.universe.json",
         "rows": 20000
       },
-      "bundle_sha256": "sha256:cc7ac03167742a1483141ecc85f41d918e81d08251de6e57a00c54c1e6ee739f"
+      "bundle_sha256": "sha256:fd06f7ee2125988dc485a3c07b53c33ba2f03ec931428e871b6e2911521b6e71"
     },
     {
       "dataset_id": "interest_segments",
@@ -90,7 +90,7 @@
         "file": "interest_segments.universe.json",
         "rows": 20000
       },
-      "bundle_sha256": "sha256:c5c5e501ad4a73117ceab81076bc1296c4e88bb6486b931724bd95df876a76b7"
+      "bundle_sha256": "sha256:580d5ee8ad1abb24b5aa1fad3765b586cc180b862c7e22c73fb7628836b93a84"
     },
     {
       "dataset_id": "acr_tv",
@@ -114,7 +114,7 @@
         "file": "acr_tv.universe.json",
         "rows": 15000
       },
-      "bundle_sha256": "sha256:a4b8db23a3c7b25888756ee4bd23586455aa90f7c99290b31fad8c8f57442897"
+      "bundle_sha256": "sha256:c62868fbd5851ee4ebc4db4afc8dd4e59db6a75d5b31e0bb0ad92793f62cb81d"
     },
     {
       "dataset_id": "web_app",
@@ -139,7 +139,7 @@
         "file": "web_app.universe.json",
         "rows": 20000
       },
-      "bundle_sha256": "sha256:0e25a755d0dd4fe960281229a67025898ad5ef572e3050e100dd9fb374c1a184"
+      "bundle_sha256": "sha256:3bc9e7c700b89e64b263ef944449b7b8fd74265d6787a34682945670da467c37"
     },
     {
       "dataset_id": "crm",
@@ -164,7 +164,7 @@
         "file": "crm.universe.json",
         "rows": 15000
       },
-      "bundle_sha256": "sha256:dd84f4d7bfae06833c230d75573903b986f468878ebd27cc05c4f456b3de0efe"
+      "bundle_sha256": "sha256:632124c89e1e9012d9ebf46ed8f41cc86e3b8d35d1f0144264fd569d529c7dc6"
     },
     {
       "dataset_id": "url_content",
@@ -187,7 +187,7 @@
         "file": "url_content.universe.json",
         "rows": 6000
       },
-      "bundle_sha256": "sha256:c9646a39aea1963aa9b58fec974b5ba9318319d7513e0a918d9d654030712ff3"
+      "bundle_sha256": "sha256:b3c4f77787c9548caa3e2471ac40735ccdb308af4ef5bcf80478c8fb3d392481"
     }
   ]
 }
