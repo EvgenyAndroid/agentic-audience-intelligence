@@ -100,3 +100,49 @@ def test_infinite_features_are_rejected(bad):
         centroid_affinity(seed, pool, min_coverage=0.5)
     with pytest.raises(ValueError):
         multi_prototype_affinity(seed, pool, k=1, min_coverage=0.5, rng_seed=0)
+
+
+# Finding D: average precision treats tied scores as one threshold, so row order cannot change it.
+
+
+def test_average_precision_is_order_invariant_under_ties():
+    y = np.array([1, 0, 1, 0, 0, 1, 0, 1, 0, 0])
+    p = np.array([0.9, 0.9, 0.7, 0.7, 0.7, 0.4, 0.4, 0.4, 0.1, 0.1])
+    values = set()
+    for seed in (1, 2, 3):
+        order = np.random.default_rng(seed).permutation(len(y))
+        values.add(average_precision(y[order], p[order]))
+    values.add(average_precision(y, p))
+    assert len(values) == 1
+
+
+@pytest.mark.parametrize(
+    ("y", "p"),
+    [
+        ([1, 0, 1, 0, 0], [0.5, 0.5, 0.5, 0.5, 0.5]),  # every score tied
+        ([0, 0, 1, 0, 0], [0.9, 0.8, 0.7, 0.6, 0.5]),  # a single positive
+        ([0, 1, 0, 1, 0, 1], [0.9, 0.9, 0.9, 0.4, 0.3, 0.2]),  # positives tied with negatives at the top
+        ([1, 0, 1, 1, 0, 0], [0.95, 0.85, 0.75, 0.65, 0.55, 0.45]),  # no ties
+    ],
+)
+def test_average_precision_matches_sklearn_on_edge_cases(y, p):
+    metrics = pytest.importorskip("sklearn.metrics")
+    assert average_precision(np.array(y), np.array(p)) == pytest.approx(
+        metrics.average_precision_score(y, p), abs=1e-12
+    )
+
+
+def test_average_precision_without_positives_raises():
+    with pytest.raises(ValueError, match="without positives"):
+        average_precision(np.zeros(5), np.linspace(0, 1, 5))
+
+
+def test_reach_selection_takes_a_tied_group_whole():
+    from aip.modeling.metrics import precision_at_reach
+
+    # A 20% reach of 10 rows is 2, but three rows tie at the top: all three are selected, in any row order.
+    y = np.array([1, 0, 0, 1, 0, 0, 1, 0, 0, 0])
+    p = np.array([0.9, 0.9, 0.9, 0.5, 0.4, 0.3, 0.2, 0.1, 0.05, 0.0])
+    for seed in (1, 2, 3):
+        order = np.random.default_rng(seed).permutation(len(y))
+        assert precision_at_reach(y[order], p[order], 0.2) == pytest.approx(1 / 3)
