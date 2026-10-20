@@ -144,8 +144,11 @@ function taskDetail(bundle, row) {
     el("div", {},
       el("h3", { text: decision.verdict === "BLOCKED" ? "What would have to change" : "What would unlock this" }),
       unlock,
-      el("p", { class: "muted" }, `Decision ${decision.decision_id}, valid until ${decision.valid_until}.`)));
+      el("p", { class: "muted" }, `Decision ${decision.decision_id}, valid until ${decision.valid_until}.${lapsed(decision.valid_until)}`)));
 }
+
+// A build-time decision is never re-decided by this page; once its window has passed, say so beside it.
+const lapsed = (ts) => (Date.parse(ts) < Date.now() ? " This window has passed: the decision is a build-time snapshot and would need re-routing." : "");
 
 // ---------- recommendation ----------
 function recommendation(bundle) {
@@ -173,7 +176,7 @@ function recommendation(bundle) {
         el("strong", { text: name(o.task_ref) }), el("div", { class: "muted", text: o.next_actions.join(" · ") }))),
       column("Blocked", rec.blocked_options, (o) => el("li", {},
         el("strong", { text: name(o.task_ref) }), el("div", { class: "muted", text: o.reason_codes.join(", ") })))),
-    el("p", { class: "muted", text: `${status} Valid until ${rec.valid_until}.` }));
+    el("p", { class: "muted", text: `${status} Valid until ${rec.valid_until}.${lapsed(rec.valid_until)}` }));
 }
 
 // ---------- charts ----------
@@ -307,7 +310,7 @@ function releasePreview(bundle) {
         el("dt", { text: "Task" }), el("dd", { text: `${familyLabel(row.task, row.objective)} (${row.task.task_id})` }),
         el("dt", { text: "Decision" }), el("dd", { class: "mono", text: row.decision.decision_id }),
         el("dt", { text: "Bound policies" }), el("dd", { class: "mono", text: row.decision.policy_versions.map((p) => `${p.id}@${p.version}`).join(", ") || "none" }),
-        el("dt", { text: "Expires" }), el("dd", { text: row.decision.valid_until }),
+        el("dt", { text: "Expires" }), el("dd", { text: row.decision.valid_until + lapsed(row.decision.valid_until) }),
         el("dt", { text: "Still required" }), el("dd", { text: "A prepared, checksummed artifact; suppression and expiry rechecks at commit; a named human reviewer's authorization." }))
     : el("p", { class: "muted", text: "Nothing is eligible to prepare yet." });
   return card("Release preview", "What an approval would have to bind. Agents cannot release their own recommendation.",
