@@ -16,9 +16,9 @@ Session 2 applied the review corrections to the Session 1 documents and produced
 | `docs/adr/` | Four architecture decision records | Session 2 |
 | `schemas/v1/` | 33 contract kinds plus shared definitions (JSON Schema 2020-12) | Validated |
 | `registry/`, `examples/`, `fixtures/routing/` | Types, reason codes, reference profiles, fixture policies, valid and invalid examples, development routing suite | Validated |
-| `src/aip/`, `tests/` | Scaffold implementation and 195 tests | Passing on Linux |
+| `src/aip/`, `tests/` | Scaffold implementation and 402 tests (195 at the Session 2 record) | Passing on Linux and Windows (CI, Python 3.11 and 3.12) |
 | `third_party/adcp/` | AdCP 3.1.20 schemas pinned at commit `d033baef`, hash-locked | Vendored unmodified |
-| `scripts/`, `.github/workflows/ci.yml` | PowerShell automation and Windows CI | Written; not yet run on Windows |
+| `scripts/`, `.github/workflows/ci.yml` | PowerShell automation and Windows CI | Runs `scripts\check-all.ps1` on GitHub Actions `windows-latest` (Python 3.11 and 3.12) on every push |
 
 ## Binding decisions
 
@@ -49,7 +49,7 @@ Executed in the Linux authoring sandbox (details in `reports/session2/README.md`
 
 - 34 of 34 schemas meta-validate.
 - 76 valid documents pass, and 54 invalid cases fail at the expected layer, keyword and path.
-- 195 of 195 tests pass. They cover PRD traceability, router golden decisions, policy composition, the gateway, release rechecks, state machines, costs, baselines, and AdCP output against the pinned schemas.
+- 402 tests pass (195 at the Session 2 record; the rest were added with later work). They cover PRD traceability, router golden decisions, policy composition, the gateway, release rechecks, state machines, costs, baselines, and AdCP output against the pinned schemas.
 - ruff, ruff format and mypy are clean.
 - The rules router scores 11 of 11 on the development routing suite. This passes by construction and shows harness wiring only. Reject-all and approve-all baselines fail as intended.
 
