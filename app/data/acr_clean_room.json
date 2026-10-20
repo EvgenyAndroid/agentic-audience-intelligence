@@ -279,7 +279,7 @@
           "Verify destination capability and conformance"
         ],
         "decided_at": "2026-10-14T12:00:00Z",
-        "valid_until": "2026-10-21T12:00:00Z",
+        "valid_until": "2027-01-01T00:00:00Z",
         "validity_basis": [
           "max_decision_ttl",
           "exec_cleanroom_demo@1.0.0",
@@ -518,7 +518,7 @@
         "reasons": [],
         "next_actions": [],
         "decided_at": "2026-10-14T12:00:00Z",
-        "valid_until": "2026-10-21T12:00:00Z",
+        "valid_until": "2027-01-01T00:00:00Z",
         "validity_basis": [
           "max_decision_ttl",
           "exec_cleanroom_demo@1.0.0",
@@ -615,7 +615,7 @@
       "dec_task_demo_acr_aggregate_alt_1.0.0_20261014T120000Z"
     ],
     "generated_at": "2026-10-14T12:00:00Z",
-    "valid_until": "2026-10-21T12:00:00Z",
+    "valid_until": "2027-01-01T00:00:00Z",
     "generated_by": {
       "service_id": "aip-recommender",
       "service_version": "0.1.0",
@@ -704,7 +704,7 @@
   ],
   "manifest": {
     "evaluated_at": "2026-10-14T12:00:00Z",
-    "max_decision_ttl_hours": 168.0,
+    "max_decision_ttl_hours": 1884.0,
     "engine_version": "0.1.0",
     "engine_sha256": "sha256:136c3fd1c94b22dcf22580e06dc0eaf48be3ca5641df6a2acee662aecb3d8d3e",
     "inputs": [
@@ -864,6 +864,6 @@
     "computed": "build_time",
     "synthetic": true,
     "disclosure": "Synthetic scenarios. Every decision, ranking and score on this page was computed by the engine when the site was built, at the evaluation time shown; nothing runs while you browse. Synthetic results test software behavior and are not evidence of data quality, model quality or market performance. The release preview is not an approval and nothing is activated.",
-    "bundle_sha256": "sha256:d6d8f550a83fce59cb5a6a1c2a0ccf37becbe9f5b12809c98870f3be8435bbfc"
+    "bundle_sha256": "sha256:d001db9c37bda6a7c9e1f97f164f118dd6c703299d2735c9ae062c29b1ecc80f"
   }
 }

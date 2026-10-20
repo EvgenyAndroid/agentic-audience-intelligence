@@ -12,7 +12,7 @@
       "summary": "A buyer wants act-alike households exported as a score file. The clean room permits internal scoring and qualifying aggregates, and prohibits row-level export.",
       "requested_task": "task_cr_export_rows",
       "file": "acr_clean_room.json",
-      "bundle_sha256": "sha256:d6d8f550a83fce59cb5a6a1c2a0ccf37becbe9f5b12809c98870f3be8435bbfc"
+      "bundle_sha256": "sha256:d001db9c37bda6a7c9e1f97f164f118dd6c703299d2735c9ae062c29b1ecc80f"
     },
     {
       "scenario_id": "web_lookalike",
@@ -21,7 +21,7 @@
       "summary": "A buyer wants browsers that resemble a seed list. The same data is also asked for a new propensity model and a bring-your-own remote look-alike model.",
       "requested_task": "task_seed_affinity_score",
       "file": "web_lookalike.json",
-      "bundle_sha256": "sha256:b85f7bf26158275813db9daf81c19f7e091b7697317e2503c5388f07150d9d5d"
+      "bundle_sha256": "sha256:1c97133cec9de2205836783fe6c61ea0e2f7abfc0c1e71cc58b0ca26fdf31483"
     },
     {
       "scenario_id": "url_content",
@@ -30,7 +30,7 @@
       "summary": "A buyer wants pages that match a quick-dinner content brief. The available vectors are taxonomy pseudo-vectors without alignment evidence.",
       "requested_task": "task_demo_url_semantic",
       "file": "url_content.json",
-      "bundle_sha256": "sha256:c8e9303d55d382c0534937e8470dd8aa5b3ec09263d16be488ebce71a1689123"
+      "bundle_sha256": "sha256:87bf1bd4dc96928c0e7d3f623ddee7d1f59dd25181aad2d90cdbbda66c62a13d"
     },
     {
       "scenario_id": "new_source",
@@ -39,7 +39,7 @@
       "summary": "A new vendor feed arrives before a steward has confirmed what its keys mean. It can be profiled safely; it cannot be scored yet.",
       "requested_task": "task_quarantine_score",
       "file": "new_source.json",
-      "bundle_sha256": "sha256:1f0271ed69d72d9a5cacbb34419cf04f7015de4efa5a35384c7dd950a7ddc1ac"
+      "bundle_sha256": "sha256:b4050b88748783cc287ed28c22a505e65beeb1fc30e7e27572050525c2de7a9f"
     }
   ]
 }
